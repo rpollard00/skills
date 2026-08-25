@@ -59,11 +59,30 @@ Do not write under the repository and then move the files. Create them in temp f
 
 ## Artifact format
 
-Prefer one `mockup.html` with embedded CSS and minimal JavaScript. Keep assets local to the temp directory when embedding them would be unwieldy.
+Prefer one `mockup.html` with minimal JavaScript. Keep assets local to the temp directory when embedding them would be unwieldy.
 
-The file should open directly when practical. A tiny temp-directory server is acceptable when browser security rules or module behavior require it. Do not introduce a framework or build step unless the design question itself depends on framework behavior—which should be rare for a visual mockup.
+The file should open directly when practical. A tiny temp-directory server is acceptable when browser security rules or module behavior require it. Do not introduce a project framework or build step unless the design question itself depends on framework behavior—which should be rare for a visual mockup.
 
-Avoid external CDNs by default. They make the artifact less reproducible, can leak access, and may fail offline. If the existing product's typeface or imagery materially affects the question, copy only necessary, non-sensitive assets that are project-owned or explicitly licensed for reproduction in the artifact. Do not copy third-party font binaries or imagery without confirmed permission. Otherwise use a documented fallback. Do not modify the source assets.
+### Preferred styling adapter: Tailwind Play CDN
+
+For temporary mockups, prefer Tailwind CSS v4's development-only Play CDN when external network access is available and allowed:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+  @theme {
+    /* Mockup-specific tokens derived from the selected direction. */
+  }
+</style>
+```
+
+This is intentionally limited to throwaway temp artifacts. Never install Tailwind, add configuration, or modify dependencies in the user's repository for a mockup.
+
+Tailwind is an implementation accelerator, not the design direction. Define deliberate mockup-specific tokens and compositions; do not let Tailwind's default palette, spacing, card patterns, or radius choices collapse structurally different alternatives into a generic aesthetic.
+
+Use embedded plain CSS instead when the environment is offline, forbids external requests, contains sensitive material, or cannot execute the Play CDN reliably. State the fallback in the handoff. Do not block mockup exploration merely because the CDN is unavailable.
+
+Do not fetch other UI kits, scripts, fonts, or imagery from CDNs by default. If the existing product's typeface or imagery materially affects the question, copy only necessary, non-sensitive assets that are project-owned or explicitly licensed for reproduction in the artifact. Do not copy third-party font binaries or imagery without confirmed permission. Otherwise use a documented fallback. Do not modify the source assets.
 
 ## Required chrome
 

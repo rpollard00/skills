@@ -173,7 +173,7 @@ If no meaningful visual uncertainty remains, continue grilling until the frontie
 
 ## 6. Create temporary HTML/CSS mockups
 
-Follow [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md).
+Follow [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md). Prefer its Tailwind Play CDN adapter for temporary mockups when external requests are available and allowed; use its embedded-CSS fallback otherwise. Never add Tailwind to the user's repository.
 
 Create two to four alternatives—three by default—that answer the selected question. Keep content and state constant so the structural difference is legible. Inspect every alternative in a browser and capture comparable screenshots.
 
