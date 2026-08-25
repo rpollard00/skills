@@ -31,7 +31,7 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 
 Read only what the current phase requires:
 
-- At the interview phase, load and follow the installed model-invoked `grilling` skill. Do not invoke or tell the user to run the user-invoked `/grill-me` command. If `grilling` is unavailable, say that a reduced fallback interview will be used, then follow section 5 directly.
+- At the interview phase, load and follow the installed model-invoked `grilling` skill. If `grilling` is unavailable, say that a reduced fallback interview will be used, then follow section 5 directly.
 - Before diagnosing or creating a direction, read [references/DESIGN-DISCIPLINE.md](references/DESIGN-DISCIPLINE.md).
 - Before controlling or inspecting a browser, read [references/BROWSER-OBSERVATION.md](references/BROWSER-OBSERVATION.md).
 - Before writing the candidate report, read [references/HTML-REPORT.md](references/HTML-REPORT.md).
@@ -142,7 +142,7 @@ Do not interview, create mockups, or edit production code until the user chooses
 
 ## 5. Grill the selected gap or scope
 
-Load and follow the installed model-invoked `grilling` skill, treating the selected gap or confirmed greenfield scope as the root of its design tree. Its rounds, frontier discipline, recommended answers, fact-finding responsibility, and shared-understanding confirmation govern the interview. Do not invoke `/grill-me`; this user-invoked skill is the orchestrator.
+Load and follow the installed model-invoked `grilling` skill, treating the selected gap or confirmed greenfield scope as the root of its design tree. Its rounds, frontier discipline, recommended answers, fact-finding responsibility, and shared-understanding confirmation govern the interview.
 
 If `grilling` is unavailable, state that the interview is using a reduced fallback. Interview in rounds, ask the whole current frontier, number each question, and give a recommended answer. Investigate facts yourself and defer questions whose prerequisites remain unsettled.
 

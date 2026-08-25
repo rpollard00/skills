@@ -49,7 +49,7 @@ The skill is user-invoked only. It does not install browser or PDF tooling. It d
 npx skills@latest add mattpocock/skills --skill=grilling
 ```
 
-Restart or reload the harness afterward. Do not invoke `/grill-me` from inside this workflow; `refine-ui` remains the user-invoked orchestrator. Without `grilling`, the skill announces and uses a reduced fallback interview.
+Restart or reload the harness afterward. Without `grilling`, the skill announces and uses a reduced fallback interview.
 
 Temporary mockups prefer Tailwind CSS v4's Play CDN and fall back to embedded CSS when external requests are unavailable or inappropriate. Tailwind is never installed into the product repository for exploration.
 
