@@ -1,0 +1,5 @@
+interface:
+  display_name: "Refine UI"
+  short_description: "Find, mock up, and refine UI improvements"
+policy:
+  allow_implicit_invocation: false
