@@ -1,52 +1,59 @@
-# Refine UI
+# Reese's Skills
 
-An Agent Skill for evidence-led UI and design-system refinement.
+Agent skills I use to make recurring workflows deliberate, inspectable, and easier to improve.
 
-It inspects a rendered product, presents visual gaps for the user to choose from, interviews the selected direction, creates temporary HTML/CSS mockups outside the product repository, and validates one accepted direction in production before broader rollout.
+These are small capability packages rather than one end-to-end methodology. User-invoked skills orchestrate a workflow and stop at decision points; model-invoked skills hold reusable disciplines an agent can apply when a task matches.
 
-## Status
+## Skills
 
-First iteration. The visual-mockup discipline is intentionally kept as a reference inside this package so it can be improved in context and extracted into a separate skill later without changing its interface.
+### Design
 
-## Package
+- **[refine-ui](skills/design/refine-ui/SKILL.md)** — Inspect a rendered UI or design system, present evidence-backed gaps, explore a chosen direction with temporary HTML/CSS mockups, and validate the accepted direction before rollout.
+
+See the [design skills index](skills/design/README.md) for invocation details and classification.
+
+## Repository structure
 
 ```text
-.
-├── SKILL.md
-├── agents/
-│   └── openai.yaml
-└── references/
-    ├── BROWSER-OBSERVATION.md
-    ├── DESIGN-DISCIPLINE.md
-    ├── HTML-REPORT.md
-    ├── PDF-REFERENCE.md
-    └── VISUAL-MOCKUPS.md
+skills/
+└── <category>/
+    ├── README.md
+    └── <skill-name>/
+        ├── SKILL.md
+        ├── agents/
+        ├── references/
+        ├── scripts/
+        └── assets/
 ```
+
+Every skill is self-contained. Only `SKILL.md` is required; references, scripts, assets, and harness metadata live beside the skill that owns them.
 
 ## Use with Pi
 
-Load the repository as an explicit skill:
+For development, load one skill directly:
 
 ```bash
-pi --skill /absolute/path/to/ui-design
+pi --skill /absolute/path/to/skills/skills/design/refine-ui
 ```
 
-Or install/copy the directory into one of Pi's discovered skill locations and invoke:
+Or link every maintained skill into local Agent Skills directories:
+
+```bash
+./scripts/link-skills.sh
+```
+
+Restart Pi or run `/reload` after changing installed skills. Invoke user-invoked skills explicitly, for example:
 
 ```text
 /skill:refine-ui
 ```
 
-The skill is user-invoked only. It does not install browser or PDF tooling. It discovers already available capabilities and asks before adding anything.
+## Safety
 
-## Compatibility
+Skills can instruct an agent to execute commands and modify files. Review each `SKILL.md` and any scripts before installing or invoking it.
 
-- **Pi:** `disable-model-invocation: true` registers an explicit `/skill:refine-ui` command when the package is installed or loaded.
-- **OpenAI-compatible skill loaders:** `agents/openai.yaml` supplies display metadata and disables implicit invocation where that policy is recognized.
-- **Generic Agent Skill loaders:** load `SKILL.md` explicitly. If the loader ignores invocation metadata, explicit invocation and all three user pauses remain behavioral requirements.
+The linking script is maintainer-oriented. It creates symlinks and refuses to overwrite existing files or links it does not own.
 
-Unknown metadata may be ignored by a harness; the workflow does not depend on automatic enforcement.
+## Status
 
-## Artifact policy
-
-Generated audit reports, screenshots, and HTML/CSS mockups go directly to a fresh OS temp directory or another user-approved location outside the product repository. They are never created, staged, or copied inside the product repository. Only user-approved production implementation, durable design decisions, and approved production visual-test baselines belong there.
+This is a personal, evolving collection. Skills may be revised as their workflows encounter real projects; compatibility and publishing infrastructure will be added only when the collection needs them.
