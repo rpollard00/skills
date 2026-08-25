@@ -15,6 +15,8 @@ First iteration. The visual-mockup discipline is intentionally kept as a referen
 ├── SKILL.md
 ├── agents/
 │   └── openai.yaml
+├── scripts/
+│   └── extract-pdf-reference.sh
 └── references/
     ├── BROWSER-OBSERVATION.md
     ├── DESIGN-DISCIPLINE.md
@@ -37,7 +39,7 @@ Or install/copy the directory into one of Pi's discovered skill locations and in
 /skill:refine-ui
 ```
 
-The skill is user-invoked only. It does not install browser or PDF tooling. It discovers already available capabilities and asks before adding anything.
+The skill is user-invoked only. It does not install browser or PDF tooling. It discovers already available capabilities and asks before adding anything. Its PDF helper uses existing Poppler commands and writes derived files to the skill's ignored `.artifacts/` directory.
 
 ## Compatibility
 

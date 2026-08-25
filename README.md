@@ -54,6 +54,8 @@ Skills can instruct an agent to execute commands and modify files. Review each `
 
 The linking script is maintainer-oriented. It creates symlinks and refuses to overwrite existing files or links it does not own.
 
+Skills may keep private generated material in local `.artifacts/` directories. These directories are ignored repository-wide and must never be included when publishing, packaging, or copying a skill.
+
 ## Status
 
 This is a personal, evolving collection. Skills may be revised as their workflows encounter real projects; compatibility and publishing infrastructure will be added only when the collection needs them.

@@ -25,7 +25,7 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 - Do not install browser tooling, packages, fonts, or MCP servers without approval.
 - Use realistic, non-sensitive content. Never copy credentials, personal data, or unrelated authenticated browser content into an artifact.
 - Accessibility is a constraint throughout, not a polish pass. Visual tactics never justify hiding required labels, focus indicators, status, terms, or controls.
-- Do not distribute or persist user-provided copyrighted references. See [references/PDF-REFERENCE.md](references/PDF-REFERENCE.md).
+- Do not distribute or track user-provided copyrighted references or their derivatives. Keep derived PDF artifacts only in the skill's private ignored cache or another approved external location. See [references/PDF-REFERENCE.md](references/PDF-REFERENCE.md).
 
 ## Load references progressively
 
