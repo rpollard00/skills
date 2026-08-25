@@ -1,8 +1,10 @@
 # Reese's Skills
 
-Agent skills I use to make recurring workflows deliberate, inspectable, and easier to improve.
+AI wrote 90% of this - that's why it reads like bad ad-copy. I'm not trying to sell anything.
 
-These are small capability packages rather than one end-to-end methodology. User-invoked skills orchestrate a workflow and stop at decision points; model-invoked skills hold reusable disciplines an agent can apply when a task matches.
+These are my own agent skills. I use them to make repeatable workflows.
+
+Some of them are invoked by the user as a workflow orchestration state machine, others might be invoked by models as part of that orchestration, or as part of a completely different workflow.
 
 ## Skills
 
