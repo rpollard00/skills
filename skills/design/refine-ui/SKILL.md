@@ -10,7 +10,7 @@ Improve interfaces through rendered evidence and explicit user decisions.
 
 The workflow is:
 
-> Observe → find a gap or frame a greenfield scope → user chooses → interview → mock up → user chooses → implement a slice → compare → user approves → roll out
+> Observe → find a gap or frame a greenfield scope → user chooses → grill ↔ mock up until the frontier is empty → user confirms → implement a slice → compare → user approves → roll out
 
 A model already knows how to write HTML and CSS. This skill supplies the process it will not follow reliably on its own: inspect the rendered product, separate local symptoms from system causes, show genuinely different directions, and stop for the user before commitment expands.
 
@@ -19,7 +19,7 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 - Treat the rendered interface as the source of truth. Do not finish after merely editing CSS or passing tests.
 - Keep the user in control at three gates: gap selection or greenfield-scope confirmation, direction selection or approval, and rollout approval. Only explicit user approval advances through a gate.
 - Find environmental facts yourself. Ask the user for decisions, intent, taste, and constraints—not facts available in the repository or running application.
-- When a preference is easier to react to than describe, show alternatives instead of prolonging the interview.
+- When a preference is easier to react to than describe, suspend grilling and show alternatives instead of asking the user to imagine them.
 - Create audit reports, screenshots, and HTML/CSS mockups in the OS temp directory, never in the user's repository. Do not add or copy mockup routes, files, or exploration dependencies into their project.
 - If a temp destination cannot be created or a capture tool cannot write outside the repository, stop and request another writable external location. Never stage artifacts in the repository as a fallback.
 - Do not install browser tooling, packages, fonts, or MCP servers without approval.
@@ -31,6 +31,7 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 
 Read only what the current phase requires:
 
+- At the interview phase, load and follow the installed model-invoked `grilling` skill. Do not invoke or tell the user to run the user-invoked `/grill-me` command. If `grilling` is unavailable, say that a reduced fallback interview will be used, then follow section 5 directly.
 - Before diagnosing or creating a direction, read [references/DESIGN-DISCIPLINE.md](references/DESIGN-DISCIPLINE.md).
 - Before controlling or inspecting a browser, read [references/BROWSER-OBSERVATION.md](references/BROWSER-OBSERVATION.md).
 - Before writing the candidate report, read [references/HTML-REPORT.md](references/HTML-REPORT.md).
@@ -51,7 +52,7 @@ Inspect repeated primitives, tokens, rendered states, and representative product
 
 ### Greenfield
 
-There is no rendered evidence yet. Begin with a short interview to settle:
+There is no rendered evidence yet. Use the grilling discipline from section 5, limiting the initial frontier to prerequisites needed for useful mockups:
 
 - primary user and task;
 - representative screen or flow;
@@ -61,12 +62,12 @@ There is no rendered evidence yet. Begin with a short interview to settle:
 
 Do not interview toward a complete imagined design. Settle enough to create useful alternatives, then let the user react to rendered mockups.
 
-Confirm the representative scope, content fixture, and one-sentence design question with the user. This confirmation is the greenfield equivalent of the gap-selection gate. Then establish observation capability and proceed directly to temporary mockups; do not manufacture an evidence-gap report for a product that does not exist. Return to the interview only when a prerequisite remains unsettled.
+Confirm the representative scope and content fixture with the user. This confirmation is the greenfield equivalent of the gap-selection gate. Then establish observation capability and continue the grilling frontier in section 5 until it reaches a visual question; do not manufacture an evidence-gap report for a product that does not exist.
 
 ### Mode paths
 
 - **Existing UI and design-system refinement:** sections 2 → 3 → 4 → 5 → 6, unless the approved direction does not need a mockup.
-- **Greenfield:** the interview and scope confirmation above → section 2 → section 6. Skip sections 3–5 except where an existing brand or system supplies evidence worth inspecting.
+- **Greenfield:** initial grilling and scope confirmation above → section 2 → section 5 → section 6. Skip sections 3–4 except where an existing brand or system supplies evidence worth inspecting.
 
 All modes rejoin at the direction gate before section 8.
 
@@ -139,18 +140,23 @@ Open the report for the user when possible, provide its absolute path, summarize
 
 Do not interview, create mockups, or edit production code until the user chooses.
 
-## 5. Interview the selected gap
+## 5. Grill the selected gap or scope
 
-Interview in rounds using a design tree. Each round asks the current frontier: decisions whose prerequisites are already settled. Give a recommended answer for each question.
+Load and follow the installed model-invoked `grilling` skill, treating the selected gap or confirmed greenfield scope as the root of its design tree. Its rounds, frontier discipline, recommended answers, fact-finding responsibility, and shared-understanding confirmation govern the interview. Do not invoke `/grill-me`; this user-invoked skill is the orchestrator.
 
-During the interview:
+If `grilling` is unavailable, state that the interview is using a reduced fallback. Interview in rounds, ask the whole current frontier, number each question, and give a recommended answer. Investigate facts yourself and defer questions whose prerequisites remain unsettled.
 
-- investigate facts yourself;
-- ask only decisions that affect the selected gap;
+Adapt grilling to visual work:
+
+- ask only decisions that affect the selected gap or scope;
 - distinguish requirements from preferences;
 - expose conflicts such as density versus calm, novelty versus familiarity, or local improvement versus system change;
-- defer dependent questions to later rounds;
-- convert visual preference questions into mockup questions whenever seeing alternatives will answer them faster.
+- ask language-shaped decisions in the current round;
+- do not ask the user to describe a visual or spatial preference that can be rendered;
+- convert each visual branch into a one-sentence mockup question;
+- when several visual branches exist, mock up the earliest independent decision and leave dependent branches off the frontier until it is answered.
+
+A mockup suspends grilling; it does not end the design tree. After the user reacts, section 7 feeds that answer back into the tree and recomputes the frontier.
 
 A visual question must be expressible in one sentence:
 
@@ -163,7 +169,7 @@ Examples:
 - whether grouping should rely on whitespace, surfaces, or dividers;
 - whether this area should become denser or more selective.
 
-If no meaningful visual uncertainty remains, skip mockup construction but not the direction gate. Present the proposed direction and ask the user to approve it, revise it, or stop. Only explicit approval permits entry into the production-slice phase.
+If no meaningful visual uncertainty remains, continue grilling until the frontier is empty. Then present the proposed direction and ask the user to confirm the shared understanding, revise it, or stop. Only explicit confirmation permits entry into the production-slice phase.
 
 ## 6. Create temporary HTML/CSS mockups
 
@@ -178,13 +184,19 @@ Open the mockup for the user, provide its absolute path, explain each alternativ
 - request a focused revision; or
 - reject all of them.
 
-Rejection returns to the selected-gap interview or to a newly framed mockup question, unless the user chooses to stop. It never falls through to production.
+Rejection returns to grilling or to a newly framed mockup question, unless the user chooses to stop. It never falls through to production.
 
 Do not treat a whole variant as indivisible. “B's hierarchy with A's density” is a valid and useful answer.
 
-## 7. Consolidate the chosen direction
+## 7. Resume grilling and consolidate the chosen direction
 
-Enter this phase only after the user has selected an alternative or an explicit combination of traits. If they rejected every alternative, return to interviewing or mockup exploration instead.
+Enter this phase only after the user has selected an alternative or an explicit combination of traits. If they rejected every alternative, return to grilling or reframe the mockup question instead.
+
+Treat the user's selection and named trait combinations as answers in the grilling design tree. Recompute the frontier:
+
+- if language-shaped decisions are now unblocked, return to section 5;
+- if another visual decision is now unblocked, return to section 6 with a new one-sentence question;
+- if the frontier is empty, consolidate the chosen direction.
 
 Turn the user's feedback into one consolidated temporary mockup. Resolve only the decisions their feedback actually settles; do not silently add a new aesthetic direction.
 
@@ -195,7 +207,7 @@ Capture:
 - rejected traits and load-bearing reasons;
 - constraints the production implementation must preserve.
 
-Show the consolidated mockup when the combination materially differs from every prior alternative. Get explicit confirmation before production work. Whether the direction came from mockups or a mockup-skipping proposal, production work cannot begin without this direction approval.
+Show the consolidated mockup when the combination materially differs from every prior alternative. Summarize the settled tree and get explicit shared-understanding confirmation before production work. Whether the direction came from mockups or a mockup-skipping proposal, production work cannot begin while the frontier is non-empty or without this direction approval.
 
 ## 8. Implement one production slice
 

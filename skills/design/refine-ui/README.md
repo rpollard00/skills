@@ -41,6 +41,16 @@ Or install/copy the directory into one of Pi's discovered skill locations and in
 
 The skill is user-invoked only. It does not install browser or PDF tooling. It discovers already available capabilities and asks before adding anything. Its PDF helper uses existing Poppler commands to build page-labelled Markdown and an optional all-page PNG cache in the skill's ignored `.artifacts/` directory.
 
+## Recommended peer skill
+
+`refine-ui` composes Matt Pocock's model-invoked `grilling` discipline for its interview rounds. Install it separately when it is not already available:
+
+```bash
+npx skills@latest add mattpocock/skills --skill=grilling
+```
+
+Restart or reload the harness afterward. Do not invoke `/grill-me` from inside this workflow; `refine-ui` remains the user-invoked orchestrator. Without `grilling`, the skill announces and uses a reduced fallback interview.
+
 ## Compatibility
 
 - **Pi:** `disable-model-invocation: true` registers an explicit `/skill:refine-ui` command when the package is installed or loaded.
