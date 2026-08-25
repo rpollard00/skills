@@ -78,7 +78,7 @@ Prefer roles, labels, text, and snapshot references. Use coordinate interaction 
 For every baseline and comparison, record or control:
 
 - URL and route parameters;
-- authentication and relevant storage state;
+- a non-secret authentication descriptor such as account role, fixture name, or isolated-profile identifier;
 - fixture or data state;
 - viewport dimensions and device scale when exposed;
 - theme and color scheme;
@@ -119,8 +119,9 @@ Browser automation can expose everything visible to the controlled profile.
 - Prefer an isolated or app-specific profile for observation.
 - Connect to the user's normal browser only when they explicitly choose to share its state.
 - Avoid unrelated tabs, password managers, personal accounts, and production data.
-- Do not place cookies, storage state, credentials, screenshots containing sensitive data, or network dumps in reports or mockup directories.
-- If authenticated state is necessary, use the least-sensitive available development account and keep its state in temp or the tool's protected cache.
+- Do not place cookies, tokens, serialized storage state, credentials, screenshots containing sensitive data, or network dumps in notes, reports, or mockup directories.
+- Control authentication material only through the browser adapter's protected profile or storage mechanism. Record a non-secret descriptor for reproducibility, never the material itself.
+- If authenticated state is necessary, use the least-sensitive available development account and keep its state in the tool's protected cache rather than the artifact directory.
 
 ## Application startup
 

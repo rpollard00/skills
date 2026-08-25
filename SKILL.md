@@ -10,17 +10,18 @@ Improve interfaces through rendered evidence and explicit user decisions.
 
 The workflow is:
 
-> Observe → find gaps → user chooses → interview → mock up → user chooses → implement a slice → compare → user approves → roll out
+> Observe → find a gap or frame a greenfield scope → user chooses → interview → mock up → user chooses → implement a slice → compare → user approves → roll out
 
 A model already knows how to write HTML and CSS. This skill supplies the process it will not follow reliably on its own: inspect the rendered product, separate local symptoms from system causes, show genuinely different directions, and stop for the user before commitment expands.
 
 ## Non-negotiables
 
 - Treat the rendered interface as the source of truth. Do not finish after merely editing CSS or passing tests.
-- Keep the user in control at three gates: gap selection, mockup direction, and rollout approval.
+- Keep the user in control at three gates: gap selection or greenfield-scope confirmation, direction selection or approval, and rollout approval. Only explicit user approval advances through a gate.
 - Find environmental facts yourself. Ask the user for decisions, intent, taste, and constraints—not facts available in the repository or running application.
 - When a preference is easier to react to than describe, show alternatives instead of prolonging the interview.
-- Create audit reports, screenshots, and HTML/CSS mockups in the OS temp directory, never in the user's repository. Do not add mockup routes, prototype files, or exploration dependencies to their project.
+- Create audit reports, screenshots, and HTML/CSS mockups in the OS temp directory, never in the user's repository. Do not add or copy mockup routes, files, or exploration dependencies into their project.
+- If a temp destination cannot be created or a capture tool cannot write outside the repository, stop and request another writable external location. Never stage artifacts in the repository as a fallback.
 - Do not install browser tooling, packages, fonts, or MCP servers without approval.
 - Use realistic, non-sensitive content. Never copy credentials, personal data, or unrelated authenticated browser content into an artifact.
 - Accessibility is a constraint throughout, not a polish pass. Visual tactics never justify hiding required labels, focus indicators, status, terms, or controls.
@@ -59,6 +60,15 @@ There is no rendered evidence yet. Begin with a short interview to settle:
 - brand, platform, and accessibility constraints.
 
 Do not interview toward a complete imagined design. Settle enough to create useful alternatives, then let the user react to rendered mockups.
+
+Confirm the representative scope, content fixture, and one-sentence design question with the user. This confirmation is the greenfield equivalent of the gap-selection gate. Then establish observation capability and proceed directly to temporary mockups; do not manufacture an evidence-gap report for a product that does not exist. Return to the interview only when a prerequisite remains unsettled.
+
+### Mode paths
+
+- **Existing UI and design-system refinement:** sections 2 → 3 → 4 → 5 → 6, unless the approved direction does not need a mockup.
+- **Greenfield:** the interview and scope confirmation above → section 2 → section 6. Skip sections 3–5 except where an existing brand or system supplies evidence worth inspecting.
+
+All modes rejoin at the direction gate before section 8.
 
 ## 2. Establish observation capability
 
@@ -153,7 +163,7 @@ Examples:
 - whether grouping should rely on whitespace, surfaces, or dividers;
 - whether this area should become denser or more selective.
 
-If no meaningful visual uncertainty remains, skip mockups and state why before moving to the production slice.
+If no meaningful visual uncertainty remains, skip mockup construction but not the direction gate. Present the proposed direction and ask the user to approve it, revise it, or stop. Only explicit approval permits entry into the production-slice phase.
 
 ## 6. Create temporary HTML/CSS mockups
 
@@ -168,9 +178,13 @@ Open the mockup for the user, provide its absolute path, explain each alternativ
 - request a focused revision; or
 - reject all of them.
 
+Rejection returns to the selected-gap interview or to a newly framed mockup question, unless the user chooses to stop. It never falls through to production.
+
 Do not treat a whole variant as indivisible. “B's hierarchy with A's density” is a valid and useful answer.
 
 ## 7. Consolidate the chosen direction
+
+Enter this phase only after the user has selected an alternative or an explicit combination of traits. If they rejected every alternative, return to interviewing or mockup exploration instead.
 
 Turn the user's feedback into one consolidated temporary mockup. Resolve only the decisions their feedback actually settles; do not silently add a new aesthetic direction.
 
@@ -181,7 +195,7 @@ Capture:
 - rejected traits and load-bearing reasons;
 - constraints the production implementation must preserve.
 
-Show the consolidated mockup when the combination materially differs from every prior alternative. Get confirmation before production work.
+Show the consolidated mockup when the combination materially differs from every prior alternative. Get explicit confirmation before production work. Whether the direction came from mockups or a mockup-skipping proposal, production work cannot begin without this direction approval.
 
 ## 8. Implement one production slice
 

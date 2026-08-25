@@ -55,7 +55,7 @@ Create a fresh directory such as:
 
 Use a new timestamped directory for every exploration so stale assets or screenshots cannot masquerade as current output.
 
-Do not write under the repository and then move the files. Create them in temp from the beginning.
+Do not write under the repository and then move the files. Create them in temp from the beginning. If the temp directory cannot be created or the browser adapter cannot write there, stop and request another writable location outside the repository. Never fall back to the repository.
 
 ## Artifact format
 
@@ -63,7 +63,7 @@ Prefer one `mockup.html` with embedded CSS and minimal JavaScript. Keep assets l
 
 The file should open directly when practical. A tiny temp-directory server is acceptable when browser security rules or module behavior require it. Do not introduce a framework or build step unless the design question itself depends on framework behavior—which should be rare for a visual mockup.
 
-Avoid external CDNs by default. They make the artifact less reproducible, can leak access, and may fail offline. If the existing product's typeface or imagery materially affects the question, copy only the necessary non-sensitive local assets into the temp directory or use a documented fallback. Do not modify the source assets.
+Avoid external CDNs by default. They make the artifact less reproducible, can leak access, and may fail offline. If the existing product's typeface or imagery materially affects the question, copy only necessary, non-sensitive assets that are project-owned or explicitly licensed for reproduction in the artifact. Do not copy third-party font binaries or imagery without confirmed permission. Otherwise use a documented fallback. Do not modify the source assets.
 
 ## Required chrome
 
@@ -175,4 +175,4 @@ These notes are temporary unless the user chooses to persist the resulting desig
 
 Temp artifacts can disappear. Always tell the user where they are and that they are temporary.
 
-Do not commit mockups to the product repository. If the user wants durable evidence, ask where it should live and copy only with explicit approval. Prefer recording the accepted decision and production comparison rather than preserving every discarded alternative.
+Do not write, copy, or commit mockups to the product repository. If the user wants durable mockup evidence, ask for an approved location outside that repository. Inside the product repository, persist only accepted decision records or approved production visual-test baselines—not exploration artifacts. Prefer recording the accepted decision and production comparison rather than preserving every discarded alternative.

@@ -39,6 +39,14 @@ Or install/copy the directory into one of Pi's discovered skill locations and in
 
 The skill is user-invoked only. It does not install browser or PDF tooling. It discovers already available capabilities and asks before adding anything.
 
+## Compatibility
+
+- **Pi:** `disable-model-invocation: true` registers an explicit `/skill:refine-ui` command when the package is installed or loaded.
+- **OpenAI-compatible skill loaders:** `agents/openai.yaml` supplies display metadata and disables implicit invocation where that policy is recognized.
+- **Generic Agent Skill loaders:** load `SKILL.md` explicitly. If the loader ignores invocation metadata, explicit invocation and all three user pauses remain behavioral requirements.
+
+Unknown metadata may be ignored by a harness; the workflow does not depend on automatic enforcement.
+
 ## Artifact policy
 
-Generated audit reports, screenshots, and HTML/CSS mockups go directly to a fresh OS temp directory. They are never created inside the product repository by default. Only user-approved production implementation and durable design decisions belong in the product repository.
+Generated audit reports, screenshots, and HTML/CSS mockups go directly to a fresh OS temp directory or another user-approved location outside the product repository. They are never created, staged, or copied inside the product repository. Only user-approved production implementation, durable design decisions, and approved production visual-test baselines belong there.

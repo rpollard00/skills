@@ -15,7 +15,7 @@ Create a fresh directory under the OS temp directory:
     └── ...
 ```
 
-Write directly to temp. Never create the report or its evidence inside the user's repository.
+Write directly to temp. Never create the report or its evidence inside the user's repository. If the temp directory cannot be created or the capture adapter cannot write there, stop and ask for another writable location outside the repository. Do not stage artifacts in the repository and move them afterward.
 
 Use plain HTML with embedded CSS and minimal optional JavaScript. Avoid CDNs and analytics. Reference evidence with relative paths or embed modest images as data URLs. The directory should remain viewable without the application running.
 

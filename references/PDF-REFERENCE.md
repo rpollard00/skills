@@ -24,17 +24,19 @@ pdftoppm -f <first> -l <last> -png -r 144 \
 
 Alternatives such as `mutool` are acceptable. Do not install PDF tooling without approval.
 
-Use a cache directory outside the user's repository, preferably under the OS temp directory for ephemeral work or the user's cache directory when they explicitly want reusable local indexing. Derive the cache key from file identity without exposing its original path in shared artifacts.
+Use a working directory outside the user's repository. Default to the OS temp directory for ephemeral work. Use the user's cache directory only when they explicitly approve reusable local indexing; record that approval in the conversation and keep the cache exclusively in the approved external location. Derive the cache key from file identity without exposing its original path in shared artifacts.
+
+The full `reference.txt` produced by the example is a transient local search index, not content to load wholesale into model context. Search it locally and load only the smallest relevant passage. Delete it after the task unless reusable local indexing was explicitly approved.
 
 ## On-demand use
 
-1. Extract metadata and text.
-2. Search headings and text for the current design question.
-3. Render only the relevant page range.
+1. Extract metadata and a transient local text index.
+2. Search headings and text locally for the current design question.
+3. Load only the smallest relevant text section and render only the relevant page range.
 4. Inspect page images if the model supports images; otherwise open them for the user.
 5. Apply the principle to the user's evidence rather than copying the book's example.
 
-Do not ingest or render the full book on every run.
+Do not load the full extracted book into model context or render the full book on every run.
 
 ## Copyright and privacy constraints
 
@@ -42,7 +44,7 @@ Do not ingest or render the full book on every run.
 - Never include book pages in the visual gap report or HTML/CSS mockup.
 - Do not quote substantial passages. Summarize the applicable principle in original language and cite the user's local page or chapter when helpful.
 - Do not upload the PDF or derived pages to remote services unless the user explicitly authorizes that service and upload.
-- Delete ephemeral rendered pages when they are no longer needed if they contain licensed or sensitive material.
+- Delete all ephemeral derived material—including extracted text and rendered pages—when it is no longer needed. Retain it only in an explicitly approved external cache.
 
 The user's possession of a PDF is not permission to redistribute it.
 
