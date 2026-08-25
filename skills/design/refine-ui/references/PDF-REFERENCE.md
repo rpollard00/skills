@@ -11,6 +11,16 @@ Use two representations:
 - extracted text to locate relevant sections;
 - rendered page images for visual inspection by an image-capable model or the user.
 
+## Prepared-cache discovery
+
+Before asking for a PDF path or running extraction, inspect the installed skill's `.artifacts/pdf/` directory for `*/reference.md` and `*/manifest.txt`.
+
+- If one complete cache exists, reuse it without requiring the source PDF.
+- If several caches exist, inspect their manifests and select the edition relevant to the user's request. Ask only when the intended edition remains ambiguous.
+- A complete all-page cache has a `reference.md` whose page headings match `page_count` and the same number of PNGs under `pages/`.
+- Do not load the full Markdown file or image directory while discovering caches. Read manifest metadata first.
+- Run extraction only when no suitable cache exists, the user supplies another authorized edition, or regeneration is required.
+
 ## Extraction helper
 
 Use the bundled script from the skill directory:

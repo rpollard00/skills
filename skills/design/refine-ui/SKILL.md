@@ -35,7 +35,7 @@ Read only what the current phase requires:
 - Before controlling or inspecting a browser, read [references/BROWSER-OBSERVATION.md](references/BROWSER-OBSERVATION.md).
 - Before writing the candidate report, read [references/HTML-REPORT.md](references/HTML-REPORT.md).
 - Before creating HTML/CSS mockups, read [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md).
-- If the user supplies a licensed PDF reference, read [references/PDF-REFERENCE.md](references/PDF-REFERENCE.md).
+- Before diagnosing or creating a direction, check the skill's `.artifacts/pdf/` directory for a prepared `reference.md`. If a prepared cache exists or the user supplies a licensed PDF, read [references/PDF-REFERENCE.md](references/PDF-REFERENCE.md). Use an existing cache without requiring the source PDF again.
 
 ## 1. Determine the entry mode
 
