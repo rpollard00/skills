@@ -39,7 +39,7 @@ Or install/copy the directory into one of Pi's discovered skill locations and in
 /skill:refine-ui
 ```
 
-The skill is user-invoked only. It does not install browser or PDF tooling. It discovers already available capabilities and asks before adding anything. Its PDF helper uses existing Poppler commands and writes derived files to the skill's ignored `.artifacts/` directory.
+The skill is user-invoked only. It does not install browser or PDF tooling. It discovers already available capabilities and asks before adding anything. Its PDF helper uses existing Poppler commands to build page-labelled Markdown and an optional all-page PNG cache in the skill's ignored `.artifacts/` directory.
 
 ## Compatibility
 

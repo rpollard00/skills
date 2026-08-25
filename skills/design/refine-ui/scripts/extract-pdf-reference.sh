@@ -6,11 +6,12 @@ usage() {
 Usage:
   extract-pdf-reference.sh [options] <reference.pdf>
 
-Create a private searchable text index and optionally render selected pages.
+Create private raw and page-indexed Markdown text, with optional PNG pages.
 The source PDF is never copied.
 
 Options:
   --pages <N|N-M>     Render one page or an inclusive page range as PNG.
+  --render-all        Render and cache every page as PNG.
   --dpi <number>      Render resolution for page images (default: 144).
   --output-dir <dir>  Override the artifact root directory.
   --force             Replace this PDF's existing derived artifacts.
@@ -53,6 +54,7 @@ sanitize_name() {
 }
 
 PAGES=""
+RENDER_ALL=false
 DPI=144
 OUTPUT_ROOT=""
 FORCE=false
@@ -65,6 +67,10 @@ while (($#)); do
       (($# >= 2)) || fail "--pages requires a value"
       PAGES="$2"
       shift 2
+      ;;
+    --render-all)
+      RENDER_ALL=true
+      shift
       ;;
     --dpi)
       (($# >= 2)) || fail "--dpi requires a value"
@@ -117,12 +123,14 @@ PDF="$(cd "$(dirname "$PDF")" && pwd -P)/$(basename "$PDF")"
 [[ "$DPI" =~ ^[1-9][0-9]*$ ]] || fail "--dpi must be a positive integer"
 ((DPI <= 1200)) || fail "--dpi must be 1200 or less"
 [[ "$FORCE" == false || "$CLEAN" == false ]] || fail "--force and --clean cannot be combined"
+[[ -z "$PAGES" || "$RENDER_ALL" == false ]] || fail "--pages and --render-all cannot be combined"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 OUTPUT_ROOT="${OUTPUT_ROOT:-${REFINE_UI_ARTIFACTS_DIR:-$SKILL_DIR/.artifacts/pdf}}"
 
 require_command awk
+require_command grep
 require_command sed
 require_command pdfinfo
 
@@ -144,7 +152,7 @@ if [[ "$CLEAN" == true ]]; then
 fi
 
 require_command pdftotext
-if [[ -n "$PAGES" ]]; then
+if [[ -n "$PAGES" || "$RENDER_ALL" == true ]]; then
   require_command pdftoppm
 fi
 
@@ -180,6 +188,30 @@ if [[ ! -s "$ARTIFACT_DIR/reference.txt" ]]; then
   WRITE_MANIFEST=true
 fi
 
+if [[ ! -s "$ARTIFACT_DIR/reference.md" ]]; then
+  {
+    printf '# Page-indexed PDF reference\n\n'
+    page_number=1
+    while IFS= read -r -d $'\f' page_text || [[ -n "$page_text" ]]; do
+      printf '## Page %d\n\n' "$page_number"
+      printf '%s' "$page_text"
+      [[ "$page_text" == *$'\n' ]] || printf '\n'
+      printf '\n'
+      ((page_number += 1))
+    done < "$ARTIFACT_DIR/reference.txt"
+  } > "$TMP_DIR/reference.md"
+
+  markdown_pages="$(grep -c '^## Page [0-9][0-9]*$' "$TMP_DIR/reference.md")"
+  [[ "$markdown_pages" == "$PAGE_COUNT" ]] || \
+    fail "page-indexed Markdown contains $markdown_pages pages; expected $PAGE_COUNT"
+  mv -- "$TMP_DIR/reference.md" "$ARTIFACT_DIR/reference.md"
+  WRITE_MANIFEST=true
+fi
+
+if [[ "$RENDER_ALL" == true ]]; then
+  PAGES="1-$PAGE_COUNT"
+fi
+
 RENDERED_RANGE=""
 if [[ -n "$PAGES" ]]; then
   if [[ "$PAGES" =~ ^([1-9][0-9]*)$ ]]; then
@@ -196,16 +228,41 @@ if [[ -n "$PAGES" ]]; then
   ((LAST_PAGE <= PAGE_COUNT)) || fail "page range ends after page $PAGE_COUNT"
 
   mkdir -p -- "$ARTIFACT_DIR/pages"
-  pdftoppm -f "$FIRST_PAGE" -l "$LAST_PAGE" -png -r "$DPI" \
-    "$PDF" "$TMP_DIR/page" >/dev/null 2>&1
+  cached_pages="$(find "$ARTIFACT_DIR/pages" -maxdepth 1 -type f -name 'page-*.png' | awk 'END { print NR }')"
+  cached_dpi=""
+  if [[ -s "$ARTIFACT_DIR/manifest.txt" ]]; then
+    cached_dpi="$(awk -F= '$1 == "render_dpi" { print $2; exit }' "$ARTIFACT_DIR/manifest.txt")"
+  fi
+  if ((cached_pages > 0)) && [[ -n "$cached_dpi" && "$cached_dpi" != "$DPI" ]]; then
+    fail "page cache uses $cached_dpi DPI; use that DPI or pass --force to replace it"
+  fi
 
-  shopt -s nullglob
-  rendered=("$TMP_DIR"/page-*.png)
-  ((${#rendered[@]} > 0)) || fail "page rendering produced no images"
-  mv -- "${rendered[@]}" "$ARTIFACT_DIR/pages/"
-  shopt -u nullglob
+  SHOULD_RENDER=true
+  if [[ "$RENDER_ALL" == true && "$cached_pages" == "$PAGE_COUNT" && "$cached_dpi" == "$DPI" ]]; then
+    SHOULD_RENDER=false
+  fi
+
+  if [[ "$SHOULD_RENDER" == true ]]; then
+    pdftoppm -f "$FIRST_PAGE" -l "$LAST_PAGE" -png -r "$DPI" \
+      "$PDF" "$TMP_DIR/page" >/dev/null 2>&1
+
+    shopt -s nullglob
+    rendered=("$TMP_DIR"/page-*.png)
+    ((${#rendered[@]} > 0)) || fail "page rendering produced no images"
+    PAGE_WIDTH="${#PAGE_COUNT}"
+    ((PAGE_WIDTH >= 3)) || PAGE_WIDTH=3
+    for rendered_file in "${rendered[@]}"; do
+      page_suffix="${rendered_file##*-}"
+      page_suffix="${page_suffix%.png}"
+      [[ "$page_suffix" =~ ^[0-9]+$ ]] || fail "unexpected rendered page name: $rendered_file"
+      page_value=$((10#$page_suffix))
+      printf -v page_name "page-%0${PAGE_WIDTH}d.png" "$page_value"
+      mv -- "$rendered_file" "$ARTIFACT_DIR/pages/$page_name"
+    done
+    shopt -u nullglob
+    WRITE_MANIFEST=true
+  fi
   RENDERED_RANGE="$FIRST_PAGE-$LAST_PAGE"
-  WRITE_MANIFEST=true
 fi
 
 if [[ ! -s "$ARTIFACT_DIR/manifest.txt" ]]; then
@@ -229,7 +286,8 @@ if [[ "$WRITE_MANIFEST" == true ]]; then
 source_filename=$SOURCE_NAME
 source_sha256=$SOURCE_HASH
 page_count=$PAGE_COUNT
-text_index=reference.txt
+text_index=reference.md
+raw_text_index=reference.txt
 rendered_pages=$RENDERED_FILES
 render_dpi=$DPI
 prepared_at=$CREATED_AT
@@ -238,7 +296,8 @@ EOF
 fi
 
 printf 'artifact_dir=%s\n' "$ARTIFACT_DIR"
-printf 'text_index=%s\n' "$ARTIFACT_DIR/reference.txt"
+printf 'text_index=%s\n' "$ARTIFACT_DIR/reference.md"
+printf 'raw_text_index=%s\n' "$ARTIFACT_DIR/reference.txt"
 printf 'metadata=%s\n' "$ARTIFACT_DIR/metadata.txt"
 printf 'manifest=%s\n' "$ARTIFACT_DIR/manifest.txt"
 printf 'page_count=%s\n' "$PAGE_COUNT"
