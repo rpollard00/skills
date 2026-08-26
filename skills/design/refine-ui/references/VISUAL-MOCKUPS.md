@@ -10,7 +10,7 @@ It is not production code, a sales demo, or a miniature implementation of the wh
 
 - one-sentence design question;
 - realistic content and relevant state;
-- accepted product, brand, platform, and accessibility constraints;
+- accepted product, brand, platform, accessibility, and design-system constraints;
 - representative narrow and wide viewports;
 - relevant visual evidence from the existing product, if any.
 
@@ -20,7 +20,8 @@ It is not production code, a sales demo, or a miniature implementation of the wh
 - two to four alternatives, three by default;
 - a stable URL or control for each alternative;
 - comparable screenshots;
-- a concise selection question for the user.
+- a concise selection question for the user;
+- a system delta for each alternative: reused choices, additions or changes, promotion or migration scope, exceptions, and unresolved decisions.
 
 ### Invariants
 
@@ -28,6 +29,7 @@ It is not production code, a sales demo, or a miniature implementation of the wh
 - Make alternatives disagree about structure, hierarchy, grouping, density, or interaction—not merely color and decoration.
 - Use realistic density and edge cases relevant to the question.
 - Keep the artifact independent of the user's project build.
+- Preserve accepted system choices unless changing one is the explicit design question.
 - Inspect every alternative in a browser before presenting it.
 - Clearly label the artifact as a temporary visual mockup.
 - Do not add mockup files, routes, packages, configuration, or dependencies to the user's repository.
@@ -93,7 +95,7 @@ The mockup needs a small, visually subordinate control surface that:
 - names the current alternative;
 - switches alternatives;
 - keeps the alternative in a URL query parameter such as `?variant=a` when possible;
-- briefly reveals each alternative's thesis and main tradeoff.
+- briefly reveals each alternative's thesis, main tradeoff, and material system delta.
 
 The control surface must not be confused with the proposed product UI. A fixed bottom toolbar usually works, but choose another neutral treatment if it obscures the design being evaluated.
 
@@ -161,7 +163,8 @@ Open the mockup when possible and provide:
 - the design question;
 - a one-sentence thesis and tradeoff for each alternative;
 - your recommended alternative and why;
-- an invitation to select, combine named traits, revise, or reject.
+- an invitation to select, combine named traits, revise, or reject;
+- material consequences for token, reusable-module, extraction, or migration scope.
 
 Good feedback:
 
@@ -186,12 +189,13 @@ Record alongside the artifact, either in the HTML or a small temp note:
 - accepted traits;
 - rejected traits and load-bearing reasons;
 - unresolved decisions;
+- accepted system delta, including any embedded-pattern promotion and migration scope;
 - date and source product surface.
 
-These notes are temporary unless the user chooses to persist the resulting design decision elsewhere.
+These notes remain temporary until the rendered production result is accepted in section 9. Before that acceptance, archive them only in another user-approved location outside the product repository; do not turn direction approval alone into durable repository design memory.
 
 ## Cleanup and durability
 
 Temp artifacts can disappear. Always tell the user where they are and that they are temporary.
 
-Do not write, copy, or commit mockups to the product repository. If the user wants durable mockup evidence, ask for an approved location outside that repository. Inside the product repository, persist only accepted decision records or approved production visual-test baselines—not exploration artifacts. Prefer recording the accepted decision and production comparison rather than preserving every discarded alternative.
+Do not write, copy, or commit mockups to the product repository. If the user wants durable mockup evidence, ask for an approved location outside that repository. Only after section 9 rendered acceptance may the product repository receive the resulting design decision or approved production visual-test baselines—not exploration artifacts. Prefer recording the accepted decision and production comparison rather than preserving every discarded alternative.

@@ -104,6 +104,8 @@ A recurring visual symptom may originate at different levels:
 
 Require repeated evidence before calling a problem systemic. When the cause is systemic, validate the proposed system change on one representative production composition before broad migration.
 
+A reusable opportunity may already exist inside a tightly coupled screen element. Treat it as an embedded pattern, not automatically as a reusable primitive. Offer promotion only when its current usage and the proposed refined usage are two concrete consumers of the same semantics, states, and invariants, and when a small interface can hide meaningful design or behavior complexity. Otherwise keep the composition local rather than extracting a cosmetic flag bag.
+
 ## Personality and context
 
 Do not default to a generic agent aesthetic: purple gradients, uniformly rounded cards, excessive shadows, ornamental blobs, sparse dashboard tiles, or every section inside a container.

@@ -1,6 +1,6 @@
 ---
 name: refine-ui
-description: Analyze an existing UI or design system, surface evidence-backed visual gaps, explore a user-selected direction with temporary HTML/CSS mockups, and refine one accepted direction through rendered comparison. Also use for greenfield UI direction-setting when the user explicitly invokes the skill.
+description: Analyze an existing UI or design system, surface evidence-backed visual gaps, explore a user-selected direction with temporary HTML/CSS mockups, and refine one accepted direction through rendered comparison while evolving durable project design memory. Also use for greenfield UI direction-setting when the user explicitly invokes the skill.
 disable-model-invocation: true
 ---
 
@@ -10,14 +10,15 @@ Improve interfaces through rendered evidence and explicit user decisions.
 
 The workflow is:
 
-> Observe → find a gap or frame a greenfield scope → user chooses → grill ↔ mock up until the frontier is empty → user confirms → implement a slice → compare → user approves → roll out
+> Observe → find a gap or frame a greenfield scope → user chooses → grill ↔ mock up until the frontier is empty → user confirms → implement a slice → compare → user accepts → record and optionally roll out
 
-A model already knows how to write HTML and CSS. This skill supplies the process it will not follow reliably on its own: inspect the rendered product, separate local symptoms from system causes, show genuinely different directions, and stop for the user before commitment expands.
+A model already knows how to write HTML and CSS. This skill supplies the process it will not follow reliably on its own: inspect the rendered product, separate local symptoms from system causes, show genuinely different directions, identify reusable design-system opportunities, and stop for the user before commitment expands.
 
 ## Non-negotiables
 
-- Treat the rendered interface as the source of truth. Do not finish after merely editing CSS or passing tests.
-- Keep the user in control at three gates: gap selection or greenfield-scope confirmation, direction selection or approval, and rollout approval. Only explicit user approval advances through a gate.
+- Treat the rendered interface as the source of truth for the current experience. Compare it with documented intent and the executable design system; disagreement among them is evidence, not permission to assume one is correct.
+- Keep the user in control at three gates: gap selection or greenfield-scope confirmation, direction selection or approval, and rendered production acceptance with a rollout decision. Only explicit user approval advances through a gate.
+- Do not hide token changes, reusable-module extraction, migration, or `DESIGN.md` updates inside implementation. Present the proposed system delta at the direction gate and record it only after the relevant rendered result is approved.
 - Find environmental facts yourself. Ask the user for decisions, intent, taste, and constraints—not facts available in the repository or running application.
 - When a preference is easier to react to than describe, suspend grilling and show alternatives instead of asking the user to imagine them.
 - Create audit reports, screenshots, and HTML/CSS mockups in the OS temp directory, never in the user's repository. Do not add or copy mockup routes, files, or exploration dependencies into their project.
@@ -33,6 +34,7 @@ Read only what the current phase requires:
 
 - At the interview phase, load and follow the installed model-invoked `grilling` skill. If `grilling` is unavailable, say that a reduced fallback interview will be used, then follow section 5 directly.
 - Before diagnosing or creating a direction, read [references/DESIGN-DISCIPLINE.md](references/DESIGN-DISCIPLINE.md).
+- Before inventorying, changing, or documenting a project's design system, read [references/DESIGN-SYSTEM.md](references/DESIGN-SYSTEM.md).
 - Before controlling or inspecting a browser, read [references/BROWSER-OBSERVATION.md](references/BROWSER-OBSERVATION.md).
 - Before writing the candidate report, read [references/HTML-REPORT.md](references/HTML-REPORT.md).
 - Before creating HTML/CSS mockups, read [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md).
@@ -48,7 +50,7 @@ Inspect the running application before interviewing about visual direction. Exis
 
 ### Design-system refinement
 
-Inspect repeated primitives, tokens, rendered states, and representative product screens. A component catalog alone cannot show whether the system works in composition.
+Inspect repeated primitives, tokens, rendered states, embedded patterns, and representative product screens. A component catalog alone cannot show whether the system works in composition. Look for both existing reusable modules and tightly coupled elements whose current surface plus the selected need could justify promotion.
 
 ### Greenfield
 
@@ -95,6 +97,8 @@ Do not modify production source during observation.
 
 Scope the review before scanning widely. If the user named a screen, flow, primitive, or system concern, begin there. Otherwise prioritize important and recently changing product surfaces.
 
+Read project `CONTEXT.md` files for domain language and `DESIGN.md` or equivalent documentation for accepted visual intent. Locate executable tokens, reusable modules, catalogs, and reference surfaces. Compare documented intent, executable constraints, and rendered behavior; do not create or update project documentation during observation.
+
 Gather only evidence relevant to the scope:
 
 - primary user task and information priority;
@@ -102,6 +106,7 @@ Gather only evidence relevant to the scope:
 - supported viewports and themes;
 - typography, spacing, color, radius, border, and shadow systems;
 - reusable primitives and important variants;
+- tightly coupled elements that may contain coherent embedded patterns;
 - rendered computed styles when available;
 - empty, loading, error, disabled, focus, hover, overflow, and realistic-density states;
 - intentional brand or product constraints.
@@ -115,6 +120,7 @@ Classify each credible gap on two axes.
 - content or information hierarchy;
 - screen composition;
 - reusable primitive;
+- embedded pattern or promotion candidate;
 - design token;
 - asset;
 - interaction or state.
@@ -126,11 +132,13 @@ Classify each credible gap on two axes.
 
 Do not infer a systemic cause from one occurrence. Do not recommend a local override for repeated system evidence.
 
+Also classify the likely system relationship as reuse, deepen, promote, add, or keep local, following [references/DESIGN-SYSTEM.md](references/DESIGN-SYSTEM.md). An existing embedded element plus the proposed refined usage can provide two concrete consumers, but promotion is credible only when they share semantics and admit a small interface—not merely similar markup.
+
 ## 4. Present gaps and stop
 
 Write a visual candidate report to a fresh temp directory. Follow [references/HTML-REPORT.md](references/HTML-REPORT.md).
 
-A candidate identifies an observable gap and frames the decision it opens. It may name a likely design lever, but it must not pretend the first proposed treatment is settled.
+A candidate identifies an observable gap and frames the decision it opens. It may name a likely design lever, but it must not pretend the first proposed treatment is settled. When system evidence exists, include the likely relationship—reuse, deepen, promote, add, or keep local—and identify existing and proposed consumers of any promotion candidate.
 
 Rank candidates qualitatively by user impact, recurrence, confidence, and change scope. Do not assign numeric design scores.
 
@@ -150,7 +158,7 @@ Adapt grilling to visual work:
 
 - ask only decisions that affect the selected gap or scope;
 - distinguish requirements from preferences;
-- expose conflicts such as density versus calm, novelty versus familiarity, or local improvement versus system change;
+- expose conflicts such as density versus calm, novelty versus familiarity, local improvement versus system change, or extraction leverage versus an over-general interface;
 - ask language-shaped decisions in the current round;
 - do not ask the user to describe a visual or spatial preference that can be rendered;
 - convert each visual branch into a one-sentence mockup question;
@@ -175,7 +183,7 @@ If no meaningful visual uncertainty remains, continue grilling until the frontie
 
 Follow [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md). Prefer its Tailwind Play CDN adapter for temporary mockups when external requests are available and allowed; use its embedded-CSS fallback otherwise. Never add Tailwind to the user's repository.
 
-Create two to four alternatives—three by default—that answer the selected question. Keep content and state constant so the structural difference is legible. Inspect every alternative in a browser and capture comparable screenshots.
+Create two to four alternatives—three by default—that answer the selected question. Keep content and state constant so the structural difference is legible. Preserve accepted project-system constraints unless changing one is the design question, and record each alternative's proposed system delta. Inspect every alternative in a browser and capture comparable screenshots.
 
 Open the mockup for the user, provide its absolute path, explain each alternative's thesis and tradeoff briefly, and ask the user to:
 
@@ -205,7 +213,8 @@ Capture:
 - the question;
 - the accepted traits;
 - rejected traits and load-bearing reasons;
-- constraints the production implementation must preserve.
+- constraints the production implementation must preserve;
+- accepted system delta, including any promotion and migration scope.
 
 Show the consolidated mockup when the combination materially differs from every prior alternative. Summarize the settled tree and get explicit shared-understanding confirmation before production work. Whether the direction came from mockups or a mockup-skipping proposal, production work cannot begin while the frontier is non-empty or without this direction approval.
 
@@ -215,7 +224,9 @@ Implement the smallest representative slice that can validate the direction in t
 
 - Use production semantics, accessibility, content, and states.
 - Reuse the project's architecture and conventions.
-- Translate accepted visual decisions into intentional tokens or primitives when the evidence is systemic.
+- Translate accepted visual decisions into intentional tokens, primitives, or patterns when the evidence is systemic.
+- Prefer reuse, deepening, or promotion over adding a parallel local implementation when the approved evidence supports it.
+- For an approved promotion, extract a small semantic interface, migrate the original embedded consumer, and apply it to the new consumer in the same validation slice. Do not add cosmetic flag bags or speculative flexibility.
 - Do not copy mockup code mechanically. The mockup is evidence, not production architecture.
 - Preserve behavior unless interaction was explicitly part of the selected question.
 - Avoid broad migration until the slice is accepted.
@@ -235,27 +246,34 @@ Check:
 - keyboard and focus behavior;
 - contrast;
 - loading, empty, error, disabled, hover, and overflow states relevant to the slice;
-- unexpected regressions outside the selected scope.
+- unexpected regressions outside the selected scope;
+- for an approved promotion, both the original and new consumers across relevant states and viewports.
 
 Present the comparison and ask the user to choose:
 
 1. refine the slice;
-2. accept and roll out;
+2. accept the slice and roll out farther;
 3. return to mockup exploration;
-4. stop with the local improvement.
+4. accept and keep only the validated slice, with no wider migration.
+
+Options 2 and 4 are explicit acceptance of the rendered production result and proceed to recording. Only option 2 permits broader rollout. When the validated slice includes an approved promotion, option 4 retains that bounded system change—the extracted module plus its original and new consumers—and must not describe it as merely local.
 
 Do not roll out merely because the implementation matches the mockup. The user approves the rendered production result.
 
-## 10. Roll out and record
+## 10. Record and optionally roll out
 
-After approval, propagate the accepted decision only as far as the evidence justifies. Consolidate repeated values, update affected primitives, migrate relevant surfaces, and add visual regression coverage where it will protect an intentional result.
+After option 2, propagate the accepted decision only as far as the evidence justifies. Consolidate repeated values, update affected primitives or patterns, migrate relevant surfaces, and add visual regression coverage where it will protect an intentional result. After option 4, retain only the accepted validation slice and do not migrate additional surfaces.
 
-Keep temporary reports, screenshots, and mockups out of the user's repository. Persist only durable project knowledge the user wants: accepted design decisions, token meanings, component contracts, or test baselines.
+For either accepted option, follow [references/DESIGN-SYSTEM.md](references/DESIGN-SYSTEM.md) when recording durable system knowledge. Update an existing design-documentation equivalent rather than creating a competing file. If none exists, create root `DESIGN.md` lazily only when this approved result establishes system-level intent, a reusable-module contract, or a load-bearing exception. Keep raw values canonical in executable tokens and document meanings, selection rules, invariants, implementation paths, and reference surfaces.
+
+Keep temporary reports, screenshots, and mockups out of the user's repository. Persist only approved production implementation and durable project knowledge justified by the result. Keep domain terminology in `CONTEXT.md`; keep visual and interaction intent in `DESIGN.md` or its equivalent.
 
 End with:
 
 - changed production files;
 - checks run;
 - surfaces migrated;
+- design-system modules or tokens reused, deepened, promoted, or added;
+- design documentation created or updated;
 - remaining visual risks or intentionally deferred gaps;
 - absolute paths to temporary artifacts while they still exist.

@@ -68,11 +68,15 @@ State which task becomes slower, ambiguous, error-prone, or needlessly effortful
 
 Label the current best classification:
 
-- cause: content, composition, primitive, token, asset, or interaction/state;
+- cause: content, composition, primitive, embedded pattern, token, asset, or interaction/state;
 - scope: local or systemic;
 - confidence: high, medium, or low.
 
 Link relevant project files only when evidence supports the source relationship.
+
+### System relationship
+
+When the evidence implicates the design system, name the narrowest likely relationship: reuse, deepen, promote, add, or keep local. For a promotion candidate, identify the existing embedded consumer and the proposed second consumer, the shared semantics or invariants, and the likely extraction scope. Present this as an opportunity for the user to select, not as permission to refactor.
 
 ### Design question
 

@@ -2,11 +2,11 @@
 
 An Agent Skill for evidence-led UI and design-system refinement.
 
-It inspects a rendered product, presents visual gaps for the user to choose from, interviews the selected direction, creates temporary HTML/CSS mockups outside the product repository, and validates one accepted direction in production before broader rollout.
+It inspects a rendered product, presents visual gaps for the user to choose from, interviews the selected direction, creates temporary HTML/CSS mockups outside the product repository, validates one accepted direction in production, and evolves the project's design system and durable design memory when the evidence justifies it.
 
 ## Status
 
-First iteration. The visual-mockup discipline is intentionally kept as a reference inside this package so it can be improved in context and extracted into a separate skill later without changing its interface.
+Active personal workflow. The visual-mockup and design-system disciplines remain references inside this package so they can evolve in context and be extracted into peer skills later without changing their interfaces.
 
 ## Package
 
@@ -20,6 +20,7 @@ First iteration. The visual-mockup discipline is intentionally kept as a referen
 └── references/
     ├── BROWSER-OBSERVATION.md
     ├── DESIGN-DISCIPLINE.md
+    ├── DESIGN-SYSTEM.md
     ├── HTML-REPORT.md
     ├── PDF-REFERENCE.md
     └── VISUAL-MOCKUPS.md
@@ -52,6 +53,12 @@ npx skills@latest add mattpocock/skills --skill=grilling
 Restart or reload the harness afterward. Without `grilling`, the skill announces and uses a reduced fallback interview.
 
 Temporary mockups prefer Tailwind CSS v4's Play CDN and fall back to embedded CSS when external requests are unavailable or inappropriate. Tailwind is never installed into the product repository for exploration.
+
+## Design-system evolution
+
+The workflow compares documented design intent, executable tokens and reusable modules, and rendered product behavior. It can offer promotion of a tightly coupled embedded pattern when its current usage and the proposed refinement provide two concrete consumers of one small semantic interface.
+
+After rendered approval, it updates existing design documentation or creates root `DESIGN.md` lazily when an accepted result establishes durable system knowledge. `DESIGN.md` records meanings, selection rules, invariants, implementation paths, and reference surfaces; executable token sources remain canonical for raw values.
 
 ## Compatibility
 
