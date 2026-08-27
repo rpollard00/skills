@@ -58,7 +58,7 @@ Temporary mockups prefer Tailwind CSS v4's Play CDN and fall back to embedded CS
 
 The workflow compares documented design intent, executable tokens and reusable modules, and rendered product behavior. It can offer promotion of a tightly coupled embedded pattern when its current usage and the proposed refinement provide two concrete consumers of one small semantic interface.
 
-After rendered approval, it updates existing design documentation or creates root `DESIGN.md` lazily when an accepted result establishes durable system knowledge. `DESIGN.md` records meanings, selection rules, invariants, implementation paths, and reference surfaces; executable token sources remain canonical for raw values.
+After the first direction approval, it creates or updates root `DESIGN.md` immediately with provisional design memory. Rendered production acceptance establishes, revises, or removes those entries. The root file indexes deeper sources and records meanings, selection rules, invariants, implementation paths, and reference surfaces; executable token sources remain canonical for raw values.
 
 ## Compatibility
 

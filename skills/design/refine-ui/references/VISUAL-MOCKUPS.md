@@ -192,10 +192,10 @@ Record alongside the artifact, either in the HTML or a small temp note:
 - accepted system delta, including any embedded-pattern promotion and migration scope;
 - date and source product surface.
 
-These notes remain temporary until the rendered production result is accepted in section 9. Before that acceptance, archive them only in another user-approved location outside the product repository; do not turn direction approval alone into durable repository design memory.
+These exploration notes remain temporary. After explicit direction approval, translate only the accepted design rule and system delta into a provisional root `DESIGN.md` entry; never copy the mockup, screenshots, discarded variants, or exploratory notes into the product repository.
 
 ## Cleanup and durability
 
 Temp artifacts can disappear. Always tell the user where they are and that they are temporary.
 
-Do not write, copy, or commit mockups to the product repository. If the user wants durable mockup evidence, ask for an approved location outside that repository. Only after section 9 rendered acceptance may the product repository receive the resulting design decision or approved production visual-test baselines—not exploration artifacts. Prefer recording the accepted decision and production comparison rather than preserving every discarded alternative.
+Do not write, copy, or commit mockups to the product repository. If the user wants durable mockup evidence, ask for an approved location outside that repository. Direction approval may create or update only provisional design memory; section 9 rendered acceptance establishes it and may add approved production visual-test baselines. Prefer recording the accepted rule and production comparison rather than preserving every discarded alternative.

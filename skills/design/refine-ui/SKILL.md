@@ -18,7 +18,7 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 
 - Treat the rendered interface as the source of truth for the current experience. Compare it with documented intent and the executable design system; disagreement among them is evidence, not permission to assume one is correct.
 - Keep the user in control at three gates: gap selection or greenfield-scope confirmation, direction selection or approval, and rendered production acceptance with a rollout decision. Only explicit user approval advances through a gate.
-- Do not hide token changes, reusable-module extraction, migration, or `DESIGN.md` updates inside implementation. Present the proposed system delta at the direction gate and record it only after the relevant rendered result is approved.
+- Do not hide token changes, reusable-module extraction, migration, or `DESIGN.md` updates inside implementation. Present the proposed system delta at the direction gate. Immediately after direction approval, create or update root `DESIGN.md` with the accepted decision marked provisional; after rendered production acceptance, establish, revise, or remove it.
 - Find environmental facts yourself. Ask the user for decisions, intent, taste, and constraints—not facts available in the repository or running application.
 - When a preference is easier to react to than describe, suspend grilling and show alternatives instead of asking the user to imagine them.
 - Create audit reports, screenshots, and HTML/CSS mockups in the OS temp directory, never in the user's repository. Do not add or copy mockup routes, files, or exploration dependencies into their project.
@@ -97,7 +97,9 @@ Do not modify production source during observation.
 
 Scope the review before scanning widely. If the user named a screen, flow, primitive, or system concern, begin there. Otherwise prioritize important and recently changing product surfaces.
 
-Read project `CONTEXT.md` files for domain language and `DESIGN.md` or equivalent documentation for accepted visual intent. Locate executable tokens, reusable modules, catalogs, and reference surfaces. Compare documented intent, executable constraints, and rendered behavior; do not create or update project documentation during observation.
+Read project `CONTEXT.md` files for domain language and root `DESIGN.md` for accepted visual intent. Locate deeper design documentation, executable tokens, reusable modules, catalogs, and reference surfaces. Compare documented intent, executable constraints, and rendered behavior; do not create or update project documentation during observation.
+
+Add a design-memory plan to the temporary UI profile: whether root `DESIGN.md` exists, which deeper sources it should index, and what provisional entry will be created or updated if the user approves a direction. Existing component catalogs, token docs, or framework documentation do not substitute for the root design-memory entry point.
 
 Gather only evidence relevant to the scope:
 
@@ -218,6 +220,8 @@ Capture:
 
 Show the consolidated mockup when the combination materially differs from every prior alternative. Summarize the settled tree and get explicit shared-understanding confirmation before production work. Whether the direction came from mockups or a mockup-skipping proposal, production work cannot begin while the frontier is non-empty or without this direction approval.
 
+Immediately after approval, create root `DESIGN.md` if absent or update it if present. Capture only the accepted intent, selection rule, invariants, proposed system delta, implementation or validation surface, and unresolved risks; mark new or changed rules **provisional**. Link deeper existing design sources rather than duplicating them. Do not wait until implementation cleanup, and do not invent unrelated foundations to make the file appear complete.
+
 ## 8. Implement one production slice
 
 Implement the smallest representative slice that can validate the direction in the real product.
@@ -258,15 +262,17 @@ Present the comparison and ask the user to choose:
 
 Options 2 and 4 are explicit acceptance of the rendered production result and proceed to recording. Only option 2 permits broader rollout. When the validated slice includes an approved promotion, option 4 retains that bounded system change—the extracted module plus its original and new consumers—and must not describe it as merely local.
 
+Keep design memory synchronized with the decision: option 1 updates the provisional entry as the slice changes; option 3 revises, supersedes, or removes the provisional entry before returning to exploration; options 2 and 4 mark the accepted rules established. Do not leave a rejected direction documented as active intent.
+
 Do not roll out merely because the implementation matches the mockup. The user approves the rendered production result.
 
 ## 10. Record and optionally roll out
 
 After option 2, propagate the accepted decision only as far as the evidence justifies. Consolidate repeated values, update affected primitives or patterns, migrate relevant surfaces, and add visual regression coverage where it will protect an intentional result. After option 4, retain only the accepted validation slice and do not migrate additional surfaces.
 
-For either accepted option, follow [references/DESIGN-SYSTEM.md](references/DESIGN-SYSTEM.md) when recording durable system knowledge. Update an existing design-documentation equivalent rather than creating a competing file. If none exists, create root `DESIGN.md` lazily only when this approved result establishes system-level intent, a reusable-module contract, or a load-bearing exception. Keep raw values canonical in executable tokens and document meanings, selection rules, invariants, implementation paths, and reference surfaces.
+For either accepted option, follow [references/DESIGN-SYSTEM.md](references/DESIGN-SYSTEM.md), mark the corresponding root `DESIGN.md` entries established, and reconcile their implementation paths and reference surfaces with the accepted result. Keep raw values canonical in executable tokens; the root file records meanings, selection rules, invariants, links to deeper sources, and accepted exceptions.
 
-Keep temporary reports, screenshots, and mockups out of the user's repository. Persist only approved production implementation and durable project knowledge justified by the result. Keep domain terminology in `CONTEXT.md`; keep visual and interaction intent in `DESIGN.md` or its equivalent.
+Keep temporary reports, screenshots, and mockups out of the user's repository. Persist only approved production implementation and durable project knowledge justified by the result. Keep domain terminology in `CONTEXT.md`; keep visual and interaction intent discoverable from root `DESIGN.md` and its linked deeper sources.
 
 End with:
 
@@ -274,6 +280,6 @@ End with:
 - checks run;
 - surfaces migrated;
 - design-system modules or tokens reused, deepened, promoted, or added;
-- design documentation created or updated;
+- design memory status: root `DESIGN.md` created, updated, or unchanged with an explicit reason;
 - remaining visual risks or intentionally deferred gaps;
 - absolute paths to temporary artifacts while they still exist.

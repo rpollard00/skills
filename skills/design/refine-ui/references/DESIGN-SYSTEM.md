@@ -7,7 +7,7 @@ Use this reference to understand, extend, and record a project's design system w
 Treat these as related but distinct evidence:
 
 1. **Domain context:** `CONTEXT.md` or its equivalent defines product terms. Use those terms in UI content; do not store visual rules there.
-2. **Design memory:** `DESIGN.md` or its equivalent explains visual and interaction intent, selection rules, invariants, and accepted exceptions.
+2. **Design memory:** root `DESIGN.md` is the canonical entry point for visual and interaction intent, selection rules, invariants, and accepted exceptions. It may link to deeper project documentation.
 3. **Executable system:** tokens, reusable modules, assets, and patterns constrain production choices.
 4. **Rendered proof:** representative product surfaces and states show whether the other layers work in composition.
 
@@ -30,7 +30,7 @@ Do not define everything up front. Introduce or deepen a system when a real deci
 Before diagnosing system impact, locate and compare:
 
 - root and scoped `CONTEXT.md` files;
-- `DESIGN.md`, design guidelines, token documentation, or equivalent project conventions;
+- root `DESIGN.md`, deeper design guidelines, token documentation, and project conventions;
 - token definitions and theme adapters;
 - reusable primitives and patterns;
 - component catalogs and visual tests;
@@ -39,7 +39,7 @@ Before diagnosing system impact, locate and compare:
 
 Do not assume a component catalog is current or that similarly named source values render equivalently.
 
-During observation, keep a temporary design-system profile outside the repository. Do not create or update project design documentation before the relevant production result is approved.
+During observation, keep a temporary design-system profile outside the repository. Record whether root `DESIGN.md` exists and what it should index, but do not modify project design memory before the user approves a direction.
 
 ## Classify the system relationship
 
@@ -113,7 +113,9 @@ Preserve the original consumer's behavior unless the approved direction explicit
 
 ## `DESIGN.md` policy
 
-Use an existing project equivalent instead of creating competing documentation. If none exists, create root `DESIGN.md` lazily after the first approved system-level rule, promotion, or load-bearing exception. Do not create it merely because the skill ran.
+Root `DESIGN.md` is the canonical design-memory entry point. Existing component catalogs, token docs, framework documentation, and deeper guidelines remain valuable sources, but they do not silently waive the root file; link to them instead of duplicating them. If an explicit repository policy requires another location, follow it and report the deviation.
+
+Create the file lazily when the first design direction is approved, not merely because the skill ran. Update it inline as later decisions crystallize rather than batching design memory into a final cleanup phase.
 
 `DESIGN.md` documents the system's human- and agent-facing interface:
 
@@ -168,19 +170,28 @@ Reference surfaces: Account overview; Billing overview
 Use status labels only when they clarify truth:
 
 - **Established:** approved and represented in production.
-- **Provisional:** deliberately under validation, not a general rule yet.
+- **Provisional:** direction-approved and deliberately under rendered validation.
 - **Legacy:** observed behavior that conflicts with accepted intent.
 - **Exception:** an approved divergence with a load-bearing reason.
 
-## Recording after acceptance
+## Active design-memory lifecycle
 
-After the user accepts the rendered production result, record durable system knowledge whether they approve wider rollout or keep only the validated slice:
+Maintain design memory as decisions happen:
+
+1. **Direction approved:** create root `DESIGN.md` if absent and add or update the accepted rule as provisional. Include its validation surface and proposed system delta.
+2. **Slice refined:** update the provisional entry inline when the accepted intent changes.
+3. **Direction abandoned or replaced:** remove, supersede, or clearly reject its provisional entry before returning to exploration.
+4. **Rendered result accepted:** mark supported rules established and reconcile implementation paths, consumers, and reference surfaces.
+5. **Wider rollout approved:** extend the established entry only as far as the migrated evidence justifies.
+
+Do not fill empty sections speculatively. A minimal first file containing one resolved decision is better than an impressive fictional system.
+
+After rendered acceptance:
 
 - encode accepted choices in the appropriate token, primitive, or pattern;
 - migrate only the consumers justified by the user's rollout decision;
-- update or create `DESIGN.md` when the accepted result changes system knowledge;
 - update a component catalog or reference surface when one exists;
 - record deliberate exceptions rather than hiding them;
 - remove stale documentation contradicted by the accepted result.
 
-A local refinement that does not change system knowledge needs no `DESIGN.md` entry. A promotion, semantic token change, new selection rule, or load-bearing exception usually does.
+Every approved direction can bootstrap design memory, including a local rule whose scope is stated honestly. Promotions, semantic token changes, new selection rules, and load-bearing exceptions should always update it.
