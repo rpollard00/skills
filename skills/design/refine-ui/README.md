@@ -54,6 +54,8 @@ Restart or reload the harness afterward. Without `grilling`, the skill announces
 
 Temporary mockups prefer Tailwind CSS v4's Play CDN and fall back to embedded CSS when external requests are unavailable or inappropriate. Tailwind is never installed into the product repository for exploration.
 
+A mockup is not ready at HTML generation. The workflow renders every required alternative, viewport, and state; captures and visually inspects current screenshots when vision is available; fixes defects; recaptures invalidated evidence; and records the result in a temporary `verification.md`. Models without vision must request user visual verification rather than claim readiness.
+
 ## Reference grounding
 
 When a prepared licensed reference cache is available, the workflow must search it twice: broadly before ranking gaps and narrowly after the user selects a design question. A temporary reference brief records the consulted pages or sections, applicable principles paraphrased in the model's own words, product implications, limitations, and search terms. Recommendations must not rely on model memory alone.

@@ -23,7 +23,8 @@ It is not production code, a sales demo, or a miniature implementation of the wh
 - comparable screenshots;
 - a concise selection question for the user;
 - a system delta for each alternative: reused choices, additions or changes, promotion or migration scope, exceptions, and unresolved decisions;
-- a concise reference rationale for each alternative: which consulted principle it applies, challenges, or finds inapplicable.
+- a concise reference rationale for each alternative: which consulted principle it applies, challenges, or finds inapplicable;
+- a temporary verification manifest covering every required alternative, viewport, and state.
 
 ### Invariants
 
@@ -33,13 +34,13 @@ It is not production code, a sales demo, or a miniature implementation of the wh
 - Keep the artifact independent of the user's project build.
 - Preserve accepted system choices unless changing one is the explicit design question.
 - Consult the focused reference brief before authoring alternatives; do not retrofit citations onto directions chosen from memory.
-- Inspect every alternative in a browser before presenting it.
+- Pass the mockup-readiness gate for every required alternative, viewport, and state before presenting it as verified.
 - Clearly label the artifact as a temporary visual mockup.
 - Do not add mockup files, routes, packages, configuration, or dependencies to the user's repository.
 
 ## Temp location
 
-Resolve the OS temp directory:
+Use the OS temp directory by default, or another external location the user explicitly approved. Resolve OS temp as:
 
 - `$TMPDIR` when set;
 - otherwise `/tmp` on Unix-like systems;
@@ -50,17 +51,20 @@ Create a fresh directory such as:
 ```text
 <temp>/refine-ui-<project>-<timestamp>/
 ├── mockup.html
+├── verification.md
 ├── assets/
 └── screenshots/
-    ├── a-narrow.png
-    ├── a-wide.png
-    ├── b-narrow.png
-    └── b-wide.png
+    ├── a-default-390x844-light.png
+    ├── a-default-1440x900-light.png
+    ├── b-default-390x844-light.png
+    ├── b-default-1440x900-light.png
+    ├── c-default-390x844-light.png
+    └── c-default-1440x900-light.png
 ```
 
 Use a new timestamped directory for every exploration so stale assets or screenshots cannot masquerade as current output.
 
-Do not write under the repository and then move the files. Create them in temp from the beginning. If the temp directory cannot be created or the browser adapter cannot write there, stop and request another writable location outside the repository. Never fall back to the repository.
+Do not write under the repository and then move the files. Create them in the selected external destination from the beginning. If that directory cannot be created or the browser adapter cannot write there, stop and request another writable location outside the repository. Never fall back to the repository.
 
 ## Artifact format
 
@@ -145,18 +149,96 @@ The code may be disposable, but the visual evidence must be trustworthy.
 - Keep JavaScript limited to alternative and state switching.
 - Do not add persistence, analytics, tests, error infrastructure, or production abstractions.
 
-## Browser inspection
+## Blocking mockup-readiness gate
 
-For each alternative:
+Generating HTML, receiving a successful navigation response, or confirming that screenshot files exist is not verification. Complete the following gate before calling a mockup ready.
 
-1. Open its stable URL.
-2. Set the representative viewport.
-3. Confirm the correct alternative and fixture are visible.
-4. Inspect for broken assets, overflow, console errors, and accidental toolbar overlap.
-5. Capture a viewport screenshot.
-6. Repeat for the other representative viewport and relevant state.
+### 1. Define the verification matrix
 
-Use identical conditions across alternatives. If a model can inspect images, critique the screenshots against the design question before showing them to the user. Fix execution mistakes, but do not collapse deliberate differences.
+List every required combination of:
+
+- alternative;
+- representative narrow and wide viewport;
+- relevant default and consequential non-default state;
+- supported theme when color or surfaces are part of the question;
+- scroll position when the viewport cannot show all relevant content or fixed chrome behavior depends on it.
+
+Keep the matrix proportional, but never omit an alternative or the agreed narrow and wide viewports merely to finish faster. Use explicit defaults such as `state=default`, `theme=default`, and `scroll=top` rather than leaving dimensions ambiguous.
+
+### 2. Stabilize each render
+
+For every matrix cell:
+
+1. Open the stable variant URL in a real browser.
+2. Set the exact viewport, state, theme, and scroll position.
+3. Wait for the document, Tailwind Play CDN when used, fonts, and images to finish loading; disable or settle animation for capture.
+4. Confirm the URL selected the intended alternative and that the constant fixture is intact.
+5. Compute one render-input fingerprint over `mockup.html` and every local asset that can affect rendering, excluding `screenshots/` and `verification.md`. Record external dependency URLs, resolved versions when exposed, and verification time separately because mutable CDN output cannot be proven by a local hash.
+
+### 3. Check runtime and layout evidence
+
+Inspect what the browser adapter exposes:
+
+- console errors and relevant warnings;
+- failed script, stylesheet, font, and image loads;
+- `document.fonts` and image completion when available;
+- document width versus viewport width for accidental horizontal overflow;
+- relevant element bounds for clipping, off-canvas controls, and fixed-toolbar overlap;
+- semantic structure and keyboard operation of mockup controls;
+- correct variant, fixture, and state.
+
+Do not treat clean console output as visual verification.
+
+### 4. Capture and inspect screenshots
+
+Capture a fresh viewport screenshot for every matrix cell. Give it a unique filename containing the alternative, state, viewport, and theme, such as `b-error-390x844-dark.png`; add a scroll suffix when multiple positions are captured. Never let states or themes overwrite the same path. When the current model can inspect images, open every screenshot and actively look for:
+
+- overlapping, clipped, cropped, or unexpectedly truncated content;
+- horizontal scroll, off-screen actions, or broken responsive reflow;
+- fixed controls covering product content;
+- missing assets, icon failures, fallback fonts, or unstyled browser defaults;
+- awkward wrapping, collapsed spacing, alignment drift, or inconsistent component geometry;
+- incorrect stacking, transparency, shadows, borders, or background seams;
+- unreadable contrast and hierarchy failures obvious in the render;
+- the wrong alternative, state, content fixture, or viewport.
+
+Judge deliberate design differences against the design question, but classify execution glitches separately. A screenshot file that was never visually opened is uninspected.
+
+### 5. Fix and recapture
+
+Fix every execution defect before handoff, then rerun the affected matrix cells and replace their screenshots. Any edit to shared HTML, CSS, JavaScript, tokens, fixture content, local assets, or mockup chrome invalidates all affected captures. A changed shared input normally invalidates every alternative. Reuse a row only when its render-input fingerprint and all matrix dimensions are identical. Do not present stale pre-fix screenshots.
+
+Do not “fix” a deliberate structural difference merely because it differs from another alternative. The gate removes broken evidence; it does not choose the winning direction.
+
+### 6. Write `verification.md`
+
+Keep the manifest beside the mockup:
+
+```markdown
+# Mockup verification
+
+Render-input fingerprint: ...
+External dependencies: URL, resolved version if exposed, verification time
+Browser adapter: ...
+Visual inspector: model | user | user-required
+Overall status: PASS | USER VISUAL REVIEW REQUIRED | FAIL
+
+| Alternative | State | Viewport | Theme | Scroll | Screenshot | Input fingerprint | Screenshot SHA-256 | Runtime | Visual | Result |
+|---|---|---:|---|---|---|---|---|---|---|---|
+| A | default | 390×844 | light | top | screenshots/a-default-390x844-light.png | ... | ... | pass | pass | pass |
+
+## Defects fixed
+- ...
+
+## Remaining limitations
+- ...
+```
+
+`PASS` requires current screenshots, passing runtime checks, and direct visual inspection of every required cell. Immediately before granting `PASS`, recompute the complete local render-input fingerprint and confirm it matches every row; also record a SHA-256 for each screenshot. If an external CDN is used, verify it loaded for every cell and disclose that its mutable output is timestamped rather than covered by the local fingerprint.
+
+If the model cannot inspect images, complete the runtime checks and captures, mark `USER VISUAL REVIEW REQUIRED`, and open the artifact and uniquely named screenshots for the user. List every matrix cell and give the user the same glitch checklist from step 4. Proceed only after the user explicitly verifies every named cell; then record `Visual inspector: user` and update each cell and the overall status to `PASS`. If they report defects, fix and recapture first. A general preference such as “I like B” or an unscoped “looks fine” is not verification of the matrix. Do not claim the mockup is verified or ready while user review remains outstanding.
+
+If screenshots cannot be captured, mark `FAIL`, explain the missing capability, and stop. Do not silently downgrade to source inspection for a visual mockup.
 
 ## Presenting to the user
 
@@ -186,6 +268,8 @@ Tie the choice back to the user's task and constraints.
 ## Consolidation
 
 When the user combines traits, create one consolidated temp mockup if the result cannot be inferred confidently from an existing alternative. Do not silently mix unrelated decorative details.
+
+Every consolidated or revised artifact starts unverified. Rerun all readiness-matrix cells affected by any render-input change and update `verification.md` before showing it. Reuse a prior row only when the render inputs are byte-identical and the alternative, state, viewport, theme, and scroll conditions are identical.
 
 Record alongside the artifact, either in the HTML or a small temp note:
 

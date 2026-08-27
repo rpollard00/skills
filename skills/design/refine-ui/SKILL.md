@@ -21,12 +21,13 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 - Do not hide token changes, reusable-module extraction, migration, or `DESIGN.md` updates inside implementation. Present the proposed system delta at the direction gate. Immediately after direction approval, create or update root `DESIGN.md` with the accepted decision marked provisional; after rendered production acceptance, establish, revise, or remove it.
 - Find environmental facts yourself. Ask the user for decisions, intent, taste, and constraints—not facts available in the repository or running application.
 - When a preference is easier to react to than describe, suspend grilling and show alternatives instead of asking the user to imagine them.
-- Create audit reports, screenshots, and HTML/CSS mockups in the OS temp directory, never in the user's repository. Do not add or copy mockup routes, files, or exploration dependencies into their project.
-- If a temp destination cannot be created or a capture tool cannot write outside the repository, stop and request another writable external location. Never stage artifacts in the repository as a fallback.
+- Create audit reports, screenshots, and HTML/CSS mockups in the OS temp directory by default or another user-approved external location, never in the user's repository. Do not add or copy mockup routes, files, or exploration dependencies into their project.
+- If the selected external destination cannot be created or the capture tool cannot write there, stop and request another writable location outside the repository. Never stage artifacts in the repository as a fallback.
 - Do not install browser tooling, packages, fonts, or MCP servers without approval.
 - Use realistic, non-sensitive content. Never copy credentials, personal data, or unrelated authenticated browser content into an artifact.
 - Accessibility is a constraint throughout, not a polish pass. Visual tactics never justify hiding required labels, focus indicators, status, terms, or controls.
 - When a prepared design reference is available, do not recommend gaps, directions, or mockups from memory alone. Search the reference for the current question, inspect the smallest relevant passages and—when visual examples matter and vision is available—page images, then record what it changed or confirmed.
+- Never describe a mockup as ready merely because its HTML was generated or opened. Render every required alternative, viewport, and state; capture screenshots; inspect runtime evidence and the screenshots themselves when vision is available; fix defects; and recapture before handoff.
 - Do not distribute or track user-provided copyrighted references or their derivatives. Keep derived PDF artifacts only in the skill's private ignored cache or another approved external location. See [references/PDF-REFERENCE.md](references/PDF-REFERENCE.md).
 
 ## Load references progressively
@@ -199,9 +200,13 @@ If no meaningful visual uncertainty remains, continue grilling until the frontie
 
 Follow [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md). Prefer its Tailwind Play CDN adapter for temporary mockups when external requests are available and allowed; use its embedded-CSS fallback otherwise. Never add Tailwind to the user's repository.
 
-Create two to four alternatives—three by default—that answer the selected question. Keep content and state constant so the structural difference is legible. Preserve accepted project-system constraints unless changing one is the design question. For each alternative, record its proposed system delta and which consulted principle it applies, deliberately challenges, or finds inapplicable. References inform coherent choices; do not copy the book's examples or turn alternatives into cosmetic demonstrations of one rule. Inspect every alternative in a browser and capture comparable screenshots.
+Create two to four alternatives—three by default—that answer the selected question. Keep content and state constant so the structural difference is legible. Preserve accepted project-system constraints unless changing one is the design question. For each alternative, record its proposed system delta and which consulted principle it applies, deliberately challenges, or finds inapplicable. References inform coherent choices; do not copy the book's examples or turn alternatives into cosmetic demonstrations of one rule.
 
-Open the mockup for the user, provide its absolute path, explain each alternative's thesis and tradeoff briefly, and ask the user to:
+Run the blocking mockup-readiness gate in [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md). Render every required alternative × viewport × state, capture current screenshots, inspect console and layout evidence, visually inspect each screenshot when vision is available, fix defects, and recapture anything invalidated by an edit. Write the temporary verification manifest. Do not proceed while any required cell is failed, stale, or uninspected.
+
+If the current model cannot inspect images, complete the objective checks and captures, mark the manifest `USER VISUAL REVIEW REQUIRED`, and hand off only to request visual verification. Name every matrix cell and provide the same visual checklist used by an image-capable model. Do not describe the mockup as ready or ask for direction selection until the user explicitly verifies every cell, reported defects are fixed and recaptured, and the manifest is updated to `PASS`.
+
+Only after the gate passes, open the mockup for the user, provide its absolute path and verification summary, explain each alternative's thesis and tradeoff briefly, and ask the user to:
 
 - select one;
 - combine named traits from several;
@@ -233,7 +238,7 @@ Capture:
 - accepted system delta, including any promotion and migration scope;
 - reference basis paraphrased in your own words and any deliberate departure from it.
 
-Show the consolidated mockup when the combination materially differs from every prior alternative; for a mockup-free proposal, present the consolidated direction in words. Summarize the settled tree and get explicit shared-understanding confirmation before production work. Whether the direction came from mockups or a mockup-free proposal, production work cannot begin while the frontier is non-empty or without this direction approval.
+Whenever a consolidated or revised mockup is created, or any render input changes, invalidate and rerun every affected readiness-matrix cell before showing it. Reuse prior verification only for byte-identical render inputs under identical matrix conditions; visual similarity is not evidence freshness. For a mockup-free proposal, present the consolidated direction in words. Summarize the settled tree and get explicit shared-understanding confirmation before production work. Whether the direction came from mockups or a mockup-free proposal, production work cannot begin while the frontier is non-empty or without this direction approval.
 
 Immediately after approval, create root `DESIGN.md` if absent or update it if present. Capture only the accepted intent, selection rule, invariants, proposed system delta, implementation or validation surface, and unresolved risks; mark new or changed rules **provisional**. Link deeper existing design sources rather than duplicating them. Do not wait until implementation cleanup, and do not invent unrelated foundations to make the file appear complete.
 
@@ -299,5 +304,6 @@ End with:
 - design-system modules or tokens reused, deepened, promoted, or added;
 - design memory status: root `DESIGN.md` created, updated, or unchanged with an explicit reason;
 - references consulted, relevant sections or local pages, and how they affected the direction;
+- mockup verification status and absolute path to its temporary manifest when mockups were used, otherwise `not applicable`;
 - remaining visual risks or intentionally deferred gaps;
 - absolute paths to temporary artifacts while they still exist.

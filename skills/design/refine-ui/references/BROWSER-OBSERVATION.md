@@ -112,6 +112,12 @@ If the current model accepts images, inspect screenshots directly. If not:
 
 Do not pretend that file dimensions, OCR, a DOM tree, or CSS values amount to visual inspection.
 
+## Mockup verification
+
+Temporary mockups have a stricter handoff requirement than source-only diagnosis. Follow the blocking gate in [VISUAL-MOCKUPS.md](VISUAL-MOCKUPS.md): capture every required alternative, viewport, and state; inspect runtime and layout evidence; visually open every screenshot when vision is available; fix and recapture defects; and write the temporary verification manifest.
+
+If the current model lacks vision, objective browser checks may establish runtime health but not visual readiness. Capture the screenshots, mark user visual review as required, and wait for that review before asking the user to choose a direction. If screenshot capture itself is unavailable, do not claim the mockup is ready.
+
 ## Privacy and browser profiles
 
 Browser automation can expose everything visible to the controlled profile.
