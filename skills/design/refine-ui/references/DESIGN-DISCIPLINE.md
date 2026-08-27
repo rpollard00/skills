@@ -1,6 +1,6 @@
 # Design Discipline
 
-Use this priority order to diagnose and create UI. It is an independently written working discipline informed by practical interface-design literature, including Adam Wathan and Steve Schoger's *Refactoring UI*. It is not a substitute for the book.
+Use this priority order to diagnose and create UI. It is an independently written working discipline informed by practical interface-design literature, including Adam Wathan and Steve Schoger's *Refactoring UI*. It is not a substitute for the book. When a prepared licensed reference cache is available, complete the targeted consultation in [PDF-REFERENCE.md](PDF-REFERENCE.md) instead of relying on this summary or model memory alone.
 
 ## Rendered evidence first
 

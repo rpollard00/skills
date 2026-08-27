@@ -54,6 +54,10 @@ Restart or reload the harness afterward. Without `grilling`, the skill announces
 
 Temporary mockups prefer Tailwind CSS v4's Play CDN and fall back to embedded CSS when external requests are unavailable or inappropriate. Tailwind is never installed into the product repository for exploration.
 
+## Reference grounding
+
+When a prepared licensed reference cache is available, the workflow must search it twice: broadly before ranking gaps and narrowly after the user selects a design question. A temporary reference brief records the consulted pages or sections, applicable principles paraphrased in the model's own words, product implications, limitations, and search terms. Recommendations must not rely on model memory alone.
+
 ## Design-system evolution
 
 The workflow compares documented design intent, executable tokens and reusable modules, and rendered product behavior. It can offer promotion of a tightly coupled embedded pattern when its current usage and the proposed refinement provide two concrete consumers of one small semantic interface.

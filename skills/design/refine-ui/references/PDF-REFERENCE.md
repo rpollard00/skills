@@ -1,6 +1,12 @@
-# Optional PDF Reference
+# Licensed PDF Reference
 
 Use a PDF only when the user supplies a path to a copy they are authorized to use. The skill does not bundle, fetch, reconstruct, or distribute *Refactoring UI* or any other copyrighted reference.
+
+## Availability is optional; use is not
+
+A source PDF is optional. When a validated page-labelled text cache is already available, or the user supplies an authorized source, consultation is a mandatory workflow checkpoint before diagnosing gaps, recommending a selected direction, or constructing mockups. Page images strengthen visual interpretation but are not required for the text-search checkpoint.
+
+Do not claim to apply *Refactoring UI* from memory while skipping an available local reference. The independent design discipline supplies a fallback when no prepared source exists; it does not replace targeted source consultation when one does.
 
 ## Why preprocessing is needed
 
@@ -15,11 +21,12 @@ Use two representations:
 
 Before asking for a PDF path or running extraction, inspect the installed skill's `.artifacts/pdf/` directory for `*/reference.md` and `*/manifest.txt`.
 
-- If one complete cache exists, reuse it without requiring the source PDF.
-- If several caches exist, inspect their manifests and select the edition relevant to the user's request. Ask only when the intended edition remains ambiguous.
-- A complete all-page cache has a `reference.md` whose page headings match `page_count` and the same number of PNGs under `pages/`.
-- Do not load the full Markdown file or image directory while discovering caches. Read manifest metadata first.
-- Run extraction only when no suitable cache exists, the user supplies another authorized edition, or regeneration is required.
+- A usable text cache has a `manifest.txt` and page-labelled `reference.md` whose page headings match `page_count`. It is sufficient for mandatory searching even when some or all PNGs are absent.
+- If one usable text cache exists, reuse it without requiring the source PDF.
+- If several usable caches exist, inspect their manifests and select the edition relevant to the user's request. Ask only when the intended edition remains ambiguous.
+- A complete visual cache additionally has `page_count` matching PNGs under `pages/`. Use those images when relevant, but do not classify a valid text cache as unavailable merely because they are absent.
+- Do not load the full Markdown file or image directory while discovering caches. Read manifest metadata first and count headings or images without opening their contents.
+- Run text extraction only when no suitable text cache exists, the user supplies another authorized edition, or regeneration is required. Render matching pages only when visual inspection matters and the authorized source remains available; otherwise continue with text and state the visual limitation.
 
 ## Extraction helper
 
@@ -70,16 +77,67 @@ To delete one PDF's derived cache:
 ./scripts/extract-pdf-reference.sh --clean "/path/to/reference.pdf"
 ```
 
-## On-demand use
+## Mandatory-use procedure
 
-1. Prepare or reuse the private indexes and all-page image cache.
-2. Search `reference.md` locally for the current design question.
-3. Use its `## Page N` heading to select the matching `pages/page-NNN.png` file.
-4. Load only the smallest relevant Markdown passage and page image into model context.
-5. Inspect adjacent pages only when the example crosses a spread or the selected page lacks enough context.
-6. Apply the principle to the user's evidence rather than copying the book's example.
+Run this procedure twice when a usable prepared reference is available:
+
+- a broad pass before classifying and ranking visual gaps, or after confirming a greenfield scope;
+- a focused pass after the user selects a gap or confirms a greenfield scope and before recommending or mocking up a direction.
+
+For each pass:
+
+1. Prepare or reuse the private page-labelled text index. Reuse matching page images when available; do not require an all-page visual cache.
+2. Write the current design question in one sentence.
+3. Derive three to eight concrete search terms from the question and observed evidence.
+4. Search `reference.md` locally. Use `rg -n -i -C 6 '<term|term>' reference.md` or an equivalent local search; never load the entire extraction.
+5. Read only the smallest relevant page-labelled passage.
+6. Use its `## Page N` heading to select the matching `pages/page-NNN.png` file when the visual example matters and image inspection is available.
+7. Inspect adjacent pages only when an example crosses a spread or lacks enough context.
+8. Write or update the temporary reference brief described below.
+9. Apply the principle to the user's rendered evidence rather than copying the book's example.
+
+Useful search families include:
+
+- hierarchy and emphasis: `hierarchy|visual hierarchy|emphasize|de-emphasize`;
+- spacing and grouping: `spacing|white space|proximity|grouping|layout`;
+- sizing systems: `spacing and sizing system|scale|constrained set`;
+- typography: `type scale|font size|line height|font weight|readability`;
+- color: `color palette|shades|contrast|semantic|grey`;
+- depth and separation: `shadow|elevation|border|depth|overlap`;
+- imagery and icons: `image|photograph|icon|illustration|contrast`;
+- responsive composition: `mobile|responsive|width|canvas|grid`.
+
+These are starting points, not a substitute for terms from the actual product question. If no relevant passage appears, record the attempted terms and say that the prepared source did not materially guide this decision. Do not manufacture relevance.
 
 Rendering every page once into the private cache is allowed and useful. Do not load the full Markdown extraction or the complete image set into model context.
+
+## Temporary reference brief
+
+Keep a small brief in the current temp report or mockup directory, never in the product repository:
+
+```markdown
+# Reference brief
+
+## Design question
+...
+
+## Consulted material
+- Local reference: chapter or section, pages N–M
+
+## Applicable principles
+- Principle paraphrased in your own words: ...
+  Product evidence: ...
+  Concrete implication: ...
+
+## Limits or departures
+- Not applicable because ...
+
+## Search trace
+- Terms: ...
+- No-result terms: ...
+```
+
+Use one to three principles, not a book summary. The brief makes consultation observable and keeps smaller models from silently substituting confidence for evidence. Candidate reports and mockup rationales may paraphrase its relevant conclusions, but must not include book page images or substantial quotations.
 
 ## Copyright and privacy constraints
 

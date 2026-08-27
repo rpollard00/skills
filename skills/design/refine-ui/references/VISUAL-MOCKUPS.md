@@ -12,7 +12,8 @@ It is not production code, a sales demo, or a miniature implementation of the wh
 - realistic content and relevant state;
 - accepted product, brand, platform, accessibility, and design-system constraints;
 - representative narrow and wide viewports;
-- relevant visual evidence from the existing product, if any.
+- relevant visual evidence from the existing product, if any;
+- the focused temporary reference brief when a prepared design reference is available.
 
 ### Outputs
 
@@ -21,7 +22,8 @@ It is not production code, a sales demo, or a miniature implementation of the wh
 - a stable URL or control for each alternative;
 - comparable screenshots;
 - a concise selection question for the user;
-- a system delta for each alternative: reused choices, additions or changes, promotion or migration scope, exceptions, and unresolved decisions.
+- a system delta for each alternative: reused choices, additions or changes, promotion or migration scope, exceptions, and unresolved decisions;
+- a concise reference rationale for each alternative: which consulted principle it applies, challenges, or finds inapplicable.
 
 ### Invariants
 
@@ -30,6 +32,7 @@ It is not production code, a sales demo, or a miniature implementation of the wh
 - Use realistic density and edge cases relevant to the question.
 - Keep the artifact independent of the user's project build.
 - Preserve accepted system choices unless changing one is the explicit design question.
+- Consult the focused reference brief before authoring alternatives; do not retrofit citations onto directions chosen from memory.
 - Inspect every alternative in a browser before presenting it.
 - Clearly label the artifact as a temporary visual mockup.
 - Do not add mockup files, routes, packages, configuration, or dependencies to the user's repository.
@@ -95,7 +98,7 @@ The mockup needs a small, visually subordinate control surface that:
 - names the current alternative;
 - switches alternatives;
 - keeps the alternative in a URL query parameter such as `?variant=a` when possible;
-- briefly reveals each alternative's thesis, main tradeoff, and material system delta.
+- briefly reveals each alternative's thesis, main tradeoff, material system delta, and reference rationale when applicable.
 
 The control surface must not be confused with the proposed product UI. A fixed bottom toolbar usually works, but choose another neutral treatment if it obscures the design being evaluated.
 
@@ -164,7 +167,8 @@ Open the mockup when possible and provide:
 - a one-sentence thesis and tradeoff for each alternative;
 - your recommended alternative and why;
 - an invitation to select, combine named traits, revise, or reject;
-- material consequences for token, reusable-module, extraction, or migration scope.
+- material consequences for token, reusable-module, extraction, or migration scope;
+- the consulted principles that materially influenced the recommendation and any deliberate departure.
 
 Good feedback:
 

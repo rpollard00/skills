@@ -113,7 +113,7 @@ Preserve the original consumer's behavior unless the approved direction explicit
 
 ## `DESIGN.md` policy
 
-Root `DESIGN.md` is the canonical design-memory entry point. Existing component catalogs, token docs, framework documentation, and deeper guidelines remain valuable sources, but they do not silently waive the root file; link to them instead of duplicating them. If an explicit repository policy requires another location, follow it and report the deviation.
+Root `DESIGN.md` is the canonical design-memory entry point. Existing component catalogs, token docs, framework documentation, and deeper guidelines remain valuable sources, but they do not waive the root file; link to them from a minimal root index instead of duplicating them. If an explicit repository policy forbids even a root index, stop at the direction gate, surface the conflict, and ask the user where design memory should live. Never silently omit the root file or choose another location.
 
 Create the file lazily when the first design direction is approved, not merely because the skill ran. Update it inline as later decisions crystallize rather than batching design memory into a final cleanup phase.
 

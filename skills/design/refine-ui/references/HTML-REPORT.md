@@ -64,6 +64,12 @@ One or two sentences describing what can be seen. Do not begin with a speculativ
 
 State which task becomes slower, ambiguous, error-prone, or needlessly effortful. If the consequence is purely aesthetic, say so plainly rather than inventing a usability claim.
 
+### Reference lens
+
+When a prepared design reference is available and relevant, name the consulted chapter, section, or local page range and paraphrase the applicable principle in your own words. Connect it to the product evidence and state the concrete implication. If the search found nothing relevant, omit this subsection from the card and retain the no-result search trace in the temporary reference brief.
+
+Never include book page images or substantial quotations in the report. A reference supports diagnosis; it does not replace observable evidence or make a treatment automatically correct.
+
 ### Cause and scope
 
 Label the current best classification:
