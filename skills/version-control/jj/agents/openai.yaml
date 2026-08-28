@@ -1,0 +1,5 @@
+interface:
+  display_name: "Jujutsu"
+  short_description: "Use colocated Git/Jujutsu workflows safely"
+policy:
+  allow_implicit_invocation: true

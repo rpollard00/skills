@@ -12,6 +12,12 @@ Some of them are invoked by the user as a workflow orchestration state machine, 
 
 See the [design skills index](skills/design/README.md) for invocation details and classification.
 
+### Version control
+
+- **[jj](skills/version-control/jj/SKILL.md)** — Bootstrap and work safely in colocated Git/Jujutsu repositories using the working-copy commit model, jj-native history operations, bookmarks, recovery, and first-class conflicts.
+
+See the [version-control skills index](skills/version-control/README.md) for invocation details and classification.
+
 ## Repository structure
 
 ```text
