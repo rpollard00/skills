@@ -17,7 +17,7 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 ## Non-negotiables
 
 - Treat the rendered interface as the source of truth for the current experience. Compare it with documented intent and the executable design system; disagreement among them is evidence, not permission to assume one is correct.
-- Keep the user in control at three gates: gap selection or greenfield-scope confirmation, direction selection or approval, and rendered production acceptance with a rollout decision. Only explicit user approval advances through a gate.
+- Keep the user in control at three gates: gap selection or greenfield-scope confirmation, direction selection or approval, and rendered production acceptance with a rollout decision. Only explicit user approval advances through a gate. Delegation never transfers these gates or final synthesis away from the main agent.
 - Do not hide token changes, reusable-module extraction, migration, or `DESIGN.md` updates inside implementation. Present the proposed system delta at the direction gate. Immediately after direction approval, create or update root `DESIGN.md` with the accepted decision marked provisional; after rendered production acceptance, establish, revise, or remove it.
 - Find environmental facts yourself. Ask the user for decisions, intent, taste, and constraints—not facts available in the repository or running application.
 - When a preference is easier to react to than describe, suspend grilling and show alternatives instead of asking the user to imagine them.
@@ -27,7 +27,8 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 - Use realistic, non-sensitive content. Never copy credentials, personal data, or unrelated authenticated browser content into an artifact.
 - Accessibility is a constraint throughout, not a polish pass. Visual tactics never justify hiding required labels, focus indicators, status, terms, or controls.
 - When a prepared design reference is available, do not recommend gaps, directions, or mockups from memory alone. Search the reference for the current question, inspect the smallest relevant passages and—when visual examples matter and vision is available—page images, then record what it changed or confirmed.
-- Never describe a mockup as ready merely because its HTML was generated or opened. Render every required alternative, viewport, and state; capture screenshots; inspect runtime evidence and the screenshots themselves when vision is available; fix defects; and recapture before handoff.
+- Never describe a mockup as ready merely because its HTML was generated or opened. The phase owner must render every required alternative, viewport, and state; capture screenshots; inspect runtime evidence and the screenshots themselves when vision is available; fix defects; and recapture before handoff.
+- When a suitable delegate is available, delegate context-heavy phases before loading their raw evidence into the main conversation. Otherwise keep the phase inline while using the canonical packet, approved external evidence artifacts, and compact phase notes. Delegation changes context ownership, never the phase's quality bar.
 - Do not distribute or track user-provided copyrighted references or their derivatives. Keep derived PDF artifacts only in the skill's private ignored cache or another approved external location. See [references/PDF-REFERENCE.md](references/PDF-REFERENCE.md).
 
 ## Load references progressively
@@ -35,6 +36,7 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 Read only what the current phase requires, but treat every applicable “before” instruction below as a checkpoint rather than a suggestion. Do not continue the phase without loading its reference.
 
 - At the interview phase, load and follow the installed model-invoked `grilling` skill. If `grilling` is unavailable, say that a reduced fallback interview will be used, then follow section 5 directly.
+- Before assigning or performing a context-heavy phase, read [references/DELEGATION.md](references/DELEGATION.md).
 - Before diagnosing or creating a direction, read [references/DESIGN-DISCIPLINE.md](references/DESIGN-DISCIPLINE.md).
 - Before inventorying, changing, or documenting a project's design system, read [references/DESIGN-SYSTEM.md](references/DESIGN-SYSTEM.md).
 - Before controlling or inspecting a browser, read [references/BROWSER-OBSERVATION.md](references/BROWSER-OBSERVATION.md).
@@ -75,7 +77,7 @@ Confirm the representative scope and content fixture with the user. This confirm
 
 Every mode passes through section 7's direction gate and provisional design-memory write before section 8.
 
-## 2. Establish observation capability
+## 2. Establish observation and delegation capability
 
 Before concluding that browser observation is unavailable:
 
@@ -93,15 +95,23 @@ Use the strongest available evidence:
 3. User-provided screenshots or design exports.
 4. Source and token analysis, explicitly marked lower-confidence.
 
+Also inspect the harness's system instructions and exposed tools for delegated or isolated execution. Do not assume a particular product, command, agent name, or context model. Following [references/DELEGATION.md](references/DELEGATION.md), identify which available delegates—if any—can read the repository, write approved external artifacts, control a browser, capture screenshots, inspect images, or modify production code. Do not delegate a phase to a context that lacks one of its required capabilities.
+
+Once the scope is known and before the first delegation, the main agent creates the initial compact direction packet in the approved external working directory with the known question, constraints, unresolved decisions, and evidence pointers. It remains canonical throughout the workflow.
+
 Do not modify production source during observation.
 
 ## 3. Explore and build a UI profile
+
+Apply the delegation checkpoint before broad scanning. A capable evidence delegate may own repository reconnaissance, rendered observation, the broad reference pass, baseline capture, UI profiling, and candidate-report construction as one bounded phase. The main agent receives a compact handoff and artifact paths rather than raw screenshots, snapshots, logs, or source inventories. If no suitable delegate exists, the main agent remains phase owner.
 
 Scope the review before scanning widely. If the user named a screen, flow, primitive, or system concern, begin there. Otherwise prioritize important and recently changing product surfaces.
 
 Read project `CONTEXT.md` files for domain language and root `DESIGN.md` for accepted visual intent. Locate deeper design documentation, executable tokens, reusable modules, catalogs, and reference surfaces. Compare documented intent, executable constraints, and rendered behavior; do not create or update project documentation during observation.
 
 Add a design-memory plan to the temporary UI profile: whether root `DESIGN.md` exists, which deeper sources it should index, and what provisional entry will be created or updated if the user approves a direction. Existing component catalogs, token docs, or framework documentation do not substitute for the root design-memory entry point.
+
+The main agent owns and updates the compact direction packet defined in [references/DELEGATION.md](references/DELEGATION.md). Update it with the UI profile and after every user decision. Delegates consume its path and evidence pointers; they do not silently redefine settled meaning.
 
 ### Reference checkpoint
 
@@ -151,13 +161,15 @@ Also classify the likely system relationship as reuse, deepen, promote, add, or 
 
 ## 4. Present gaps and stop
 
-Write a visual candidate report to a fresh temp directory. Follow [references/HTML-REPORT.md](references/HTML-REPORT.md).
+The phase owner writes one visual candidate report to a fresh approved external directory, following [references/HTML-REPORT.md](references/HTML-REPORT.md). If a delegate already produced it under the phase contract, the main agent validates the handoff rather than regenerating the report.
 
 A candidate identifies an observable gap and frames the decision it opens. It may name a likely design lever, but it must not pretend the first proposed treatment is settled. Include a concise reference lens from the temporary brief when an applicable prepared source exists. When system evidence exists, include the likely relationship—reuse, deepen, promote, add, or keep local—and identify existing and proposed consumers of any promotion candidate.
 
 Rank candidates qualitatively by user impact, recurrence, confidence, and change scope. Do not assign numeric design scores.
 
-Open the report for the user when possible, provide its absolute path, summarize the top recommendation in chat, and ask:
+When this phase was delegated, validate the compact handoff against its contract before presenting anything. Expand raw evidence only for the spot-check triggers in [references/DELEGATION.md](references/DELEGATION.md); do not automatically reload the delegate's screenshot gallery or detailed logs into the main context.
+
+The main agent opens the report for the user when possible, provides its absolute path, summarizes the top recommendation in chat, and asks:
 
 > Which gap would you like to explore?
 
@@ -165,9 +177,9 @@ Do not interview, create mockups, or edit production code until the user chooses
 
 ## 5. Grill the selected gap or scope
 
-Load and follow the installed model-invoked `grilling` skill, treating the selected gap or confirmed greenfield scope as the root of its design tree. Its rounds, frontier discipline, recommended answers, fact-finding responsibility, and shared-understanding confirmation govern the interview.
+The main agent loads and follows the installed model-invoked `grilling` skill, treating the selected gap or confirmed greenfield scope as the root of its design tree. Its rounds, frontier discipline, recommended answers, fact-finding responsibility, and shared-understanding confirmation govern the interview. Do not delegate the user conversation or design-tree synthesis.
 
-Before giving the first recommendation for the selected gap or confirmed greenfield scope, run a focused reference search using the exact design question and likely levers. For greenfield, derive terms from the confirmed task, fixture, constraints, personality, and proposed visual lever. Update the temporary reference brief with anything newly applicable. The broad pass does not substitute for this focused pass.
+Before giving the first recommendation for the selected gap or confirmed greenfield scope, the main agent may assign a bounded read-only delegate to run the focused reference pass and write the temporary brief. Whether delegated or inline, search using the exact design question and likely levers. For greenfield, derive terms from the confirmed task, fixture, constraints, personality, and proposed visual lever. Update the temporary reference brief with anything newly applicable. The broad pass does not substitute for this focused pass.
 
 If `grilling` is unavailable, state that the interview is using a reduced fallback. Interview in rounds, ask the whole current frontier, number each question, and give a recommended answer. Investigate facts yourself and defer questions whose prerequisites remain unsettled.
 
@@ -200,11 +212,13 @@ If no meaningful visual uncertainty remains, continue grilling until the frontie
 
 Follow [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md). Prefer its Tailwind Play CDN adapter for temporary mockups when external requests are available and allowed; use its embedded-CSS fallback otherwise. Never add Tailwind to the user's repository.
 
+Before consuming mockup implementation or screenshot context in the main conversation, assign one capable phase owner when delegation is available. Prefer one delegate to own focused evidence consumption, alternative construction, browser rendering, screenshot inspection, defect repair, recapture, and the verification manifest end to end. Do not split that loop among several delegates merely to parallelize it. The main agent provides the direction packet and remains responsible for presenting the result and receiving the user's decision.
+
 Create two to four alternatives—three by default—that answer the selected question. Keep content and state constant so the structural difference is legible. Preserve accepted project-system constraints unless changing one is the design question. For each alternative, record its proposed system delta and which consulted principle it applies, deliberately challenges, or finds inapplicable. References inform coherent choices; do not copy the book's examples or turn alternatives into cosmetic demonstrations of one rule.
 
-Run the blocking mockup-readiness gate in [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md). Render every required alternative × viewport × state, capture current screenshots, inspect console and layout evidence, visually inspect each screenshot when vision is available, fix defects, and recapture anything invalidated by an edit. Write the temporary verification manifest. Do not proceed while any required cell is failed, stale, or uninspected.
+The designated phase owner runs the blocking mockup-readiness gate in [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md). Render every required alternative × viewport × state, capture current screenshots, inspect console and layout evidence, visually inspect each screenshot when vision is available, fix defects, and recapture anything invalidated by an edit. Write the temporary verification manifest. Do not proceed while any required cell is failed, stale, or uninspected. When delegated, the main agent validates the compact handoff and manifest status without duplicating the full screenshot inspection unless a spot-check trigger fires.
 
-If the current model cannot inspect images, complete the objective checks and captures, mark the manifest `USER VISUAL REVIEW REQUIRED`, and hand off only to request visual verification. Name every matrix cell and provide the same visual checklist used by an image-capable model. Do not describe the mockup as ready or ask for direction selection until the user explicitly verifies every cell, reported defects are fixed and recaptured, and the manifest is updated to `PASS`.
+If the phase owner's model cannot inspect images, complete the objective checks and captures, mark the manifest `USER VISUAL REVIEW REQUIRED`, and hand off only to request visual verification. Name every matrix cell and provide the same visual checklist used by an image-capable model. Do not describe the mockup as ready or ask for direction selection until the user explicitly verifies every cell, reported defects are fixed and recaptured, and the manifest is updated to `PASS`.
 
 Only after the gate passes, open the mockup for the user, provide its absolute path and verification summary, explain each alternative's thesis and tradeoff briefly, and ask the user to:
 
@@ -219,7 +233,7 @@ Do not treat a whole variant as indivisible. “B's hierarchy with A's density�
 
 ## 7. Finalize the chosen direction and design memory
 
-Every path enters this phase before production: either the user selected a mockup alternative or trait combination, or section 5 produced a mockup-free proposal with an empty frontier. If they rejected every alternative, return to grilling or reframe the mockup question instead.
+The main agent owns this phase. Every path enters it before production: either the user selected a mockup alternative or trait combination, or section 5 produced a mockup-free proposal with an empty frontier. If they rejected every alternative, return to grilling or reframe the mockup question instead.
 
 For a mockup selection, treat the user's selection and named trait combinations as answers in the grilling design tree. Recompute the frontier:
 
@@ -244,6 +258,8 @@ Immediately after approval, create root `DESIGN.md` if absent or update it if pr
 
 ## 8. Implement one production slice
 
+After direction approval and the provisional root `DESIGN.md` write, the main agent may assign one mutation-capable delegate as the sole production writer. Give it the current direction packet, relevant repository paths, approved system and migration scope, validation contract, authority limits, and required compact handoff. Do not send the entire conversation when a fresh or minimal context plus canonical artifacts is sufficient. Do not run overlapping writers in one checkout.
+
 Implement the smallest representative slice that can validate the direction in the real product.
 
 Before editing production code, verify that root `DESIGN.md` exists and contains the approved direction as provisional. If it does not, stop and complete section 7; do not treat a deeper design document as a substitute.
@@ -261,7 +277,9 @@ Run the application's normal checks.
 
 ## 9. Compare and stop
 
-Reproduce the baseline conditions and capture the production slice. Compare before and after using both semantic evidence and screenshots.
+A fresh capable validation delegate may own reproduction, browser exercise, screenshot inspection, and comparison evidence. Give it the direction packet and current artifacts rather than the implementation worker's reasoning transcript. The main agent validates the handoff, reconciles conflicts, and retains the rendered-production and rollout gate.
+
+The phase owner reproduces the baseline conditions and captures the production slice. Compare before and after using both semantic evidence and screenshots.
 
 Check:
 
@@ -298,6 +316,8 @@ Keep temporary reports, screenshots, and mockups out of the user's repository. P
 
 End with:
 
+- phase ownership: delegated or inline, with compact handoff paths where applicable;
+- absolute path and current version of the canonical direction packet;
 - changed production files;
 - checks run;
 - surfaces migrated;

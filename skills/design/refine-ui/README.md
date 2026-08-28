@@ -6,7 +6,7 @@ It inspects a rendered product, presents visual gaps for the user to choose from
 
 ## Status
 
-Active personal workflow. The visual-mockup and design-system disciplines remain references inside this package so they can evolve in context and be extracted into peer skills later without changing their interfaces.
+Active personal workflow. The delegation, visual-mockup, and design-system disciplines remain references inside this package so they can evolve in context and be extracted into peer skills later without changing their interfaces.
 
 ## Package
 
@@ -19,6 +19,7 @@ Active personal workflow. The visual-mockup and design-system disciplines remain
 │   └── extract-pdf-reference.sh
 └── references/
     ├── BROWSER-OBSERVATION.md
+    ├── DELEGATION.md
     ├── DESIGN-DISCIPLINE.md
     ├── DESIGN-SYSTEM.md
     ├── HTML-REPORT.md
@@ -55,6 +56,12 @@ Restart or reload the harness afterward. Without `grilling`, the skill announces
 Temporary mockups prefer Tailwind CSS v4's Play CDN and fall back to embedded CSS when external requests are unavailable or inappropriate. Tailwind is never installed into the product repository for exploration.
 
 A mockup is not ready at HTML generation. The workflow renders every required alternative, viewport, and state; captures and visually inspects current screenshots when vision is available; fixes defects; recaptures invalidated evidence; and records the result in a temporary `verification.md`. Models without vision must request user visual verification rather than claim readiness.
+
+## Context-aware delegation
+
+The workflow can use any harness-provided flavor of delegated or isolated execution; it does not require a specific subagent product or command. Context-heavy bounded phases may be handed off before their raw evidence enters the main conversation. Detailed screenshots, browser output, reference material, and source inventories stay in the approved external artifact directory, while the main agent receives compact decision-grade handoffs and stable evidence pointers. Harness-managed outputs are suitable only for compact non-sensitive handoffs.
+
+The main agent retains grilling, synthesis, all three user gates, the canonical direction packet, and root `DESIGN.md`. One capable phase owner handles iterative mockup construction and visual verification end to end; one production writer owns a shared checkout. If suitable delegation is unavailable, the main agent keeps the phase inline with the canonical packet, approved external artifacts, and compact phase notes; it does not create a pointless self-handoff.
 
 ## Reference grounding
 
