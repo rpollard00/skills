@@ -1,12 +1,6 @@
 ---
 name: simple-technical-english
-description: |
-  Write technical text with the rules of ASD-STE100 Simplified Technical English so it is clear, unambiguous, and free of slop. Must use for
-  documentation, READMEs, runbooks, procedures, error messages, release notes, incident reports, and API guides. For general prose, blog voice,
-  and marketing copy, use the unslop skill instead.
-license: MIT
-metadata:
-  standard: ASD-STE100 Issue 9 (2025-01-15)
+description: ASD-STE100 simplified technical english
 ---
 
 # Simple English: Write Like an Aerospace Manual

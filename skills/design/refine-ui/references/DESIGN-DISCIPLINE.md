@@ -1,4 +1,4 @@
-# Design Discipline
+# Design discipline
 
 Use this priority order to diagnose and create UI. It is an independently written working discipline informed by practical interface-design literature, including Adam Wathan and Steve Schoger's *Refactoring UI*. It is not a substitute for the book. When a prepared licensed reference cache is available, complete the targeted consultation in [PDF-REFERENCE.md](PDF-REFERENCE.md) instead of relying on this summary or model memory alone.
 
@@ -7,7 +7,7 @@ Use this priority order to diagnose and create UI. It is an independently writte
 A source value is not a visual result. Cascades, inherited styles, fonts, content density, viewport size, and neighboring elements determine what users see.
 
 - Inspect the running interface when possible.
-- Diagnose observable effects before prescribing source edits.
+- Diagnose observable effects before you prescribe source edits.
 - Compare changes under identical rendered conditions.
 - Treat static-analysis findings as leads, not visual defects by definition.
 
@@ -61,14 +61,14 @@ Typography carries hierarchy before color is added.
 - Are neutral, primary, and semantic colors systematic enough for actual product states?
 - Does colored text remain legible on colored surfaces?
 - Is meaning available without color alone?
-- Do foreground/background pairs meet the project's accessibility target?
+- Do foreground and background pairs meet the project's accessibility target?
 
 Do not create arbitrary shades because an existing shade is slightly inconvenient. Do not preserve a token scale that fails in real composition merely for mathematical neatness.
 
 ### 6. Surfaces, borders, and depth
 
 - Is separation necessary, or would spacing or background contrast work better?
-- Are borders being used around everything by default?
+- Are borders used around everything by default?
 - Does elevation correspond to actual layering and interaction?
 - Are shadows consistent with an implied light source?
 - If every element floats, which one is actually elevated?
@@ -77,7 +77,7 @@ Use fewer borders. Prefer the least decoration that makes structure clear.
 
 ### 7. Images and icons
 
-- Is imagery carrying useful content or generic decoration?
+- Does imagery carry useful content or generic decoration?
 - Are crops, aspect ratios, and intended display sizes controlled?
 - Does text remain legible over variable images?
 - Are icon style, stroke, size, and alignment coherent?
@@ -93,18 +93,18 @@ Use fewer borders. Prefer the least decoration that makes structure clear.
 
 ## Local versus systemic change
 
-A recurring visual symptom may originate at different levels:
+A recurring visual symptom can originate at different levels:
 
-- **Content:** order, labels, density, or missing information.
-- **Composition:** one screen combines sound primitives poorly.
-- **Primitive:** a reusable control or pattern encodes the wrong hierarchy.
-- **Token:** the available choices make inconsistency likely.
-- **Asset:** imagery or icon treatment breaks the system.
-- **Interaction/state:** the default looks correct but behavior states do not.
+- **Content.** Order, labels, density, or missing information.
+- **Composition.** One screen combines sound primitives poorly.
+- **Primitive.** A reusable control or pattern encodes the wrong hierarchy.
+- **Token.** The available choices make inconsistency likely.
+- **Asset.** Imagery or icon treatment breaks the system.
+- **Interaction and state.** The default looks correct but behavior states do not.
 
-Require repeated evidence before calling a problem systemic. When the cause is systemic, validate the proposed system change on one representative production composition before broad migration.
+Require repeated evidence before you call a problem systemic. When the cause is systemic, validate the proposed system change on one representative production composition before broad migration.
 
-A reusable opportunity may already exist inside a tightly coupled screen element. Treat it as an embedded pattern, not automatically as a reusable primitive. Offer promotion only when its current usage and the proposed refined usage are two concrete consumers of the same semantics, states, and invariants, and when a small interface can hide meaningful design or behavior complexity. Otherwise keep the composition local rather than extracting a cosmetic flag bag.
+A reusable opportunity can already exist inside a tightly coupled screen element. Treat it as an embedded pattern, not automatically as a reusable primitive. Offer promotion only when its current usage and the proposed refined usage are two concrete consumers of the same semantics, states, and invariants. Also require a small interface that hides meaningful design or behavior complexity. Otherwise keep the composition local instead of extracting cosmetic flags.
 
 ## Personality and context
 
@@ -112,27 +112,27 @@ Do not default to a generic agent aesthetic: purple gradients, uniformly rounded
 
 Establish contextual dials instead:
 
-- formal ↔ casual;
-- reserved ↔ expressive;
-- spacious ↔ dense;
-- familiar ↔ distinctive;
-- editorial ↔ utilitarian.
+- formal ↔ casual
+- reserved ↔ expressive
+- spacious ↔ dense
+- familiar ↔ distinctive
+- editorial ↔ utilitarian
 
 These are not independent style controls. A trusted financial workflow, a children's learning app, and an expert operations console need different evidence of quality.
 
 ## Accessibility floor
 
-At every phase preserve or improve:
+At every phase, preserve or improve:
 
-- semantic structure and accessible names;
-- visible keyboard focus;
-- usable keyboard order;
-- sufficient contrast;
-- non-color status cues;
-- touch target size appropriate to platform;
-- zoom and text resizing;
-- reduced-motion preferences;
-- understandable errors and state changes.
+- semantic structure and accessible names
+- visible keyboard focus
+- usable keyboard order
+- sufficient contrast
+- non-color status cues
+- touch target size appropriate to platform
+- zoom and text resizing
+- reduced-motion preferences
+- understandable errors and state changes
 
 An attractive inaccessible mockup is not a viable direction.
 
@@ -140,12 +140,12 @@ An attractive inaccessible mockup is not a viable direction.
 
 Use these as observations, not scores:
 
-- **Squint/blur:** does the intended attention order remain?
-- **Grayscale:** is color compensating for weak hierarchy?
-- **Reading order:** does the eye encounter information in task order?
-- **Proximity:** are group relationships unambiguous?
-- **Density:** does representative content still fit the composition?
-- **Edge cases:** do long text, missing assets, and error states remain coherent?
-- **Repetition:** does the same treatment mean the same thing across surfaces?
+- **Squint or blur.** Does the intended attention order remain?
+- **Grayscale.** Is color compensating for weak hierarchy?
+- **Reading order.** Does the eye encounter information in task order?
+- **Proximity.** Are group relationships unambiguous?
+- **Density.** Does representative content still fit the composition?
+- **Edge cases.** Do long text, missing assets, and error states remain coherent?
+- **Repetition.** Does the same treatment mean the same thing across surfaces?
 
 Do not produce a numeric design score. State the evidence, consequence, confidence, and decision that follows.

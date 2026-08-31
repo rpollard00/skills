@@ -1,6 +1,6 @@
 ---
 name: unslop
-description: Cut AI tells from any writing. Apply to general prose, conversation, blog voice, and marketing copy. Route technical writing to simple-technical-english instead.
+description: AI writing unslopper. 
 ---
 
 # Unslop

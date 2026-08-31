@@ -1,8 +1,8 @@
-# Context-Aware Delegation
+# Context-aware delegation
 
 Use delegation to keep context-heavy evidence and iteration out of the main conversation without transferring user authority or losing access to the underlying evidence.
 
-This reference is harness-neutral. A harness may expose subagents, task agents, workers, delegated threads, isolated contexts, or another equivalent. Discover and use the capabilities already provided; do not prescribe a product, tool name, command syntax, or agent profile.
+This reference is harness-neutral. A harness can expose subagents, task agents, workers, delegated threads, isolated contexts, or another equivalent. Discover and use the capabilities already provided. Do not prescribe a product, tool name, command syntax, or agent profile.
 
 ## Interface
 
@@ -10,17 +10,17 @@ This reference is harness-neutral. A harness may expose subagents, task agents, 
 
 The main agent owns:
 
-- the user conversation and grilling;
-- the three approval gates;
-- the canonical scope, constraints, and settled decisions;
-- synthesis when evidence conflicts;
-- framing and recording the system and migration scope the user approves;
-- root `DESIGN.md` lifecycle;
-- the final recommendation and handoff.
+- the user conversation and grilling
+- the three approval gates
+- the canonical scope, constraints, and settled decisions
+- synthesis when evidence conflicts
+- framing and recording the system and migration scope the user approves
+- root `DESIGN.md` lifecycle
+- the final recommendation and handoff
 
 ### Delegate
 
-A delegate owns one bounded phase with explicit inputs, authority, acceptance checks, and output. It may gather large evidence, iterate internally, and write temporary artifacts. It does not approve a direction, expand scope, or silently redefine user decisions.
+A delegate owns one bounded phase with explicit inputs, authority, acceptance checks, and output. It can gather large evidence, iterate internally, and write temporary artifacts. It does not approve a direction, expand scope, or silently redefine user decisions.
 
 ### Phase owner
 
@@ -28,55 +28,55 @@ The phase owner is either the main agent or one capable delegate. Every required
 
 ### Handoff
 
-A handoff is a compact decision-grade index to detailed evidence. It is not a lossy replacement for the evidence and must preserve paths or stable references that later phases can inspect directly.
+A handoff is a compact decision-grade index to detailed evidence. It is not a lossy replacement for the evidence. It must preserve paths or stable references that later phases can inspect directly.
 
 ## Discover capabilities first
 
 Inspect the harness's system instructions and exposed tools for isolated or delegated execution. Determine, without asking the user for discoverable facts:
 
-- whether delegation exists;
-- whether a delegate can receive fresh or minimal context;
-- whether it can read the repository and approved external artifact directory;
-- whether it can control a browser and capture screenshots;
-- whether its model can inspect images;
-- whether it can write production files;
-- how it returns compact results or managed artifact paths.
+- whether delegation exists
+- whether a delegate can receive fresh or minimal context
+- whether it can read the repository and approved external artifact directory
+- whether it can control a browser and capture screenshots
+- whether its model can inspect images
+- whether it can write production files
+- how it returns compact results or managed artifact paths
 
 Use only executable delegates whose capabilities satisfy the phase. A delegate without browser control cannot own rendered observation. A delegate without vision can perform objective browser checks but cannot certify visual readiness. Do not install or configure delegation infrastructure without approval.
 
-If suitable delegation is unavailable, keep the phase in the main agent. Continue using the canonical packet, approved external evidence artifacts, and compact phase notes or pointers, but do not create a delegate contract or self-handoff when there is no receiving context.
+If suitable delegation is unavailable, keep the phase in the main agent. Continue using the canonical packet, approved external evidence artifacts, and compact phase notes or pointers. Do not create a delegate contract or self-handoff when there is no receiving context.
 
 ## When to delegate
 
 Prefer delegation when a phase is:
 
-- context-heavy because it reads many files, pages, screenshots, snapshots, or logs;
-- bounded by clear inputs and outputs;
-- independently executable and artifact-verifiable;
-- likely to require an internal inspect–fix–reinspect loop;
-- unlikely to require user judgment midway through the phase;
-- supported by a delegate with all required capabilities.
+- context-heavy because it reads many files, pages, screenshots, snapshots, or logs
+- bounded by clear inputs and outputs
+- independently executable and artifact-verifiable
+- likely to require an internal inspect, fix, and reinspect loop
+- unlikely to require user judgment midway through the phase
+- supported by a delegate with all required capabilities
 
 Do not delegate merely because a task exists. Keep work in the main agent when:
 
-- the next step is a user-owned decision;
-- evidence from several phases must be reconciled;
-- the task is small enough that the handoff would cost more context than the work;
-- the delegate would need the entire conversation to act correctly;
-- the main agent would have to reread every raw artifact to trust the result;
-- no delegate can meet the phase's verification contract.
+- the next step is a user-owned decision
+- evidence from several phases must be reconciled
+- the task is small enough that the handoff would cost more context than the work
+- the delegate would need the entire conversation to act correctly
+- the main agent would have to reread every raw artifact to trust the result
+- no delegate can meet the phase's verification contract
 
 Delegate before consuming the context-heavy evidence in the main conversation. Delegating after loading the screenshot gallery or full source inventory does not recover that context.
 
-## Natural phase seams
+## Natural phase boundaries
 
 ### Observation and candidate report
 
-A capable evidence delegate may own repository reconnaissance, rendered observation, the broad reference pass, UI profiling, baseline capture, and candidate-report construction. It returns candidate summaries and artifact paths. The main agent checks the handoff, presents the recommendation, and owns the gap-selection gate.
+A capable evidence delegate can own repository reconnaissance, rendered observation, the broad reference pass, UI profiling, baseline capture, and candidate-report construction. It returns candidate summaries and artifact paths. The main agent checks the handoff, presents the recommendation, and owns the gap-selection gate.
 
 ### Focused reference pass
 
-A read-only delegate may search the prepared licensed reference and write the temporary reference brief. It returns only applicable principles, local section or page pointers, concrete product implications, search limitations, and the brief path. Do not inline passages or page images into the main conversation.
+A read-only delegate can search the prepared licensed reference and write the temporary reference brief. It returns only applicable principles, local section or page pointers, concrete product implications, search limitations, and the brief path. Do not inline passages or page images into the main conversation.
 
 ### Mockup exploration
 
@@ -90,11 +90,11 @@ The main agent still presents the alternatives, receives user feedback, records 
 
 ### Production implementation
 
-After direction approval and provisional design memory, one mutation-capable delegate may own the accepted production slice. Give it the canonical direction packet, repository paths, approved extraction or migration scope, and validation contract. Use one writer for a shared checkout; parallelize reads and reviews, not overlapping writes.
+After direction approval and provisional design memory, one mutation-capable delegate can own the accepted production slice. Give it the canonical direction packet, repository paths, approved extraction or migration scope, and validation contract. Use one writer for a shared checkout. Parallelize reads and reviews, not overlapping writes.
 
 ### Rendered production comparison
 
-A fresh capable validator may reproduce baseline conditions, exercise the accepted slice, capture and inspect comparison evidence, and return a pass/fail handoff. The main agent reconciles that verdict with the accepted direction and owns the rendered-production and rollout gate.
+A fresh capable validator can reproduce baseline conditions, interact with the accepted slice in the browser, capture and inspect comparison evidence, and return a pass or fail handoff. The main agent reconciles that verdict with the accepted direction and owns the rendered-production and rollout gate.
 
 ## Canonical direction packet
 
@@ -146,13 +146,13 @@ Do not put screenshots, copied reference passages, browser dumps, or long implem
 
 Give each delegate a compact contract containing:
 
-- **Goal:** one concrete phase outcome.
-- **Inputs:** exact direction-packet, applicable skill-reference, and evidence-artifact paths; repository scope; routes; states; and accepted decisions.
-- **Authority:** read-only, temporary-artifact writer, or approved production writer; actions it must not take.
-- **Invariants:** gates, privacy, accessibility, artifact location, system scope, and reference constraints.
-- **Acceptance:** the checks and evidence required before returning pass.
-- **Output:** the handoff schema and artifact destinations.
-- **Stop rules:** unresolved user, product, scope, architecture, credential, or destructive decisions return to the main agent instead of being guessed.
+- **Goal.** One concrete phase outcome.
+- **Inputs.** The exact direction-packet, skill-reference, and evidence-artifact paths, plus repository scope, routes, states, and accepted decisions.
+- **Authority.** Read-only, temporary-artifact writer, or approved production writer. Include the actions it must not take.
+- **Invariants.** Gates, privacy, accessibility, artifact location, system scope, and reference constraints.
+- **Acceptance.** The checks and evidence required before returning pass.
+- **Output.** The handoff schema and artifact destinations.
+- **Stop rules.** Unresolved user, product, scope, architecture, credential, or destructive decisions return to the main agent instead of being guessed.
 
 Prefer fresh or minimal delegated context when the harness supports it. Pass the packet and exact evidence paths rather than the full parent transcript. Use inherited conversation context only when the phase genuinely depends on nuanced history that the packet cannot represent safely.
 
@@ -195,34 +195,34 @@ PASS | BLOCKED | USER REVIEW REQUIRED
 
 Keep it concise and proportional. Do not inline:
 
-- screenshot or image payloads;
-- full semantic snapshots or DOM trees;
-- complete console or network logs;
-- large source inventories;
-- PDF passages or page images;
-- long chronological tool transcripts.
+- screenshot or image payloads
+- full semantic snapshots or DOM trees
+- complete console or network logs
+- large source inventories
+- PDF passages or page images
+- long chronological tool transcripts
 
-Detailed UI evidence stays in the approved external artifact directory required by this skill. Harness-managed outputs may hold only compact non-sensitive handoffs. Downstream delegates should read the canonical evidence artifact directly instead of receiving a summary of a summary.
+Detailed UI evidence stays in the approved external artifact directory required by this skill. Harness-managed outputs can hold only compact non-sensitive handoffs. Downstream delegates read the canonical evidence artifact directly instead of receiving a summary of a summary.
 
 ## Parent acceptance of a handoff
 
 Before advancing, the main agent verifies that the handoff:
 
-1. covers the contracted scope and matrix;
-2. honors the direction packet and authority limits;
-3. points to current evidence with relevant fingerprints or conditions;
-4. distinguishes observation from inference;
-5. reports validation, fixed defects, confidence, and limitations;
-6. escalates unresolved user decisions rather than guessing.
+1. covers the contracted scope and matrix
+2. honors the direction packet and authority limits
+3. points to current evidence with relevant fingerprints or conditions
+4. distinguishes observation from inference
+5. reports validation, fixed defects, confidence, and limitations
+6. escalates unresolved user decisions rather than guessing
 
 A delegate result is evidence, not authority. Expand raw evidence only when:
 
-- the handoff is incomplete or low-confidence;
-- two findings conflict;
-- the recommendation depends on an ambiguous observation;
-- verification failed or evidence is stale;
-- the proposed system or migration scope expanded;
-- a representative spot-check contradicts the handoff.
+- the handoff is incomplete or low-confidence
+- two findings conflict
+- the recommendation depends on an ambiguous observation
+- verification failed or evidence is stale
+- the proposed system or migration scope expanded
+- a representative spot-check contradicts the handoff
 
 For high-impact, systemic, security-sensitive, or low-confidence changes, use a fresh independent validator when a capable delegate exists. Give that validator the direction packet and artifacts, not the builder's reasoning transcript. The main agent synthesizes the verdicts.
 
@@ -233,8 +233,8 @@ For high-impact, systemic, security-sensitive, or low-confidence changes, use a 
 - Pass stable artifact pointers between delegates rather than copying content through the parent.
 - Preserve user-approved meaning in the direction packet and root `DESIGN.md`, not in delegate memory.
 - Do not duplicate a passed inspection in the main context unless a spot-check trigger fires.
-- Do not launch several clone tasks; each delegate needs a distinct phase, question, and output.
+- Do not launch several clone tasks. Each delegate needs a distinct phase, question, and output.
 - Keep one production writer per checkout unless the harness provides deliberate filesystem isolation and the work is truly independent.
-- Stop delegation at user gates. No delegate may interpret silence as approval.
+- Stop delegation at user gates. No delegate treats silence as approval.
 
-The objective is a deep handoff seam: substantial evidence gathering and iteration behind a small, inspectable interface, with the main agent retaining decision quality and user authority.
+The objective is a narrow, inspectable interface between heavy evidence work and the main agent. Evidence gathering and iteration stay behind that interface. The main agent keeps decision quality and user authority.

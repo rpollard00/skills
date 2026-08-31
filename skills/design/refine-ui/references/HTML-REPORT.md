@@ -1,4 +1,4 @@
-# Visual Gap Report
+# Visual gap report
 
 The report presents evidence-backed gaps so the user can choose what to explore. It is a decision artifact, not a style guide or an implementation plan.
 
@@ -17,38 +17,38 @@ Create a fresh directory under the OS temp directory by default, or another exte
 
 Write directly to the selected external destination. Never create the report or its evidence inside the user's repository. If that directory cannot be created or the capture adapter cannot write there, stop and ask for another writable location outside the repository. Do not stage artifacts in the repository and move them afterward.
 
-Use plain HTML with embedded CSS and minimal optional JavaScript. Avoid CDNs and analytics. Reference evidence with relative paths or embed modest images as data URLs. The directory should remain viewable without the application running.
+Use plain HTML with embedded CSS and minimal optional JavaScript. Avoid CDNs and analytics. Reference evidence with relative paths or embed modest images as data URLs. The directory must remain viewable without the application running.
 
 ## Header
 
 Include only useful context:
 
-- product or repository name;
-- reviewed scope;
-- date;
-- evidence level: rendered and vision-inspected, rendered with user visual review required, supplied screenshots, or source-only;
-- viewports, themes, and states observed;
-- link to the top recommendation.
+- product or repository name
+- reviewed scope
+- date
+- evidence level: rendered and vision-inspected, rendered with user visual review required, supplied screenshots, or source-only
+- viewports, themes, and states observed
+- link to the top recommendation
 
 Do not lead with methodology or a numeric score.
 
 ## Candidate card
 
-Each candidate should contain:
+Each candidate contains:
 
 ### Title
 
-Name the visible opportunity, not the source file or generic category.
+Name the visible opportunity, not the source file or a generic category.
 
 Good:
 
-- “Restore a clear decision hierarchy on the incident page”
-- “Make related account details read as one group”
+- "Restore a clear decision hierarchy on the incident page"
+- "Make related account details read as one group"
 
 Weak:
 
-- “Fix CSS”
-- “Improve visual hierarchy”
+- "Fix CSS"
+- "Improve visual hierarchy"
 
 ### Evidence
 
@@ -58,7 +58,7 @@ Include route, state, and viewport in a compact caption.
 
 ### Observable gap
 
-One or two sentences describing what can be seen. Do not begin with a speculative source-code diagnosis.
+Write one or two sentences that describe what can be seen. Do not begin with a speculative source-code diagnosis.
 
 ### User consequence
 
@@ -66,17 +66,17 @@ State which task becomes slower, ambiguous, error-prone, or needlessly effortful
 
 ### Reference lens
 
-When a prepared design reference is available and relevant, name the consulted chapter, section, or local page range and paraphrase the applicable principle in your own words. Connect it to the product evidence and state the concrete implication. If the search found nothing relevant, omit this subsection from the card and retain the no-result search trace in the temporary reference brief.
+When a prepared design reference is available and relevant, name the consulted chapter, section, or local page range. Paraphrase the applicable principle in your own words. Connect it to the product evidence and state the concrete implication. If the search found nothing relevant, omit this subsection from the card and retain the no-result search trace in the temporary reference brief.
 
-Never include book page images or substantial quotations in the report. A reference supports diagnosis; it does not replace observable evidence or make a treatment automatically correct.
+Never include book page images or substantial quotations in the report. A reference supports diagnosis. It does not replace observable evidence or make a treatment automatically correct.
 
 ### Cause and scope
 
 Label the current best classification:
 
-- cause: content, composition, primitive, embedded pattern, token, asset, or interaction/state;
-- scope: local or systemic;
-- confidence: high, medium, or low.
+- cause: content, composition, primitive, embedded pattern, token, asset, or interaction/state
+- scope: local or systemic
+- confidence: high, medium, or low
 
 Link relevant project files only when evidence supports the source relationship.
 
@@ -90,28 +90,28 @@ Frame what the selected exploration must settle:
 
 > Should this surface prioritize immediate action or comprehensive status?
 
-A strong question can produce meaningfully different mockups. “How should this look better?” is not a design question.
+A strong question can produce meaningfully different mockups. "How should this look better?" is not a design question.
 
 ### Likely lever
 
-Name a probable avenue—hierarchy, grouping, density, typography, color role, elevation, or state treatment—without presenting it as a settled solution.
+Name the probable lever: hierarchy, grouping, density, typography, color role, elevation, or state treatment. Do not present it as a settled solution.
 
 ### Recommendation strength
 
 Use one badge:
 
-- **Strong:** clear user consequence, strong evidence, and proportionate scope;
-- **Worth exploring:** credible improvement with a meaningful decision still open;
-- **Speculative:** limited evidence or uncertain product consequence.
+- **Strong.** Clear user consequence, strong evidence, and proportionate scope.
+- **Worth exploring.** Credible improvement with a meaningful decision still open.
+- **Speculative.** Limited evidence or uncertain product consequence.
 
 ## Ordering
 
 Order candidates by:
 
-1. user impact;
-2. recurrence;
-3. confidence;
-4. proportionate change scope.
+1. user impact
+2. recurrence
+3. confidence
+4. proportionate change scope
 
 Do not bury one systemic cause under many near-duplicate screen-level cards. Group recurring evidence into one candidate and show representative examples.
 
@@ -121,24 +121,24 @@ Keep the report selective. Three to six credible candidates are usually more use
 
 End with one recommendation containing:
 
-- candidate name;
-- one sentence explaining why it should be explored first;
-- the exact design question it would prototype or interview;
-- a link back to its evidence.
+- candidate name
+- one sentence explaining why to explore it first
+- the exact design question it would prototype or interview
+- a link back to its evidence
 
 The top recommendation is advice, not permission to proceed.
 
 ## Visual style
 
-The report itself should demonstrate restraint:
+The report itself must demonstrate restraint:
 
-- neutral, readable typography;
-- generous but not wasteful space;
-- one restrained accent plus semantic warning colors;
-- clear evidence captions;
-- no dashboard theatrics;
-- no gradients, ornamental illustration, or animated decoration;
-- responsive layout so the user can review it in a normal browser window.
+- neutral, readable typography
+- generous but not wasteful space
+- one restrained accent plus semantic warning colors
+- clear evidence captions
+- no dashboard decoration
+- no gradients, ornamental illustration, or animated decoration
+- responsive layout so the user can review it in a normal browser window
 
 The evidence carries the weight. Keep prose concise.
 
@@ -148,9 +148,9 @@ Open `audit.html` with the platform-appropriate command when available. Report i
 
 Summarize:
 
-- number of candidates;
-- top recommendation;
-- evidence limitations.
+- number of candidates
+- top recommendation
+- evidence limitations
 
 Then ask exactly:
 
