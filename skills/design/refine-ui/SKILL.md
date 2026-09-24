@@ -2,6 +2,8 @@
 name: refine-ui
 description: Analyze an existing UI or design system. Surface evidence-backed visual gaps, explore a user-selected direction with temporary HTML/CSS mockups, and refine the accepted direction through rendered comparison while project design memory evolves. Also use for greenfield UI direction-setting when the user explicitly invokes the skill.
 disable-model-invocation: true
+metadata:
+  opencode/autoinvoke: "false"
 ---
 
 # Refine UI

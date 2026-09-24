@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""Preview or install a category-preserving bundle for pi, Codex, and OpenCode 2."""
+
+import argparse
+import os
+import sys
+from pathlib import Path
+
+from yaml import YAMLError
+
+from validate_skills import frontmatter, skill_files, validate
+
+
+class InstallError(Exception):
+    pass
+
+
+def installed_skills(root, ignored):
+    pending = [root]
+    visited = set()
+    while pending:
+        path = pending.pop()
+        if path in ignored:
+            continue
+        if path.is_file() and path.parent == root and path.suffix == ".md":
+            yield path
+            continue
+        if not path.is_dir():
+            continue
+        resolved = path.resolve()
+        if resolved in visited:
+            continue
+        visited.add(resolved)
+        entry = path / "SKILL.md"
+        if entry.is_file():
+            yield entry
+            continue
+        pending.extend(p for p in path.iterdir() if not p.name.startswith(".") and p.name != "node_modules")
+
+
+def plan(repo, home, destination, migrate):
+    repo = repo.resolve()
+    source = repo / "skills"
+    errors = validate(source)
+    if errors:
+        raise InstallError("\n".join(errors))
+    if destination.resolve().is_relative_to(repo):
+        raise InstallError(f"destination resolves inside this repository: {destination}")
+    if os.path.lexists(destination) and not destination.is_dir():
+        raise InstallError(f"destination is not a directory: {destination}")
+    bundle = destination / "reese"
+    if os.path.lexists(bundle) and not (bundle.is_symlink() and bundle.resolve() == source):
+        raise InstallError(f"refusing to replace existing path: {bundle}")
+
+    sources = {frontmatter(p)["name"]: p.parent.resolve() for p in skill_files(source)}
+    roots = {destination, home / ".pi/agent/skills", home / ".agents/skills", home / ".codex/skills",
+             home / ".config/opencode/skills"}
+    legacy_roots = roots | {home / ".claude/skills"}
+    removals = []
+    for root in sorted(legacy_roots):
+        for name, directory in sources.items():
+            candidate = root / name
+            if candidate.is_symlink() and candidate.resolve() == directory:
+                removals.append((candidate, directory))
+    if removals and not migrate:
+        paths = "\n".join(str(p) for p, _ in removals)
+        raise InstallError(f"repo-owned flat links require --migrate-owned-flat:\n{paths}")
+
+    ignored = {p for p, _ in removals}
+    for root in roots:
+        installed_bundle = root / "reese"
+        if installed_bundle.is_symlink() and installed_bundle.resolve() == source:
+            ignored.add(installed_bundle)
+    collisions = []
+    for root in sorted(roots):
+        for entry in installed_skills(root, ignored):
+            try:
+                name = frontmatter(entry).get("name")
+            except (ValueError, YAMLError) as error:
+                if entry.name != "SKILL.md":
+                    continue
+                raise InstallError(f"cannot inspect {entry}: {error}") from error
+            if not isinstance(name, str) or not name:
+                name = entry.parent.name if entry.name == "SKILL.md" else entry.stem
+            if name in sources:
+                collisions.append(f"{name}: {entry}")
+    if collisions:
+        raise InstallError("existing skills collide; no copies or foreign links will be replaced:\n" + "\n".join(collisions))
+    return source, bundle, removals
+
+
+def apply(source, bundle, removals):
+    # Create the bundle before removing old aliases. A failed creation preserves
+    # the old installation. Never overwrite a path created after preflight.
+    bundle.parent.mkdir(parents=True, exist_ok=True)
+    if not os.path.lexists(bundle):
+        bundle.symlink_to(source, target_is_directory=True)
+    elif not (bundle.is_symlink() and bundle.resolve() == source):
+        raise InstallError(f"bundle changed after preflight: {bundle}")
+    for path, expected in removals:
+        if not path.is_symlink() or path.resolve() != expected:
+            raise InstallError(f"flat link changed after preflight; left untouched: {path}")
+        path.unlink()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--destination", type=Path, help="skill discovery directory; default: ~/.agents/skills")
+    parser.add_argument("--apply", action="store_true", help="perform the printed changes; default is preview only")
+    parser.add_argument("--migrate-owned-flat", action="store_true", help="remove only flat symlinks pointing to this checkout's skills")
+    args = parser.parse_args()
+    home = Path.home()
+    destination = (args.destination or home / ".agents/skills").expanduser().absolute()
+    repo = Path(__file__).resolve().parents[1]
+    try:
+        source, bundle, removals = plan(repo, home, destination, args.migrate_owned_flat)
+        print(f"Bundle: {bundle} -> {source}")
+        for path, expected in removals:
+            print(f"Remove owned flat link: {path} -> {expected}")
+        if args.apply:
+            apply(source, bundle, removals)
+            print("Installed. Reload your harness. No harness configuration files were changed.")
+        else:
+            print("Preview only. Add --apply to install. Project-local and custom skill paths are not audited.")
+        return 0
+    except (InstallError, OSError, ValueError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

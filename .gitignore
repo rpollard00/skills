@@ -1,2 +1,7 @@
 # Private generated artifacts, including licensed reference derivatives.
 .artifacts/
+
+# Local Python tooling.
+__pycache__/
+*.py[cod]
+.venv/
