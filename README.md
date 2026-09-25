@@ -4,26 +4,27 @@ Agent skills for repeatable engineering, design, version-control, and writing wo
 
 ## Mako
 
-[Mako](skills/engineering/mako/SKILL.md) is the explicit software-engineering router. Invoke it with a task. It selects the workflow, loads the required skills, and stays active in that conversation until you opt out.
+[Mako](skills/mako/SKILL.md) is the explicit software-engineering router. Invoke it with a task. It selects the workflow, loads the required skills, and stays active in that conversation until you opt out.
 
-It does not announce activation or narrate skill selection. Progress, evidence, decisions, and approval gates remain visible.
+It owns the goal through verified completion: make engineering decisions, investigate uncertainty, and proceed without routine permission questions. Explicit scope limits and dangerous-action boundaries remain binding. It reports progress, consequential choices, and evidence without narrating skill selection.
 
 The collection contains 52 skills: 24 engineering skills, 23 independent engineering principles, and the five existing design, version-control, and writing skills. Mako also owns 19 task playbooks.
 
-## Categories
+## Skills
 
-- [Engineering](skills/engineering/README.md): Mako, investigation, design, implementation workflows, review, verification, and delivery.
-- [Engineering principles](skills/engineering-principles/README.md): independent, explicit-only guidance selected when applicable.
-- [Design](skills/design/README.md): the existing [refine-ui](skills/design/refine-ui/SKILL.md) workflow and visual approval gates.
-- [Version control](skills/version-control/README.md): [jj](skills/version-control/jj/SKILL.md) owns operations when `.jj` exists.
-- [Writing](skills/writing/README.md): the existing writing router, simple-technical-english, and unslop.
+Every skill has its own directory directly under `skills/`, without categories. See the [skill index](skills/README.md).
+
+- [Mako](skills/mako/SKILL.md): engineering workflows and selective loading of [independent principles](skills/mako/references/principles.md).
+- [refine-ui](skills/refine-ui/SKILL.md): visual exploration and approval gates.
+- [jj](skills/jj/SKILL.md): repository operations when `.jj` exists.
+- [writing](skills/writing/SKILL.md): the existing router for simple-technical-english and unslop.
 
 ## Try Mako without installation
 
 In pi, load just its entry point for one session:
 
 ```bash
-pi --skill /absolute/path/to/skills/skills/engineering/mako
+pi --skill /absolute/path/to/skills/skills/mako
 ```
 
 Then invoke it:
@@ -32,11 +33,11 @@ Then invoke it:
 /skill:mako investigate how cancellation works
 ```
 
-In any supported harness, you can also explicitly ask the agent to read the absolute path to `skills/engineering/mako/SKILL.md` and apply it to a task. Dependencies resolve from that source path. This requires no global installation.
+In any supported harness, you can also explicitly ask the agent to read the absolute path to `skills/mako/SKILL.md` and apply it to a task. Skill names fall back to sibling directories in that checkout when harness lookup is unavailable. This requires no global installation.
 
 ## Install the bundle
 
-Keep the category hierarchy. A flat skill-by-skill installation breaks source-relative dependency paths.
+Keep dependent skills together so name lookup can fall back to sibling paths. The installer links the entire flat `skills/` directory as one bundle.
 
 The installer uses Python 3.10+ and PyYAML. Install its dependency in your development environment, then preview:
 
@@ -51,7 +52,7 @@ The default target is:
 ~/.agents/skills/reese -> <checkout>/skills
 ```
 
-The script makes no changes unless you add `--apply`. For a prior flat installation, preview removal of this checkout's own links:
+The script makes no changes unless you add `--apply`. For a prior per-skill installation, preview removal of this checkout's own links, including links left dangling by the directory move:
 
 ```bash
 ./scripts/link-skills.sh --migrate-owned-flat
@@ -73,18 +74,25 @@ Reload the harness after installation. Native entry points are `/skill:mako` in 
 
 ```bash
 python3 scripts/validate_skills.py
+python3 scripts/markdown_lists.py
 python3 -m unittest discover -s tests -v
 ```
 
-[Harness compatibility](docs/mako-harness-compatibility.md) records tested versions and commands. The checks cover metadata, dependency reachability, protected upstream content, logging, safe installation, and actual harness discovery. Behavioral agent evaluations are not included in those passing results.
+[Harness compatibility](docs/mako-harness-compatibility.md) records tested versions and commands. The checks cover metadata, dependency reachability, protected upstream content, logging, safe installation, and actual harness discovery. These checks do not establish model compliance. Instruction tuning follows actual use, not a separate behavioral test suite.
 
-Mako requires completion evidence, but it does not add runtime mission enforcement. pi-subagents' automatic Git-worktree isolation is not a verified jj integration. The [execution contract](skills/engineering/mako/references/execution.md) states these limits.
+Mako requires completion evidence, but it does not add runtime mission enforcement. pi-subagents' automatic Git-worktree isolation is not a verified jj integration. The [execution contract](skills/mako/references/execution.md) states these limits.
 
 ## Structure and provenance
 
-Each skill owns its references, scripts, metadata, and license. Shared procedures use explicit relative links. Copy the whole bundle when a skill has cross-category dependencies.
+Each skill owns its references, scripts, and metadata. Imported skills retain their upstream license notices. Cross-skill references use exact skill names. Specific playbooks, references, and scripts retain relative file links. Copy the whole bundle when a skill has cross-skill dependencies.
 
 The imports are pinned and adapted according to [the selection record](docs/skill-router-decisions.md). See [upstream provenance](docs/upstream-provenance.md) for licenses, hashes, preserved content, and adaptation boundaries.
+
+## License
+
+This repository is licensed under the [MIT License](LICENSE), copyright 2026 Reese Pollard. Upstream portions retain their original copyrights and licenses, collected in [Third-party notices](THIRD_PARTY_NOTICES.md).
+
+When distributing an individual skill, include the repository license and its applicable upstream notices.
 
 ## Safety
 

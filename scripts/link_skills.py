@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preview or install a category-preserving bundle for pi, Codex, and OpenCode 2."""
+"""Preview or install the skill bundle for pi, Codex, and OpenCode 2."""
 
 import argparse
 import os
@@ -38,6 +38,15 @@ def installed_skills(root, ignored):
         pending.extend(p for p in path.iterdir() if not p.name.startswith(".") and p.name != "node_modules")
 
 
+def previous_source(repo, name):
+    """Recognize this checkout's pre-flattening targets, including dangling links."""
+    category = {
+        "refine-ui": "design", "jj": "version-control",
+        "writing": "writing", "simple-technical-english": "writing", "unslop": "writing",
+    }.get(name, "engineering-principles" if name.startswith("principle-") else "engineering")
+    return repo / "skills" / category / name
+
+
 def plan(repo, home, destination, migrate):
     repo = repo.resolve()
     source = repo / "skills"
@@ -60,8 +69,10 @@ def plan(repo, home, destination, migrate):
     for root in sorted(legacy_roots):
         for name, directory in sources.items():
             candidate = root / name
-            if candidate.is_symlink() and candidate.resolve() == directory:
-                removals.append((candidate, directory))
+            if candidate.is_symlink():
+                target = candidate.resolve()
+                if target in {directory, previous_source(repo, name)}:
+                    removals.append((candidate, target))
     if removals and not migrate:
         paths = "\n".join(str(p) for p, _ in removals)
         raise InstallError(f"repo-owned flat links require --migrate-owned-flat:\n{paths}")

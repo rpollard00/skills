@@ -1,0 +1,21 @@
+### Hillclimb
+
+**You own the metric and the experiment's integrity. Supervise and review. Delegate the attempts.** For sustained, iterative improvement of one measurable thing against a target. A one-off fix is Bug fix or Perf issue. This is the loop.
+
+Core discipline: one change, one measurement, keep or revert. Never stack untested changes, and never claim a win from code inspection (the `principle-prove-it-works` principle skill).
+
+1. Ground the workload and architecture before choosing the metric. Run the `how` skill over the target, name the realistic workload dimensions that can move the result (data size, history, state, concurrency), and select a case that reproduces the user's complaint. If no case reproduces it, fix the repro instead of hillclimbing. Then fix one metric, the direction that counts as better, and a checkable stop predicate. Use the user's target or choose and record an evidence-backed target within the budget; ask only when the product tradeoff cannot reasonably be defaulted. Require enough samples to distinguish signal from noise. A minimum attempt count is optional, not a universal gate.
+2. Build the measurement harness, prove its sensitivity, then freeze it (the `principle-build-the-lever` principle skill). Run contrasting realistic workloads and confirm the target case reproduces the symptom while easier cases separate as expected. If the harness cannot distinguish them, revise the workload or metric. Once frozen, one repeatable command emits the metric, sampled enough to clear the noise (median of N, not a single run). Record the baseline metric and a green run of the regression gate (the tests that must keep passing) before any change.
+3. Select the canonical trail through `show-me-your-work`. Record each attempt's hypothesis, change, measurements, regression outcome, and keep/revert verdict as evidence. Do not invent a second log schema.
+4. Ground each hypothesis in the architecture model from step 1, so it names a specific mechanism ("defer X off the boot path because it blocks first paint"), not "try memoizing something".
+5. Loop, one hypothesis per iteration:
+   - Read [execution](../references/execution.md), then hand the change to a supported implementer with a tight scope. Supervise and review the diff rather than typing it (the `principle-guard-the-context-window` principle skill). When several independent hypotheses are live, fan them to parallel subagents, each in an isolated repository-aware workspace (the `principle-separate-before-serializing-shared-state` principle skill).
+   - Measure before and after with the frozen harness, and run the regression gate.
+   - Accept only when the metric moves past noise and the gate stays green. Otherwise revert the change in full. A tweak that "might help" is not kept.
+   - Keep accepted changes distinct using the repository's version-control model. Preserve user work; use jj when present. Log the row either way, kept or reverted.
+   Each iteration ends in a check before the next begins (the `principle-sequence-verifiable-units` principle skill). If the run is unattended, borrow only the wake mechanism from the Autonomous run playbook ([Autonomous run](autonomous-run.md)), not its stop rule.
+6. Push past the first plateau. On a stall, several rejects in a row, pivot category, combine near-misses, re-read the source, or try something more radical before concluding the hill is climbed. Correctness and simplicity outrank the number. Revert a win that breaks behavior, and keep a simplification that holds the number (the `principle-laziness-protocol` principle skill).
+7. Stop successfully when the predicate is met. If remaining ideas are not worth their cost, the budget is exhausted, or a blocker persists, report an incomplete outcome to the continuation owner. Do not relax the predicate or call a plateau success.
+8. Run [**Opening a PR**](opening-a-pr.md) with the accepted commits stacked in the order they landed.
+
+**Reply:** the metric and target, baseline to final with the percent delta, iterations run (kept vs reverted), each accepted fix on one line, the canonical decision-trail location, and the best idea you would try next if pushed further.

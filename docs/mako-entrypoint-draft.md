@@ -1,6 +1,6 @@
 # Mako entry-point draft
 
-Status: historical design draft. The implemented entry point is [Mako](../skills/engineering/mako/SKILL.md). This draft is not installed.
+Status: historical design draft. The implemented entry point is [Mako](../skills/mako/SKILL.md). This draft is not installed.
 
 Skill names in this draft identify selected dependencies. Add relative links when those dependencies exist. Do not publish this draft as a functioning standalone skill.
 
@@ -44,36 +44,90 @@ Use `figure-it-out` when no route fits or the work requires a bespoke sequence. 
 
 ## Select the route
 
-| Request or situation | Route | Deliverable or stop boundary |
-| --- | --- | --- |
-| Understand current behavior or assess a claim | Investigation with `how` | Cited explanation or recommendation; no implementation |
-| Investigate historical rationale | Investigation with `how` and `why` | Facts, inferences, competing explanations, and gaps |
-| Explain code or a change at the user's pace | `teach` | Explanation, not edits |
-| Shape a decision or design with the user | `grill-me`, composing `grilling` and `domain-modeling` | Confirmed understanding and warranted glossary/ADR updates |
-| Find or investigate architectural friction | `improve-codebase-architecture` | Evidence-backed candidates; stop for selection and later decision gates |
-| Design a module or interface | `architect` with `codebase-design` | Design or implementation, according to the authorized task |
-| Build new or changed behavior | Feature | Designed, independently reviewed, runtime-verified behavior |
-| Reproduce and fix a defect | `bug-fix` | Failing-before and passing-after proof on the reported behavior |
-| Restructure without changing behavior | Refactoring | Preserved behavior at tested seams |
-| Diagnose and fix measured slowness | Perf issue | Baseline, measured change, and regression evidence |
-| Repeatedly improve a measured outcome | Hillclimb | Controlled experiments, accepted changes, and stop verdict |
-| Diagnose a live process | Runtime forensics | Evidence-backed diagnosis; no automatic product fix |
-| Diagnose an existing capture | Trace forensics | Query-backed findings and source attribution |
-| Settle a behavioral or timing uncertainty experimentally | Prototype | Observed answer and isolated exploratory artifact |
-| Improve a rendered UI or explore visual direction | `refine-ui` | Its observation, direction, implementation, and acceptance gates |
-| Preserve appearance across implementations | Visual parity | Baseline comparison under agreed capture conditions |
-| Assess downstream change impact | `blast-radius` | Proven safety assumptions and remaining risks |
-| Challenge a design or review a diff | `interrogate` | Prioritized findings and lead judgment; no automatic fixes |
-| Create or maintain executable project verification | `create-verification-skill` or `maintain-verification-skill` | Proven instructions and an accurate feature map |
-| Author or revise a skill | Authoring a skill | Validated instructions and appropriate behavior evidence |
-| Compare skill or prompt behavior | Eval | Isolated candidates, blinded assessment, and execution evidence |
-| Resume a specific task | Session pickup | Reconstructed current state, then the remaining task's route |
-| Explicitly pause current work | Pause safely | Safe checkpoint and a durable handoff |
-| Check PR status, address threads, or reach merge-ready | Babysit | Declare status-only, threads-only, or drive mode; do not merge |
-| Merge authorized changes | Shipping | Independently verified changes landed in dependency order |
-| Drive one objective without routine intervention | Autonomous run | Verified completion or a concrete incomplete outcome |
-| Deliver independent PRs with merge authority | Autopilot-full | Independently verified PRs merged; operator-reserved items wait |
-| Build and verify a stack for operator landing | Autopilot-stack | Verified stack; no merge or auto-merge |
+- Understand current behavior or assess a claim
+  - Route: Investigation with `how`
+  - Deliverable or stop boundary: Cited explanation or recommendation; no implementation
+- Investigate historical rationale
+  - Route: Investigation with `how` and `why`
+  - Deliverable or stop boundary: Facts, inferences, competing explanations, and gaps
+- Explain code or a change at the user's pace
+  - Route: `teach`
+  - Deliverable or stop boundary: Explanation, not edits
+- Shape a decision or design with the user
+  - Route: `grill-me`, composing `grilling` and `domain-modeling`
+  - Deliverable or stop boundary: Confirmed understanding and warranted glossary/ADR updates
+- Find or investigate architectural friction
+  - Route: `improve-codebase-architecture`
+  - Deliverable or stop boundary: Evidence-backed candidates; stop for selection and later decision gates
+- Design a module or interface
+  - Route: `architect` with `codebase-design`
+  - Deliverable or stop boundary: Design or implementation, according to the authorized task
+- Build new or changed behavior
+  - Route: Feature
+  - Deliverable or stop boundary: Designed, independently reviewed, runtime-verified behavior
+- Reproduce and fix a defect
+  - Route: `bug-fix`
+  - Deliverable or stop boundary: Failing-before and passing-after proof on the reported behavior
+- Restructure without changing behavior
+  - Route: Refactoring
+  - Deliverable or stop boundary: Preserved behavior at tested seams
+- Diagnose and fix measured slowness
+  - Route: Perf issue
+  - Deliverable or stop boundary: Baseline, measured change, and regression evidence
+- Repeatedly improve a measured outcome
+  - Route: Hillclimb
+  - Deliverable or stop boundary: Controlled experiments, accepted changes, and stop verdict
+- Diagnose a live process
+  - Route: Runtime forensics
+  - Deliverable or stop boundary: Evidence-backed diagnosis; no automatic product fix
+- Diagnose an existing capture
+  - Route: Trace forensics
+  - Deliverable or stop boundary: Query-backed findings and source attribution
+- Settle a behavioral or timing uncertainty experimentally
+  - Route: Prototype
+  - Deliverable or stop boundary: Observed answer and isolated exploratory artifact
+- Improve a rendered UI or explore visual direction
+  - Route: `refine-ui`
+  - Deliverable or stop boundary: Its observation, direction, implementation, and acceptance gates
+- Preserve appearance across implementations
+  - Route: Visual parity
+  - Deliverable or stop boundary: Baseline comparison under agreed capture conditions
+- Assess downstream change impact
+  - Route: `blast-radius`
+  - Deliverable or stop boundary: Proven safety assumptions and remaining risks
+- Challenge a design or review a diff
+  - Route: `interrogate`
+  - Deliverable or stop boundary: Prioritized findings and lead judgment; no automatic fixes
+- Create or maintain executable project verification
+  - Route: `create-verification-skill` or `maintain-verification-skill`
+  - Deliverable or stop boundary: Proven instructions and an accurate feature map
+- Author or revise a skill
+  - Route: Authoring a skill
+  - Deliverable or stop boundary: Validated instructions and appropriate behavior evidence
+- Compare skill or prompt behavior
+  - Route: Eval
+  - Deliverable or stop boundary: Isolated candidates, blinded assessment, and execution evidence
+- Resume a specific task
+  - Route: Session pickup
+  - Deliverable or stop boundary: Reconstructed current state, then the remaining task's route
+- Explicitly pause current work
+  - Route: Pause safely
+  - Deliverable or stop boundary: Safe checkpoint and a durable handoff
+- Check PR status, address threads, or reach merge-ready
+  - Route: Babysit
+  - Deliverable or stop boundary: Declare status-only, threads-only, or drive mode; do not merge
+- Merge authorized changes
+  - Route: Shipping
+  - Deliverable or stop boundary: Independently verified changes landed in dependency order
+- Drive one objective without routine intervention
+  - Route: Autonomous run
+  - Deliverable or stop boundary: Verified completion or a concrete incomplete outcome
+- Deliver independent PRs with merge authority
+  - Route: Autopilot-full
+  - Deliverable or stop boundary: Independently verified PRs merged; operator-reserved items wait
+- Build and verify a stack for operator landing
+  - Route: Autopilot-stack
+  - Deliverable or stop boundary: Verified stack; no merge or auto-merge
 
 Autonomous run and the autopilots compose task routes; they do not replace their design, review, or verification requirements. Opening a PR is a delivery step, not the default outcome of every route.
 
@@ -81,23 +135,21 @@ Autonomous run and the autopilots compose task routes; they do not replace their
 
 Load a dependency before the action it governs. Reuse material already present and current in context.
 
-| Trigger | Required action |
-| --- | --- |
-| Nontrivial change, architecture decision, or “are we sure?” | Apply `how` to establish the relevant system model. |
-| Domain meaning becomes ambiguous or a new term is settled | Apply `domain-modeling`. Preserve the distinction between glossary and implementation details. |
-| Write stateful logic or choose a data shape | Apply `principle-model-the-domain`. |
-| Code change crosses a function boundary | Apply `architect`. Reuse a settled design instead of repeating the same exploration. |
-| Evaluate architecture | Load `codebase-design` vocabulary and applicable principles. |
-| Need competing candidate artifacts | Use `arena`. Choose model diversity and design diversity separately. |
-| Need partitioned coverage or a declared race | Use `swarm`. Require evidence and explicit gaps. |
-| Contested design before delivery | Run `interrogate`. |
-| Read or edit TypeScript | Apply `typescript-best-practices`. |
-| Produce prose | Apply the existing `writing` router. |
-| Before a commit | Run `deslop` within the change's scope. |
-| Before review | Run `no-comments`, preserving its selected behavior. |
-| Long, autonomous, or multi-phase execution | Keep the canonical decision trail through `show-me-your-work`. |
-| User asks to reflect | Run `reflect`; obtain approval before applying shared-skill edits. |
-| User invokes `bro` | Restate the previous message plainly. |
+- Nontrivial change, architecture decision, or “are we sure?”: Apply `how` to establish the relevant system model.
+- Domain meaning becomes ambiguous or a new term is settled: Apply `domain-modeling`. Preserve the distinction between glossary and implementation details.
+- Write stateful logic or choose a data shape: Apply `principle-model-the-domain`.
+- Code change crosses a function boundary: Apply `architect`. Reuse a settled design instead of repeating the same exploration.
+- Evaluate architecture: Load `codebase-design` vocabulary and applicable principles.
+- Need competing candidate artifacts: Use `arena`. Choose model diversity and design diversity separately.
+- Need partitioned coverage or a declared race: Use `swarm`. Require evidence and explicit gaps.
+- Contested design before delivery: Run `interrogate`.
+- Read or edit TypeScript: Apply `typescript-best-practices`.
+- Produce prose: Apply the existing `writing` router.
+- Before a commit: Run `deslop` within the change's scope.
+- Before review: Run `no-comments`, preserving its selected behavior.
+- Long, autonomous, or multi-phase execution: Keep the canonical decision trail through `show-me-your-work`.
+- User asks to reflect: Run `reflect`; obtain approval before applying shared-skill edits.
+- User invokes `bro`: Restate the previous message plainly.
 
 Use the compact principle index to select additional applicable principles. Read a principle's full instructions before relying on it. Do not load every principle for every task.
 

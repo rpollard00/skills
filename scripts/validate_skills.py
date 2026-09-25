@@ -52,6 +52,14 @@ def local_links(path):
             yield path.parent / unquote(url.path)
 
 
+def named_skill_dependencies(path, skills):
+    """Resolve known skill names in prose code spans against a bundle inventory."""
+    for line in prose(path.read_text(encoding="utf-8")):
+        for name in re.findall(r"(?<!`)`([a-z0-9]+(?:-[a-z0-9]+)*)`(?!`)", line):
+            if name in skills:
+                yield skills[name]
+
+
 def skill_files(root):
     return sorted(p for p in root.rglob("SKILL.md") if ".artifacts" not in p.parts)
 
@@ -81,9 +89,7 @@ def validate(root):
                 raise ValueError("disable-model-invocation must be a boolean")
             if hidden and data.get("metadata", {}).get("opencode/autoinvoke") not in (False, "false"):
                 raise ValueError("missing explicit-only OpenCode 2 metadata")
-            # The new bundle promises pi and Codex policy parity. Older categories
-            # retain their existing metadata until separately migrated.
-            if hidden and path.relative_to(root).parts[0] in {"engineering", "engineering-principles"}:
+            if hidden:
                 policy_path = path.parent / "agents/openai.yaml"
                 metadata = yaml.safe_load(policy_path.read_text(encoding="utf-8"))
                 if not isinstance(metadata, dict) or metadata.get("policy", {}).get("allow_implicit_invocation") is not False:

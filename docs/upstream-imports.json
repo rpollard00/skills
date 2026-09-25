@@ -12,931 +12,932 @@
   "files": [
     {
       "source": "pstack/skills/how/SKILL.md",
-      "destination": "skills/engineering/how/SKILL.md",
+      "destination": "skills/how/SKILL.md",
       "sha256": "d31805589c7f6a63a6db6c9fadebbd79fb9660682cf1654e9b2e5e1e7cd30bc0",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/how/references/explainer-prompt.md",
-      "destination": "skills/engineering/how/references/explainer-prompt.md",
+      "destination": "skills/how/references/explainer-prompt.md",
       "sha256": "ddb89cebefc24e2b54517a331aedfe045b6971e101f45c71b8cef4cccff45bff",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/how/references/explorer-prompt.md",
-      "destination": "skills/engineering/how/references/explorer-prompt.md",
+      "destination": "skills/how/references/explorer-prompt.md",
       "sha256": "a3b44a6e5bb16a6d4d1cac19db8ed5322ffd5f5f5d45baca4e73990ca096f8be",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/how/LICENSE",
+      "destination": "skills/how/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/SKILL.md",
-      "destination": "skills/engineering/why/SKILL.md",
+      "destination": "skills/why/SKILL.md",
       "sha256": "2a852ec8680920109d2b56538b027c52867896a597250ac5d18a13e0b42e5b06",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/epistemics.md",
-      "destination": "skills/engineering/why/references/epistemics.md",
+      "destination": "skills/why/references/epistemics.md",
       "sha256": "fcc0f559c072832c869a5ada72434b4849320a637ae63c09e8ee14f7ad787059",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/investigator-prompt.md",
-      "destination": "skills/engineering/why/references/investigator-prompt.md",
+      "destination": "skills/why/references/investigator-prompt.md",
       "sha256": "6892956a7ab0b5ee6c4babaf4f793703abe89b350ea7cb9463b4a56eea1c8266",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/source-playbook.md",
-      "destination": "skills/engineering/why/references/source-playbook.md",
+      "destination": "skills/why/references/source-playbook.md",
       "sha256": "9ae9dcb9d09111c9facc68510331c5aba4aed9b1b057314ff1fc0e166ad3993a",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/sources/code-archaeology.md",
-      "destination": "skills/engineering/why/references/sources/code-archaeology.md",
+      "destination": "skills/why/references/sources/code-archaeology.md",
       "sha256": "8c14aa382f0de40829b2668d43e3f54814480bb93a486c9282ada4003f6b9dbd",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/sources/databricks.md",
-      "destination": "skills/engineering/why/references/sources/databricks.md",
+      "destination": "skills/why/references/sources/databricks.md",
       "sha256": "236ede7aab6454662a992db088a5393537a5233a4c26719c93188f9e174488f6",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/sources/datadog.md",
-      "destination": "skills/engineering/why/references/sources/datadog.md",
+      "destination": "skills/why/references/sources/datadog.md",
       "sha256": "ebe9c07bac28e47757ee7f16fb93b0c01d427a08c501957d047f395a2f37b7e7",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/sources/incident-postmortem.md",
-      "destination": "skills/engineering/why/references/sources/incident-postmortem.md",
+      "destination": "skills/why/references/sources/incident-postmortem.md",
       "sha256": "a899470f05f86029630a13a2696491cc708ca7b56a6e822a69ff6e954d6ff8cf",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/sources/linear.md",
-      "destination": "skills/engineering/why/references/sources/linear.md",
+      "destination": "skills/why/references/sources/linear.md",
       "sha256": "01304e7f1badfcfb78babbb0edcadeb3cc8dd3f713793420cdff24ba190f907c",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/sources/notion.md",
-      "destination": "skills/engineering/why/references/sources/notion.md",
+      "destination": "skills/why/references/sources/notion.md",
       "sha256": "3bcfa695c49dfad4ac036d5d7181c12585f55ac04f1936198d16ab75a2788997",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/sources/sentry.md",
-      "destination": "skills/engineering/why/references/sources/sentry.md",
+      "destination": "skills/why/references/sources/sentry.md",
       "sha256": "6f292bc4fb1548e956f95e1900b9481abf5134254419f1cd9edec95428c82d73",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/sources/slack.md",
-      "destination": "skills/engineering/why/references/sources/slack.md",
+      "destination": "skills/why/references/sources/slack.md",
       "sha256": "58fee61d024b3700b407e7acbed367944720ff05adfddb6954d36c88368f3ba7",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/why/references/synthesizer-prompt.md",
-      "destination": "skills/engineering/why/references/synthesizer-prompt.md",
+      "destination": "skills/why/references/synthesizer-prompt.md",
       "sha256": "733a3e9cf897b1aca56aaddeae01a3832e4bfed024c2f602db2d1bf807d7a73b",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/why/LICENSE",
+      "destination": "skills/why/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/teach/SKILL.md",
-      "destination": "skills/engineering/teach/SKILL.md",
+      "destination": "skills/teach/SKILL.md",
       "sha256": "bd286e5a6290673be2cd28aef7af2ec7f1fb138e6bce156ea657368c7e7fc8a4",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/teach/LICENSE",
+      "destination": "skills/teach/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/architect/SKILL.md",
-      "destination": "skills/engineering/architect/SKILL.md",
+      "destination": "skills/architect/SKILL.md",
       "sha256": "691cd39f52c7b613866e6baf9ea0b05451ffa21a6a9b4102f166418b89178fde",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/architect/references/design-red-flags.md",
-      "destination": "skills/engineering/architect/references/design-red-flags.md",
+      "destination": "skills/architect/references/design-red-flags.md",
       "sha256": "905066f9bbac81c573c2b325be47751d2c0f9325e0a0772bd4384e82dafe9336",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/architect/references/rationale-template.md",
-      "destination": "skills/engineering/architect/references/rationale-template.md",
+      "destination": "skills/architect/references/rationale-template.md",
       "sha256": "0cedfccdc7b47fc881febd5a8293eecbc542c20f8df825639904a8102d2eb5d3",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/architect/references/runner-prompt.md",
-      "destination": "skills/engineering/architect/references/runner-prompt.md",
+      "destination": "skills/architect/references/runner-prompt.md",
       "sha256": "983bf2820cc14ed8ecab6e448e1033e5cfe6031967d0a9287b48c7fa9c33d925",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/architect/LICENSE",
+      "destination": "skills/architect/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/arena/SKILL.md",
-      "destination": "skills/engineering/arena/SKILL.md",
+      "destination": "skills/arena/SKILL.md",
       "sha256": "e3a1f6c49a08b7e0b92134e53300d146f1f22ba83386d2019926e736df421851",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/arena/LICENSE",
+      "destination": "skills/arena/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/swarm/SKILL.md",
-      "destination": "skills/engineering/swarm/SKILL.md",
+      "destination": "skills/swarm/SKILL.md",
       "sha256": "e28057fbbd1113257b2e953c6e891c41f535dbb01400b6bfd3eb9a85a2ab861f",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/swarm/LICENSE",
+      "destination": "skills/swarm/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/interrogate/SKILL.md",
-      "destination": "skills/engineering/interrogate/SKILL.md",
+      "destination": "skills/interrogate/SKILL.md",
       "sha256": "59d498c3e9848a24b2d105eb3f05b808aa4152adf4cb1de7bbb6aff4f4cd9b68",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/interrogate/references/code-quality-review.md",
-      "destination": "skills/engineering/interrogate/references/code-quality-review.md",
+      "destination": "skills/interrogate/references/code-quality-review.md",
       "sha256": "79162fda183eafd40d51661fbb5e151c7ba250f89e506ba17f5bd135dcbd50a8",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/interrogate/references/lead-judgment.md",
-      "destination": "skills/engineering/interrogate/references/lead-judgment.md",
+      "destination": "skills/interrogate/references/lead-judgment.md",
       "sha256": "6e5bdf5670eb34017692e9b6c546f36ac7552e6bb9f3f2f3429164fcc46a9361",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/interrogate/references/reviewer-prompt.md",
-      "destination": "skills/engineering/interrogate/references/reviewer-prompt.md",
+      "destination": "skills/interrogate/references/reviewer-prompt.md",
       "sha256": "e0598e254792b56de39bb16b1e6db559b03a522fdc54b98f942d254090920ae6",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/interrogate/references/rubric.md",
-      "destination": "skills/engineering/interrogate/references/rubric.md",
+      "destination": "skills/interrogate/references/rubric.md",
       "sha256": "a85aa801abbaf14434f00579440abc0d8e2723227ba8bf57de7cca8d6e7d2f25",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/interrogate/LICENSE",
+      "destination": "skills/interrogate/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/no-comments/SKILL.md",
-      "destination": "skills/engineering/no-comments/SKILL.md",
+      "destination": "skills/no-comments/SKILL.md",
       "sha256": "5c5b0882297d704c3a9720c52b7a793c68b013eaf717989f0945624efdfe2b05",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/no-comments/LICENSE",
+      "destination": "skills/no-comments/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/blast-radius/SKILL.md",
-      "destination": "skills/engineering/blast-radius/SKILL.md",
+      "destination": "skills/blast-radius/SKILL.md",
       "sha256": "5f02db9101ccf26c20254718f0fcd5c2c7ac5d4292b0e0923d0944ac47237aff",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/blast-radius/LICENSE",
+      "destination": "skills/blast-radius/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/reflect/SKILL.md",
-      "destination": "skills/engineering/reflect/SKILL.md",
+      "destination": "skills/reflect/SKILL.md",
       "sha256": "36efa48cc4ec2ba6f8131651aae24c6321682b098ed47a1069a7509462bf4a84",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/reflect/references/divergent-reviewer.md",
-      "destination": "skills/engineering/reflect/references/divergent-reviewer.md",
+      "destination": "skills/reflect/references/divergent-reviewer.md",
       "sha256": "221dfc0abf7cbcd25e1da3cd87323f5d1050fc3bf652e096d093584e183c98fb",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/reflect/references/judgment-reviewer.md",
-      "destination": "skills/engineering/reflect/references/judgment-reviewer.md",
+      "destination": "skills/reflect/references/judgment-reviewer.md",
       "sha256": "a40ecb9b28bd2a3491e11a541157fe58efe158e0eda7b61a5006c14590aabe61",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/reflect/references/synthesizer.md",
-      "destination": "skills/engineering/reflect/references/synthesizer.md",
+      "destination": "skills/reflect/references/synthesizer.md",
       "sha256": "2f76c847eb45b182dc6fbcbf7d96c8ee7e2986ecfd9e0d640fec44e3cc5a617c",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/reflect/references/tooling-reviewer.md",
-      "destination": "skills/engineering/reflect/references/tooling-reviewer.md",
+      "destination": "skills/reflect/references/tooling-reviewer.md",
       "sha256": "bc49ced90fa81eaba3083b88aeb430d900a6d8f14ff40c1d6b52263bacfc77b6",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/reflect/LICENSE",
+      "destination": "skills/reflect/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/create-verification-skill/SKILL.md",
-      "destination": "skills/engineering/create-verification-skill/SKILL.md",
+      "destination": "skills/create-verification-skill/SKILL.md",
       "sha256": "644f2551403c1bca01a2855b34611b6e7be0ce0dc5b204514c376c0f6a6e6ac4",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/create-verification-skill/references/feature-map-example/README.md",
-      "destination": "skills/engineering/create-verification-skill/references/feature-map-example/README.md",
+      "destination": "skills/create-verification-skill/references/feature-map-example/README.md",
       "sha256": "cb7bd782cf89968a4ba3d58a5151db837430db92d19a6f52a906973b77b516ba",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/create-verification-skill/references/feature-map-example/create-note.md",
-      "destination": "skills/engineering/create-verification-skill/references/feature-map-example/create-note.md",
+      "destination": "skills/create-verification-skill/references/feature-map-example/create-note.md",
       "sha256": "644a44c74f35d38c2feb7cd05a0121fdebbb623e8dc376c185b565a581d1ccf7",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/create-verification-skill/references/feature-map-example/search.md",
-      "destination": "skills/engineering/create-verification-skill/references/feature-map-example/search.md",
+      "destination": "skills/create-verification-skill/references/feature-map-example/search.md",
       "sha256": "6e87b9e7f2791a7776ba1bb83f371cd285c306c67f19d245cc4dd6ca3015c823",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/create-verification-skill/LICENSE",
+      "destination": "skills/create-verification-skill/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/maintain-verification-skill/SKILL.md",
-      "destination": "skills/engineering/maintain-verification-skill/SKILL.md",
+      "destination": "skills/maintain-verification-skill/SKILL.md",
       "sha256": "515c0eaa054b3f6be1b1fb06f2c2f173c80fddb58bbcac57576f89c479bc68e8",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/maintain-verification-skill/LICENSE",
+      "destination": "skills/maintain-verification-skill/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/figure-it-out/SKILL.md",
-      "destination": "skills/engineering/figure-it-out/SKILL.md",
+      "destination": "skills/figure-it-out/SKILL.md",
       "sha256": "0eb9485f0e7d84fee56b5d0f0af0faf4635e3ca87c8cba3970c01293b76ecc19",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/figure-it-out/LICENSE",
+      "destination": "skills/figure-it-out/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/show-me-your-work/SKILL.md",
-      "destination": "skills/engineering/show-me-your-work/SKILL.md",
+      "destination": "skills/show-me-your-work/SKILL.md",
       "sha256": "bcff5f7f9fd23f92c12b251f9cd6b947e9485e1055cfacb6fdd9cae0789d7550",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/show-me-your-work/references/decision-log-template.tsv",
-      "destination": "skills/engineering/show-me-your-work/references/decision-log-template.tsv",
+      "destination": "skills/show-me-your-work/references/decision-log-template.tsv",
       "sha256": "6779378006a2f5225e8c06deb84f1d913fb532041ebbb6e50d94600bfe3f4b76",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/show-me-your-work/scripts/log.sh",
-      "destination": "skills/engineering/show-me-your-work/scripts/log.sh",
+      "destination": "skills/show-me-your-work/scripts/log.sh",
       "sha256": "a65a4bc5fb7cdeadbdb7b7ff1ca4682f4d9c42420942b2977cd17b46c4ac338e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/show-me-your-work/LICENSE",
+      "destination": "skills/show-me-your-work/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/typescript-best-practices/SKILL.md",
-      "destination": "skills/engineering/typescript-best-practices/SKILL.md",
+      "destination": "skills/typescript-best-practices/SKILL.md",
       "sha256": "28f9e61710e205f6f3c5476f333483cff0e988f6a5b639e2faad536344b40c5e",
-      "upstream": "cursor"
+      "upstream": "cursor",
+      "list_format_sha256": "adee632c5085c20b7a164382a07c421cdf95f5ef21ac60c1b13953b5d6ec02ff"
     },
     {
       "source": "pstack/skills/typescript-best-practices/references/patterns.md",
-      "destination": "skills/engineering/typescript-best-practices/references/patterns.md",
+      "destination": "skills/typescript-best-practices/references/patterns.md",
       "sha256": "62e9cd32d2fa066a35d0d1349aac22dce31a48ad7d5eaf142570770cfe707384",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/typescript-best-practices/LICENSE",
+      "destination": "skills/typescript-best-practices/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/bro/SKILL.md",
-      "destination": "skills/engineering/bro/SKILL.md",
+      "destination": "skills/bro/SKILL.md",
       "sha256": "aa329d0ceeeecb6822a7174ad76bb07a7826a3c52ceb6a588dec4138815084bb",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/bro/LICENSE",
+      "destination": "skills/bro/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-attack-the-premise/SKILL.md",
-      "destination": "skills/engineering-principles/principle-attack-the-premise/SKILL.md",
+      "destination": "skills/principle-attack-the-premise/SKILL.md",
       "sha256": "c87bd7536f772f8a403ad8155535ee17a1bbec9a353156693eb3bb1520c87ae3",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-attack-the-premise/LICENSE",
+      "destination": "skills/principle-attack-the-premise/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-boundary-discipline/SKILL.md",
-      "destination": "skills/engineering-principles/principle-boundary-discipline/SKILL.md",
+      "destination": "skills/principle-boundary-discipline/SKILL.md",
       "sha256": "62ac2862c2caa22dd14531f51c9c6bb445ceb198ca98a687e25b4d47c1f10a28",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-boundary-discipline/LICENSE",
+      "destination": "skills/principle-boundary-discipline/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-build-the-lever/SKILL.md",
-      "destination": "skills/engineering-principles/principle-build-the-lever/SKILL.md",
+      "destination": "skills/principle-build-the-lever/SKILL.md",
       "sha256": "458b269eab8e95a1573276955312f7d2a13ae8599879a9efc748248f6bc34b56",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-build-the-lever/LICENSE",
+      "destination": "skills/principle-build-the-lever/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-encode-lessons-in-structure/SKILL.md",
-      "destination": "skills/engineering-principles/principle-encode-lessons-in-structure/SKILL.md",
+      "destination": "skills/principle-encode-lessons-in-structure/SKILL.md",
       "sha256": "77044c83a9ac6df78fc643887ea5f1f11f082adaf14b717c060cdaed03cce863",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-encode-lessons-in-structure/LICENSE",
+      "destination": "skills/principle-encode-lessons-in-structure/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-exhaust-the-design-space/SKILL.md",
-      "destination": "skills/engineering-principles/principle-exhaust-the-design-space/SKILL.md",
+      "destination": "skills/principle-exhaust-the-design-space/SKILL.md",
       "sha256": "8583310d7297b7823d75494faa57b003564d436807febecdecbd8321abe5cf6e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-exhaust-the-design-space/LICENSE",
+      "destination": "skills/principle-exhaust-the-design-space/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-experience-first/SKILL.md",
-      "destination": "skills/engineering-principles/principle-experience-first/SKILL.md",
+      "destination": "skills/principle-experience-first/SKILL.md",
       "sha256": "58903529d733b1c1a7c9ccf127d45ef3c7d0d9f0b81164a4dc6b80efe6f2912b",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-experience-first/LICENSE",
+      "destination": "skills/principle-experience-first/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-fix-root-causes/SKILL.md",
-      "destination": "skills/engineering-principles/principle-fix-root-causes/SKILL.md",
+      "destination": "skills/principle-fix-root-causes/SKILL.md",
       "sha256": "ba4cd38da1dcc8fe5432feb64457cba95594736a9b21b2ebf8f8c52aee068707",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-fix-root-causes/LICENSE",
+      "destination": "skills/principle-fix-root-causes/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-foundational-thinking/SKILL.md",
-      "destination": "skills/engineering-principles/principle-foundational-thinking/SKILL.md",
+      "destination": "skills/principle-foundational-thinking/SKILL.md",
       "sha256": "864b827e8199d946ce58beca0f89c4ed4099ed6e426fb698a3aaa45de2a9eea2",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-foundational-thinking/LICENSE",
+      "destination": "skills/principle-foundational-thinking/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-guard-the-context-window/SKILL.md",
-      "destination": "skills/engineering-principles/principle-guard-the-context-window/SKILL.md",
+      "destination": "skills/principle-guard-the-context-window/SKILL.md",
       "sha256": "d2cef147862576e3d709b7afc149d85196245e8338b9c7eef337c95fba412b3e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-guard-the-context-window/LICENSE",
+      "destination": "skills/principle-guard-the-context-window/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-laziness-protocol/SKILL.md",
-      "destination": "skills/engineering-principles/principle-laziness-protocol/SKILL.md",
+      "destination": "skills/principle-laziness-protocol/SKILL.md",
       "sha256": "9006579e9e3f33955d17569733db688ae65f22577dc3b21803d219a5a8445aff",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-laziness-protocol/LICENSE",
+      "destination": "skills/principle-laziness-protocol/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-make-operations-idempotent/SKILL.md",
-      "destination": "skills/engineering-principles/principle-make-operations-idempotent/SKILL.md",
+      "destination": "skills/principle-make-operations-idempotent/SKILL.md",
       "sha256": "540738217c3da7bf513b9886924ad6a2bc77e58be867f5bd2e1831c74bf2ce70",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-make-operations-idempotent/LICENSE",
+      "destination": "skills/principle-make-operations-idempotent/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md",
-      "destination": "skills/engineering-principles/principle-migrate-callers-then-delete-legacy-apis/SKILL.md",
+      "destination": "skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md",
       "sha256": "09978915a4a11990cf0a9a02d9c08cc59e0b7a04c5c24b83aa560fbe4146f75b",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-migrate-callers-then-delete-legacy-apis/LICENSE",
+      "destination": "skills/principle-migrate-callers-then-delete-legacy-apis/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-minimize-reader-load/SKILL.md",
-      "destination": "skills/engineering-principles/principle-minimize-reader-load/SKILL.md",
+      "destination": "skills/principle-minimize-reader-load/SKILL.md",
       "sha256": "42551c5dc74cd578163c148da552db3ff67d29b78600ef216bfd311fb828fe69",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-minimize-reader-load/LICENSE",
+      "destination": "skills/principle-minimize-reader-load/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-model-the-domain/SKILL.md",
-      "destination": "skills/engineering-principles/principle-model-the-domain/SKILL.md",
+      "destination": "skills/principle-model-the-domain/SKILL.md",
       "sha256": "bbadbb9a723fac3f76e782ae45665eb94058ec10993e4bae36d4dc6b0e4eac07",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-model-the-domain/LICENSE",
+      "destination": "skills/principle-model-the-domain/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-never-block-on-the-human/SKILL.md",
-      "destination": "skills/engineering-principles/principle-never-block-on-the-human/SKILL.md",
+      "destination": "skills/principle-never-block-on-the-human/SKILL.md",
       "sha256": "f2764bb9338cbfc788c903cf4b9cd0a5f4042d3a04dd6d59cbd525d9beaadd0a",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-never-block-on-the-human/LICENSE",
+      "destination": "skills/principle-never-block-on-the-human/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-outcome-oriented-execution/SKILL.md",
-      "destination": "skills/engineering-principles/principle-outcome-oriented-execution/SKILL.md",
+      "destination": "skills/principle-outcome-oriented-execution/SKILL.md",
       "sha256": "10eb91633aa570355ba4bb37088fcade2b22e498df7a58edc749e65bc5a78e2d",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-outcome-oriented-execution/LICENSE",
+      "destination": "skills/principle-outcome-oriented-execution/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-prove-it-works/SKILL.md",
-      "destination": "skills/engineering-principles/principle-prove-it-works/SKILL.md",
+      "destination": "skills/principle-prove-it-works/SKILL.md",
       "sha256": "ec79a15025bac8d33d62011c54f3b612733fd2a024e623b531b3637aa75070e2",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-prove-it-works/LICENSE",
+      "destination": "skills/principle-prove-it-works/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-redesign-from-first-principles/SKILL.md",
-      "destination": "skills/engineering-principles/principle-redesign-from-first-principles/SKILL.md",
+      "destination": "skills/principle-redesign-from-first-principles/SKILL.md",
       "sha256": "a1c7fd0a96b40e12a74bceb0e6bb20a9666dd844dcabfb624acb27da23b929fe",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-redesign-from-first-principles/LICENSE",
+      "destination": "skills/principle-redesign-from-first-principles/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-separate-before-serializing-shared-state/SKILL.md",
-      "destination": "skills/engineering-principles/principle-separate-before-serializing-shared-state/SKILL.md",
+      "destination": "skills/principle-separate-before-serializing-shared-state/SKILL.md",
       "sha256": "05294b40448e927c5da1c7b6f5c6b9fed3744637e3833d2d948b9154a9dd00bb",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-separate-before-serializing-shared-state/LICENSE",
+      "destination": "skills/principle-separate-before-serializing-shared-state/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-sequence-verifiable-units/SKILL.md",
-      "destination": "skills/engineering-principles/principle-sequence-verifiable-units/SKILL.md",
+      "destination": "skills/principle-sequence-verifiable-units/SKILL.md",
       "sha256": "2ccbbacc56ace5afdfb8670cef19d7bd009fb2a0033b9a741cbdf2b6baf72187",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-sequence-verifiable-units/LICENSE",
+      "destination": "skills/principle-sequence-verifiable-units/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-subtract-before-you-add/SKILL.md",
-      "destination": "skills/engineering-principles/principle-subtract-before-you-add/SKILL.md",
+      "destination": "skills/principle-subtract-before-you-add/SKILL.md",
       "sha256": "a983a50e732c1ed315eba7aaf47a61329e31c4794eb1ab9d25d9945265b31e03",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-subtract-before-you-add/LICENSE",
+      "destination": "skills/principle-subtract-before-you-add/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-test-behavior-not-implementation/SKILL.md",
-      "destination": "skills/engineering-principles/principle-test-behavior-not-implementation/SKILL.md",
+      "destination": "skills/principle-test-behavior-not-implementation/SKILL.md",
       "sha256": "87e40efe4e486f7ea639d2ed1fc0abe6c93b8fd0e89a81218086909d2470a52e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-test-behavior-not-implementation/LICENSE",
+      "destination": "skills/principle-test-behavior-not-implementation/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/principle-type-system-discipline/SKILL.md",
-      "destination": "skills/engineering-principles/principle-type-system-discipline/SKILL.md",
+      "destination": "skills/principle-type-system-discipline/SKILL.md",
       "sha256": "c83da8031ffb4c86410030d3e261f659598fca2b7d8158fd9dc269d70a3a025e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering-principles/principle-type-system-discipline/LICENSE",
+      "destination": "skills/principle-type-system-discipline/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
-      "destination": "skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
+      "destination": "skills/improve-codebase-architecture/HTML-REPORT.md",
       "sha256": "581e8bb5a521e46bbda8ca7e19b15948bed882187108092ebb90c62513b77528",
       "upstream": "matt"
     },
     {
       "source": "skills/engineering/improve-codebase-architecture/SKILL.md",
-      "destination": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "destination": "skills/improve-codebase-architecture/SKILL.md",
       "sha256": "d1ac25511a936ff4250a48dbcefda363837d6bb9321b3cba73df99fa37270a75",
       "upstream": "matt"
     },
     {
       "source": "skills/engineering/improve-codebase-architecture/agents/openai.yaml",
-      "destination": "skills/engineering/improve-codebase-architecture/agents/openai.yaml",
+      "destination": "skills/improve-codebase-architecture/agents/openai.yaml",
       "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1",
       "upstream": "matt"
     },
     {
       "source": "LICENSE",
-      "destination": "skills/engineering/improve-codebase-architecture/LICENSE",
+      "destination": "skills/improve-codebase-architecture/LICENSE",
       "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
       "upstream": "matt"
     },
     {
       "source": "skills/engineering/codebase-design/DEEPENING.md",
-      "destination": "skills/engineering/codebase-design/DEEPENING.md",
+      "destination": "skills/codebase-design/DEEPENING.md",
       "sha256": "f3dd099ce99289bd213914d8ee3e2429b78309c3957ca4583f7659551b1d53c1",
       "upstream": "matt"
     },
     {
       "source": "skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
-      "destination": "skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
+      "destination": "skills/codebase-design/DESIGN-IT-TWICE.md",
       "sha256": "8e740bf98446dbd4dfdc132ac4346d9a7eedaf93de6a495889171cf7f99f16bd",
       "upstream": "matt"
     },
     {
       "source": "skills/engineering/codebase-design/SKILL.md",
-      "destination": "skills/engineering/codebase-design/SKILL.md",
+      "destination": "skills/codebase-design/SKILL.md",
       "sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
       "upstream": "matt"
     },
     {
       "source": "skills/engineering/codebase-design/agents/openai.yaml",
-      "destination": "skills/engineering/codebase-design/agents/openai.yaml",
+      "destination": "skills/codebase-design/agents/openai.yaml",
       "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f",
       "upstream": "matt"
     },
     {
       "source": "LICENSE",
-      "destination": "skills/engineering/codebase-design/LICENSE",
+      "destination": "skills/codebase-design/LICENSE",
       "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
       "upstream": "matt"
     },
     {
       "source": "skills/engineering/domain-modeling/ADR-FORMAT.md",
-      "destination": "skills/engineering/domain-modeling/ADR-FORMAT.md",
+      "destination": "skills/domain-modeling/ADR-FORMAT.md",
       "sha256": "944c92aa790e8fbdc9199640b170979abb8a34ba8d0fe18c2a01a63bce140ca0",
       "upstream": "matt"
     },
     {
       "source": "skills/engineering/domain-modeling/CONTEXT-FORMAT.md",
-      "destination": "skills/engineering/domain-modeling/CONTEXT-FORMAT.md",
+      "destination": "skills/domain-modeling/CONTEXT-FORMAT.md",
       "sha256": "17ab16ce783e4d2801ee52fd9acdf550cbf44de65ae76797a93943bbedf22a13",
       "upstream": "matt"
     },
     {
       "source": "skills/engineering/domain-modeling/SKILL.md",
-      "destination": "skills/engineering/domain-modeling/SKILL.md",
+      "destination": "skills/domain-modeling/SKILL.md",
       "sha256": "327a2b50620e2fd70abc6893cd6965e76b20f8d0adb0dc2c8d5eb3845efb643e",
       "upstream": "matt"
     },
     {
       "source": "skills/engineering/domain-modeling/agents/openai.yaml",
-      "destination": "skills/engineering/domain-modeling/agents/openai.yaml",
+      "destination": "skills/domain-modeling/agents/openai.yaml",
       "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b",
       "upstream": "matt"
     },
     {
       "source": "LICENSE",
-      "destination": "skills/engineering/domain-modeling/LICENSE",
+      "destination": "skills/domain-modeling/LICENSE",
       "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
       "upstream": "matt"
     },
     {
       "source": "skills/productivity/grilling/SKILL.md",
-      "destination": "skills/engineering/grilling/SKILL.md",
+      "destination": "skills/grilling/SKILL.md",
       "sha256": "10ff989e7498b23b5acb49d5048f11dcd906757d2f79c5cdf8a00001381296f2",
       "upstream": "matt"
     },
     {
       "source": "skills/productivity/grilling/agents/openai.yaml",
-      "destination": "skills/engineering/grilling/agents/openai.yaml",
+      "destination": "skills/grilling/agents/openai.yaml",
       "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b",
       "upstream": "matt"
     },
     {
       "source": "LICENSE",
-      "destination": "skills/engineering/grilling/LICENSE",
+      "destination": "skills/grilling/LICENSE",
       "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
       "upstream": "matt"
     },
     {
       "source": "cursor-team-kit/skills/deslop/SKILL.md",
-      "destination": "skills/engineering/deslop/SKILL.md",
+      "destination": "skills/deslop/SKILL.md",
       "sha256": "2f7b7def74af7ed11f5b44b4d32f0f91fca8c5d1f92bf2171e8d12fd33a0f810",
       "upstream": "cursor"
     },
     {
       "source": "cursor-team-kit/LICENSE",
-      "destination": "skills/engineering/deslop/LICENSE",
+      "destination": "skills/deslop/LICENSE",
       "sha256": "702f5f331b56aff0e33d8c7826df5202559f894145eb70355c6477b55b5bb8a0",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/authoring-a-skill.md",
-      "destination": "skills/engineering/mako/playbooks/authoring-a-skill.md",
+      "destination": "skills/mako/playbooks/authoring-a-skill.md",
       "sha256": "f6a13a445c360b48d6cd72780ac01955f45b82826476efe0e67c7559329407aa",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/autonomous-run.md",
-      "destination": "skills/engineering/mako/playbooks/autonomous-run.md",
+      "destination": "skills/mako/playbooks/autonomous-run.md",
       "sha256": "15e54ad3ac92565613980772d8708de6e19cc4690bfd4bb3fb8836522407377b",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/autopilot-full.md",
-      "destination": "skills/engineering/mako/playbooks/autopilot-full.md",
+      "destination": "skills/mako/playbooks/autopilot-full.md",
       "sha256": "975439613b9073b637a88c6df762b474dbd745f0e86150bb07d2121e32eb48e7",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/autopilot-stack.md",
-      "destination": "skills/engineering/mako/playbooks/autopilot-stack.md",
+      "destination": "skills/mako/playbooks/autopilot-stack.md",
       "sha256": "f626f4ed17725de5ea96ac22597a1c298c46c36015e844bf86a68f6d38d57fbf",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/babysit.md",
-      "destination": "skills/engineering/mako/playbooks/babysit.md",
+      "destination": "skills/mako/playbooks/babysit.md",
       "sha256": "a0346c37c2313f36a863b80f66ee7b98059c2242adf74fc7b3e48abdb9ec6f5a",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/eval.md",
-      "destination": "skills/engineering/mako/playbooks/eval.md",
+      "destination": "skills/mako/playbooks/eval.md",
       "sha256": "b862bfa2fae2399abf047a8e80d3e3dddb64003af96fb1cebb625216131e36bb",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/feature.md",
-      "destination": "skills/engineering/mako/playbooks/feature.md",
+      "destination": "skills/mako/playbooks/feature.md",
       "sha256": "3a62cc4a8cbcf144bb9dd05f05420a15be0d38b784d3b141bb730a5852f50a62",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/hillclimb.md",
-      "destination": "skills/engineering/mako/playbooks/hillclimb.md",
+      "destination": "skills/mako/playbooks/hillclimb.md",
       "sha256": "41980da135de2579bb38570e4b3373e015029148734ab5dc7d6103417b499af6",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/investigation.md",
-      "destination": "skills/engineering/mako/playbooks/investigation.md",
+      "destination": "skills/mako/playbooks/investigation.md",
       "sha256": "dc66bcf6af3a074fc7f67aa5e12b93ef571a4fb4d8e17f2f1af5ae5359f42e46",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/opening-a-pr.md",
-      "destination": "skills/engineering/mako/playbooks/opening-a-pr.md",
+      "destination": "skills/mako/playbooks/opening-a-pr.md",
       "sha256": "1c0281f84348aa5dc6f10defbcdd8357f4b0786d874f340ba34bfc169dc6c26f",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/pause-safely.md",
-      "destination": "skills/engineering/mako/playbooks/pause-safely.md",
+      "destination": "skills/mako/playbooks/pause-safely.md",
       "sha256": "77968cfe5f4a71a8cd33e0ae8ffcdbd88dd693a212c240457773e6c40c96c21d",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/perf-issue.md",
-      "destination": "skills/engineering/mako/playbooks/perf-issue.md",
+      "destination": "skills/mako/playbooks/perf-issue.md",
       "sha256": "bb957907426666b7aa599aed3f6ddebf423364a1428f93790b5cb9e15c878e7e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/prototype.md",
-      "destination": "skills/engineering/mako/playbooks/prototype.md",
+      "destination": "skills/mako/playbooks/prototype.md",
       "sha256": "7aa1f52c691c3d46d5afc527b23f90977fce869ce33573c73c81a4c7f0cde962",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/refactoring.md",
-      "destination": "skills/engineering/mako/playbooks/refactoring.md",
+      "destination": "skills/mako/playbooks/refactoring.md",
       "sha256": "50f4f7d3d301551f8b8a57c3303c99958c5ca630ae0d0051823b6987c0eb5b96",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/runtime-forensics.md",
-      "destination": "skills/engineering/mako/playbooks/runtime-forensics.md",
+      "destination": "skills/mako/playbooks/runtime-forensics.md",
       "sha256": "594f02c40c243a346e1f57b688ecf2ed5e882f21b3d24ed2204d1ac6f1c24a8a",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/session-pickup.md",
-      "destination": "skills/engineering/mako/playbooks/session-pickup.md",
+      "destination": "skills/mako/playbooks/session-pickup.md",
       "sha256": "1604fb463f7c7410d43fa024ca76c1c1824c166a01fd69d61f073d06fdca2a47",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/shipping.md",
-      "destination": "skills/engineering/mako/playbooks/shipping.md",
+      "destination": "skills/mako/playbooks/shipping.md",
       "sha256": "19f3f6803a7bbe9ff04f624b03e3b55f07ac0a05e991aa00d5fe51239b920b2a",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/trace-forensics.md",
-      "destination": "skills/engineering/mako/playbooks/trace-forensics.md",
+      "destination": "skills/mako/playbooks/trace-forensics.md",
       "sha256": "137ce3984fb96e45971fdff4d3c79fa4ccc647c5b30ae4945783b9fb23f8cec7",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/visual-parity.md",
-      "destination": "skills/engineering/mako/playbooks/visual-parity.md",
+      "destination": "skills/mako/playbooks/visual-parity.md",
       "sha256": "950ca51999a6454c98eee6bcbc3d1bbe501a4e3a5d5439b6f6ddc378991b256c",
       "upstream": "cursor"
     },
     {
       "source": "pstack/agents/comment-sicko.md",
-      "destination": "skills/engineering/no-comments/references/comment-sicko.md",
+      "destination": "skills/no-comments/references/comment-sicko.md",
       "sha256": "c0fd0383008da45fc78cfac17b9007d62c42f87ad1c8d5c2fb658b1fd01f7c82",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/references/bugbot-triage.md",
-      "destination": "skills/engineering/mako/references/bugbot-triage.md",
+      "destination": "skills/mako/references/bugbot-triage.md",
       "sha256": "b2d146c770d8d3593e1ef3d77b668039b8e1f78093ea1a86f1d45d7f99614309",
       "upstream": "cursor"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/mako/LICENSE",
+      "destination": "skills/mako/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/SKILL.md",
-      "destination": "skills/engineering/mako/SKILL.md",
+      "destination": "skills/mako/SKILL.md",
       "sha256": "7645c9ee27ef9798c48a84060b6df409f8593d1058c7c25cbec28dce976195f9",
       "upstream": "cursor"
     },
     {
       "source": "pstack/skills/poteto-mode/playbooks/bug-fix.md",
-      "destination": "skills/engineering/bug-fix/SKILL.md",
+      "destination": "skills/bug-fix/SKILL.md",
       "sha256": "018bbc146ae19145caa6c7e70591fee081b64447dda1c1c4b681c9974d928b13",
       "upstream": "cursor"
     },
     {
       "source": "skills/engineering/grill-with-docs/SKILL.md",
-      "destination": "skills/engineering/grill-me/SKILL.md",
+      "destination": "skills/grill-me/SKILL.md",
       "sha256": "7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe",
       "upstream": "matt"
     },
     {
       "source": "pstack/LICENSE",
-      "destination": "skills/engineering/bug-fix/LICENSE",
+      "destination": "skills/bug-fix/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor"
     },
     {
       "source": "LICENSE",
-      "destination": "skills/engineering/grill-me/LICENSE",
+      "destination": "skills/grill-me/LICENSE",
       "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
       "upstream": "matt"
     }

@@ -1,14 +1,18 @@
 # Mako harness compatibility
 
-The bundle preserves category directories under one `reese -> <checkout>/skills` symlink. Tests use isolated homes and temporary discovery directories. No model turn or global installation is required.
+The bundle contains one directory per skill under one `reese -> <checkout>/skills` symlink. Tests use isolated homes and temporary discovery directories. No model turn or global installation is required.
 
 ## Tested capabilities
 
-| Harness | Discovery evidence | Explicit-only evidence |
-| --- | --- | --- |
-| Installed pi loader | All 52 skills through the bundle symlink, no diagnostics; sibling and cross-category reads resolve | All hidden skills absent from `formatSkillsForPrompt`; visible skills remain |
-| Codex CLI 0.155.0 | All 52 enabled skills returned by `skills/list` through both `.agents/skills` and `.codex/skills` | All 45 explicit-only skills absent from `debug prompt-input`; seven model-invoked bundle skills remain |
-| OpenCode v2.0.15 | All 52 skills returned by the persistent server's skill API through both `.agents/skills` and native configuration roots; dependency reads resolve | All 45 explicit-only skills return `autoinvoke: false`; the installed prompt-filtering implementation excludes that flag |
+- Installed pi loader
+  - Discovery evidence: All 52 skills through the bundle symlink, no diagnostics; sibling dependency reads resolve
+  - Explicit-only evidence: All hidden skills absent from `formatSkillsForPrompt`; visible skills remain
+- Codex CLI 0.155.0
+  - Discovery evidence: All 52 enabled skills returned by `skills/list` through both `.agents/skills` and `.codex/skills`
+  - Explicit-only evidence: All 45 explicit-only skills absent from `debug prompt-input`; seven model-invoked bundle skills remain
+- OpenCode v2.0.15
+  - Discovery evidence: All 52 skills returned by the persistent server's skill API through both `.agents/skills` and native configuration roots; dependency reads resolve
+  - Explicit-only evidence: All 45 explicit-only skills return `autoinvoke: false`; the installed prompt-filtering implementation excludes that flag
 
 The OpenCode check does not render a model prompt. Its API result and version-matched source inspection are separate evidence from pi and Codex's rendered-prompt checks.
 
@@ -43,6 +47,7 @@ Install the Python tooling dependency in your development environment:
 ```bash
 python3 -m pip install -r scripts/requirements.txt
 python3 scripts/validate_skills.py
+python3 scripts/markdown_lists.py
 python3 -m unittest discover -s tests -v
 ```
 
@@ -76,10 +81,12 @@ Codex documentation: [Agent skills](https://developers.openai.com/codex/skills).
 - Runtime enforcement of mission-wide completion evidence.
 - pi-subagents automatic Git-worktree isolation in a jj repository.
 
-The [routing acceptance cases](mako-routing-cases.md) remain the behavioral evaluation plan. Do not call them passed because metadata and paths validate.
+Tune instructions through actual use. Passing metadata and path checks does not establish model compliance; no standing behavioral test suite is maintained.
 
 ## Installation state
 
-`scripts/link-skills.sh` previews by default. It validates the bundle and checks common discovery roots before any mutation. `--apply` creates the bundle link; `--migrate-owned-flat` additionally permits removal of matching symlinks owned by this checkout.
+`scripts/link-skills.sh` previews by default. It validates the bundle and checks common discovery roots before any mutation. `--apply` creates the bundle link; `--migrate-owned-flat` additionally permits removal of matching symlinks owned by this checkout, including dangling targets from the former category layout.
 
-The current user's four separately installed architecture skills collide by name. The preview refuses them. Their comparison, backup, and replacement remain an explicit migration task. No copy was overwritten and no global configuration was changed.
+The full bundle is installed at `~/.agents/skills/reese`, linked to this checkout's `skills/` directory. All 52 installed skills pass validation, and a second installer preview reports no collisions or pending migrations. Reload the harness to refresh discovery.
+
+The user authorized deleting the four separate copies of `domain-modeling`, `grilling`, `codebase-design`, and `improve-codebase-architecture` without comparison or backup. The installer then replaced the ten repo-owned per-skill aliases under `~/.agents/skills` and `~/.claude/skills` with the shared bundle installation. Unrelated skills and harness configuration files were left untouched. No new Claude-native bundle link was created; the tested targets are pi, Codex, and OpenCode 2.

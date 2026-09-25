@@ -1,0 +1,11 @@
+### Runtime forensics
+
+**You own the diagnosis. Instrument the live process, don't theorize from source.** The deliverable is a cited diagnosis, not a fix.
+
+1. Read [execution](../references/execution.md). Capture the live signal through the project's verification skill or discovered tools: a CPU profile for a spinning process, a heap snapshot for a leak, a CDP trace for a visual glitch. A real artifact, not a guess.
+2. Reduce the artifact to the smoking gun: the function on the hot path, the retainer chain from the leaked object to a GC root, the loop firing without input. Parse large artifacts in a subagent (the `principle-guard-the-context-window` principle skill), keep the reduced finding in the main thread.
+3. Prove the mechanism before believing it. Instrument only an authorized environment; live instrumentation and hotfixes are mutations. Prefer an isolated reproduction. Record the intervention and restore owned temporary changes after capturing evidence.
+4. Map the finding back to source: file, symbol, the line that allocates or schedules.
+5. Throughput checkpoint stays one line: `throughput checkpoint: diagnosis only; live interventions require explicit environment authority`.
+
+**Reply:** the signal captured, the reduced finding, how you proved the mechanism, the source location, artifact paths. No fix unless asked. Hand back to Bug fix or Perf once the cause is known.

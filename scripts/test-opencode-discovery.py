@@ -73,8 +73,8 @@ def main():
                     assert path.resolve().is_relative_to(source), path
                     assert path.is_file(), path
                 mako = Path(found["mako"]["path"])
-                for dependency in ["../architect/SKILL.md", "../../writing/writing/SKILL.md",
-                                   "../../engineering-principles/principle-model-the-domain/SKILL.md"]:
+                for dependency in ["../architect/SKILL.md", "../writing/SKILL.md",
+                                   "../principle-model-the-domain/SKILL.md"]:
                     assert (mako.parent / dependency).read_text()
             finally:
                 if process.poll() is None:

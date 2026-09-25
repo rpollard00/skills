@@ -32,12 +32,12 @@ try {
   assert.ok(mako?.disableModelInvocation);
   for (const relative of [
     "../architect/SKILL.md",
-    "../../engineering-principles/principle-model-the-domain/SKILL.md",
-    "../../writing/writing/SKILL.md",
+    "../principle-model-the-domain/SKILL.md",
+    "../writing/SKILL.md",
     "playbooks/feature.md",
   ]) {
     const fromLink = await realpath(resolve(mako.baseDir, relative));
-    const fromSource = await realpath(resolve(source, "engineering/mako", relative));
+    const fromSource = await realpath(resolve(source, "mako", relative));
     assert.equal(fromLink, fromSource);
     assert.ok((await readFile(fromLink, "utf8")).length > 0);
   }

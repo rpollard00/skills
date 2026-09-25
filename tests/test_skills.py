@@ -11,10 +11,11 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 from link_skills import InstallError, apply, plan
-from validate_skills import local_links, validate
+from markdown_lists import markdown_files, to_lists
+from validate_skills import local_links, named_skill_dependencies, validate
 
 
-def make_skill(root, name="sample", *, category="engineering", hidden=False):
+def make_skill(root, name="sample", *, category="", hidden=False):
     directory = root / category / name
     directory.mkdir(parents=True, exist_ok=True)
     (directory / "SKILL.md").write_text(
@@ -28,7 +29,9 @@ def make_skill(root, name="sample", *, category="engineering", hidden=False):
 
 class ValidationTests(unittest.TestCase):
     def test_repository(self):
-        self.assertEqual(validate(REPO / "skills"), [])
+        root = REPO / "skills"
+        self.assertEqual(validate(root), [])
+        self.assertEqual(set(root.rglob("SKILL.md")), set(root.glob("*/SKILL.md")))
 
     def test_missing_dependency_is_reported(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -80,7 +83,8 @@ class ValidationTests(unittest.TestCase):
 
     def test_mako_reaches_all_selected_skills(self):
         root = REPO / "skills"
-        pending = [root / "engineering/mako/SKILL.md"]
+        skills = {p.parent.name: p for p in root.glob("*/SKILL.md")}
+        pending = [skills["mako"]]
         seen = set()
         while pending:
             path = pending.pop().resolve()
@@ -88,9 +92,20 @@ class ValidationTests(unittest.TestCase):
                 continue
             seen.add(path)
             pending.extend(local_links(path))
-        selected = set(root.glob("engineering/*/SKILL.md")) | set(root.glob("engineering-principles/*/SKILL.md"))
+            pending.extend(named_skill_dependencies(path, skills))
+        selected = set(root.glob("*/SKILL.md"))
         self.assertEqual({p.resolve() for p in selected} - seen, set())
-        self.assertEqual(len(list(root.glob("engineering-principles/*/SKILL.md"))), 23)
+        self.assertEqual(len(list(root.glob("principle-*/SKILL.md"))), 23)
+
+    def test_named_dependencies_use_inventory_and_ignore_fenced_examples(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            skill = make_skill(root)
+            reference = skill / "references/guide.md"
+            reference.parent.mkdir()
+            reference.write_text("Read `sample`. Not a skill: `value`.\n```\n`hidden`\n```\n")
+            skills = {"sample": skill / "SKILL.md", "hidden": root / "hidden/SKILL.md"}
+            self.assertEqual(list(named_skill_dependencies(reference, skills)), [skill / "SKILL.md"])
 
     def test_import_inventory_and_protected_upstream_content(self):
         imports = json.loads((REPO / "docs/upstream-imports.json").read_text())["files"]
@@ -98,18 +113,23 @@ class ValidationTests(unittest.TestCase):
         for row in imports:
             self.assertTrue((REPO / row["destination"]).is_file(), row)
         protected = [
-            "skills/engineering/no-comments/references/comment-sicko.md",
-            "skills/engineering/typescript-best-practices/SKILL.md",
-            "skills/engineering/typescript-best-practices/references/patterns.md",
+            "skills/no-comments/references/comment-sicko.md",
+            "skills/typescript-best-practices/SKILL.md",
+            "skills/typescript-best-practices/references/patterns.md",
         ]
         for name in protected:
             content = (REPO / name).read_text()
             if name.endswith("typescript-best-practices/SKILL.md"):
                 content = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", content)
                 content = content.replace('\nmetadata:\n  opencode/autoinvoke: "false"', "")
-            self.assertEqual(hashlib.sha256(content.encode()).hexdigest(), records[name]["sha256"], name)
-        for path in (REPO / "skills/engineering").glob("*/SKILL.md"):
-            self.assertTrue((path.parent / "LICENSE").is_file(), path)
+                for principle in ("type-system-discipline", "boundary-discipline"):
+                    content = content.replace(f"`principle-{principle}`", f"**{principle}**")
+            expected = records[name].get("list_format_sha256", records[name]["sha256"])
+            self.assertEqual(hashlib.sha256(content.encode()).hexdigest(), expected, name)
+        for row in imports:
+            if row["destination"].endswith("/SKILL.md"):
+                path = REPO / row["destination"]
+                self.assertTrue((path.parent / "LICENSE").is_file(), path)
 
 
 class InstallerTests(unittest.TestCase):
@@ -128,7 +148,7 @@ class InstallerTests(unittest.TestCase):
         apply(*args)
         link = self.dest / "reese"
         self.assertEqual(link.resolve(), self.repo / "skills")
-        self.assertTrue((link / "engineering/sample/SKILL.md").is_file())
+        self.assertTrue((link / "sample/SKILL.md").is_file())
         apply(*plan(self.repo, self.home, self.dest, False))
         self.assertEqual(list(self.dest.iterdir()), [link])
 
@@ -144,6 +164,39 @@ class InstallerTests(unittest.TestCase):
         apply(*args)
         self.assertFalse(old.is_symlink())
         self.assertTrue(self.source.is_dir())
+
+    def test_pre_flattening_links_require_explicit_migration(self):
+        old_categories = {
+            "sample": "engineering", "principle-prove-it-works": "engineering-principles",
+            "refine-ui": "design", "jj": "version-control", "writing": "writing",
+            "simple-technical-english": "writing", "unslop": "writing",
+        }
+        for name, category in old_categories.items():
+            with self.subTest(name=name):
+                source = make_skill(self.repo / "skills", name=name)
+                old = self.home / ".agents/skills" / name
+                old.parent.mkdir(parents=True, exist_ok=True)
+                target = self.repo / "skills" / category / name
+                old.symlink_to(target)
+                self.assertFalse(old.exists())
+                with self.assertRaises(InstallError):
+                    plan(self.repo, self.home, self.dest, False)
+                args = plan(self.repo, self.home, self.dest, True)
+                self.assertIn((old, target), args[2])
+                self.assertTrue(old.is_symlink())
+                apply(*args)
+                self.assertFalse(old.is_symlink())
+                self.assertTrue(source.is_dir())
+
+    def test_foreign_dangling_skill_link_is_not_migrated(self):
+        old = self.home / ".agents/skills/sample"
+        old.parent.mkdir(parents=True)
+        target = self.root / "foreign/skills/engineering/sample"
+        old.symlink_to(target)
+        args = plan(self.repo, self.home, self.dest, True)
+        self.assertEqual(args[2], [])
+        apply(*args)
+        self.assertEqual(os.readlink(old), str(target))
 
     def test_foreign_copy_blocks_before_mutation(self):
         foreign = make_skill(self.home / ".agents/skills", category="collection")
@@ -173,10 +226,10 @@ class InstallerTests(unittest.TestCase):
         with self.assertRaises(InstallError):
             plan(self.repo, self.home, self.repo / "nested", True)
 
-    def test_shared_destination_preserves_category_links(self):
+    def test_shared_destination_preserves_skill_links(self):
         dest = self.home / ".agents/skills"
         apply(*plan(self.repo, self.home, dest, False))
-        self.assertEqual((dest / "reese/engineering/sample/SKILL.md").resolve(), self.source / "SKILL.md")
+        self.assertEqual((dest / "reese/sample/SKILL.md").resolve(), self.source / "SKILL.md")
 
     def test_same_bundle_in_another_native_root_is_not_a_foreign_collision(self):
         apply(*plan(self.repo, self.home, self.dest, False))
@@ -223,9 +276,51 @@ class InstallerTests(unittest.TestCase):
         self.assertFalse(self.home.exists())
 
 
+class MarkdownListTests(unittest.TestCase):
+    def test_two_columns_and_idempotence(self):
+        source = "| Term | Meaning |\n| :--- | ---: |\n| [name](path) | **meaning** |\n"
+        expected = "- [name](path): **meaning**\n"
+        self.assertEqual(to_lists(source), expected)
+        self.assertEqual(to_lists(expected), expected)
+
+    def test_multiple_columns_keep_field_names(self):
+        source = "Name | Input | Output\n--- | --- | ---\nExample | one | two\n"
+        self.assertEqual(to_lists(source), "- Example\n  - Input: one\n  - Output: two\n")
+
+    def test_escaped_and_code_pipes(self):
+        source = "| Input | Output |\n| --- | --- |\n| a\\|b | `x | y` |\n"
+        self.assertEqual(to_lists(source), "- a\\|b: `x | y`\n")
+
+    def test_fences_indented_examples_and_header_only_fixtures_are_preserved(self):
+        table = "| Name | Value |\n| --- | --- |\n| x | y |\n"
+        fixtures = [
+            "```markdown\n" + table + "```\n",
+            "~~~~markdown\n" + table + "~~~\n" + table + "~~~~\n",
+            "````markdown\n```\n" + table + "```\n````\n",
+            "".join("    " + line for line in table.splitlines(keepends=True)),
+            "| Name | Value |\n| --- | --- |\n",
+        ]
+        for fixture in fixtures:
+            with self.subTest(fixture=fixture):
+                self.assertEqual(to_lists(fixture), fixture)
+        self.assertEqual(to_lists(fixtures[0] + table), fixtures[0] + "- x: y\n")
+
+    def test_malformed_table_fails_instead_of_dropping_cells(self):
+        with self.assertRaises(ValueError):
+            to_lists("| Name | Value |\n| --- | --- |\n| x | y | z |\n")
+
+    def test_repository_markdown_and_links(self):
+        for path in markdown_files(REPO):
+            with self.subTest(path=path):
+                content = path.read_text()
+                self.assertEqual(to_lists(content), content)
+                for target in local_links(path):
+                    self.assertTrue(target.exists(), target)
+
+
 class DecisionLogTests(unittest.TestCase):
     def test_append_sanitizes_cells_and_preserves_prior_rows(self):
-        helper = REPO / "skills/engineering/show-me-your-work/scripts/log.sh"
+        helper = REPO / "skills/show-me-your-work/scripts/log.sh"
         with tempfile.TemporaryDirectory() as temp:
             log = Path(temp) / "nested/decisions.tsv"
             subprocess.run([str(helper), str(log), "frame", "=bad\tvalue", "why\nnext", "@artifact", "open"], check=True)
