@@ -2,6 +2,19 @@
 
 Use this priority order to diagnose and create UI. It is an independently written working discipline informed by practical interface-design literature, including Adam Wathan and Steve Schoger's *Refactoring UI*. It is not a substitute for the book. When a prepared licensed reference cache is available, complete the targeted consultation in [PDF-REFERENCE.md](PDF-REFERENCE.md) instead of relying on this summary or model memory alone.
 
+## Compose from the task
+
+For new UI or an authorized redesign, choose content before choosing the page shell or component arrangement:
+
+1. Identify the primary user task and representative data. Select the facts, controls, and outcomes needed to complete it.
+2. Group content by the question or action it supports. Place each fact where users need it, including relevant detail and recovery contexts.
+3. Set the hierarchy and interaction for each group. Decide what needs a label, value, action, or explanation before writing the copy.
+4. Define what each consequential state makes available, unknown, or actionable. Choose components that express those relationships instead of filling a predetermined set of slots.
+
+Establish the primary task region with realistic content before elaborating the surrounding page. Reuse accepted shells, components, and project rules for scoped work. These choices do not require a separate document, mockup, or approval gate. Carry consequential choices into the caller's existing plan or implementation brief when useful.
+
+An optional subtitle, banner, or caption is an available capability, not a request for text. Create it for a distinct user need. A familiar template does not establish that need. Let the product's character guide typography, color, imagery, and purposeful brand expression without inventing extra subject matter.
+
 ## Rendered evidence first
 
 A source value is not a visual result. Cascades, inherited styles, fonts, content density, viewport size, and neighboring elements determine what users see.
@@ -24,7 +37,7 @@ Work from structural questions toward decoration. Do not polish a hierarchy that
 
 Prefer real domain language and representative data over placeholder copy. A sparse mockup cannot validate a data-dense product.
 
-Set the control, hierarchy, grouping, and interaction before adding explanation. For each text element, ask what becomes unclear if it disappears. Try a precise label or better placement before a paragraph. Keep explanation for the ambiguity that remains.
+Choose copy by its role in the task. Labels identify controls and values. Actions name outcomes. Explanations resolve specific ambiguity, consequences, or recovery needs. Prefer a precise label and clear placement when those already communicate the meaning.
 
 Do not turn implementation requirements into visible disclaimers or narrate every default. Summarize active restrictions at the decision they affect. Show actions available in the current state, with reasons or recovery paths where unavailable actions matter. Preserve consequential uncertainty, risk, status, warnings, accessible names, and required terms.
 
@@ -52,6 +65,8 @@ Keep required form labels and accessible names. Advice to reduce labels applies 
 - Is density appropriate for expertise and frequency of use?
 
 Preserve density appropriate to the task, expertise, and frequency of use. More space is not automatically better. A constrained spacing scale is a decision aid, not a ban on optical correction.
+
+Separate content selection from its presentation. A card can group useful content yet use too much space. A sidebar can provide suitable navigation yet need different treatment at narrow widths. Adjust dimensions, spacing, grouping, or order when the content is useful but the composition obstructs the task. An item below the initial viewport is not, by itself, evidence of filler.
 
 ### 4. Typography
 
@@ -145,18 +160,6 @@ At every phase, preserve or improve:
 - understandable errors and state changes
 
 An attractive inaccessible mockup is not a viable direction.
-
-## Content-removal pass
-
-Before delivery, review the rendered result specifically for content and structure that can disappear:
-
-1. Inspect the required viewports and states, including the initial view and relevant details or recovery states.
-2. Identify repeated orientation, restated labels, obvious chart narration, diagnostic data, and empty containers as removal candidates.
-3. For each candidate, name the user task or distinction that would fail without it. Accuracy alone does not justify inclusion.
-4. Within writable scope, remove candidates with no such purpose. Improve a label or placement before adding replacement explanation.
-5. Recheck orientation, data meaning, warnings, accessible names, and recovery actions. Recapture every state affected by an edit.
-
-Respect read-only scope, accepted project constraints, and fixed parity baselines. Return out-of-scope findings instead of editing them. Do not force deletions, impose a word quota, or remove useful brand expression to make the result look sparse. The deliverable is the improved interface, not a mandatory inventory of every retained sentence.
 
 ## Practical visual tests
 
