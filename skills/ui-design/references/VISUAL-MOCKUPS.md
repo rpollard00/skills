@@ -1,6 +1,6 @@
 # Temporary HTML/CSS mockups
 
-A visual mockup is throwaway HTML/CSS. It answers one design question with concrete alternatives that the user can react to.
+A visual mockup is throwaway HTML/CSS. It answers the caller's design question with a concrete artifact. The caller chooses whether a mockup is needed, its scope, and whether alternatives help.
 
 It is not production code, a sales demo, or a miniature implementation of the whole application.
 
@@ -8,20 +8,21 @@ It is not production code, a sales demo, or a miniature implementation of the wh
 
 ### Inputs
 
-- one-sentence design question
+- one-sentence design question and caller-authorized artifact scope
+- one artifact or the alternatives needed to answer that question
 - realistic content and relevant state
 - accepted product, brand, platform, accessibility, and design-system constraints
-- representative narrow and wide viewports
+- representative viewports appropriate to the scoped question
 - relevant visual evidence from the existing product, if any
 - the focused temporary reference brief, when a prepared design reference is available
 
 ### Outputs
 
 - a runnable artifact in the OS temp directory
-- two to four alternatives, three by default
+- the artifact or alternatives requested by the caller
 - a stable URL or control for each alternative
 - comparable screenshots
-- a concise selection question for the user
+- the answer, implications, and remaining uncertainty relevant to the question
 - a system delta for each alternative: reused choices, additions or changes, promotion or migration scope, exceptions, and unresolved decisions
 - a concise reference rationale for each alternative: which consulted principle it applies, challenges, or finds inapplicable
 - a temporary verification manifest covering every required alternative, viewport, and state
@@ -49,7 +50,7 @@ Use the OS temp directory by default, or another external location the user expl
 Create a fresh directory such as:
 
 ```text
-<temp>/refine-ui-<project>-<timestamp>/
+<temp>/ui-design-<project>-<timestamp>/
 ├── mockup.html
 ├── verification.md
 ├── assets/
@@ -99,16 +100,16 @@ The mockup needs a small, visually subordinate control surface that:
 
 - states "Temporary visual mockup"
 - shows the one-sentence question
-- names the current alternative
-- switches alternatives
-- keeps the alternative in a URL query parameter such as `?variant=a` when possible
+- identifies the artifact or current alternative
+- switches alternatives when more than one exists
+- keeps the alternative in a URL query parameter such as `?variant=a` when alternatives exist
 - briefly reveals each alternative's thesis, main tradeoff, material system delta, and reference rationale when applicable
 
 The control surface must not be confused with the proposed product UI. A fixed bottom toolbar usually works, but choose another neutral treatment if it obscures the design under evaluation.
 
 ## Designing alternatives
 
-Start by naming genuinely different theses. Examples:
+When alternatives are useful, start by naming genuinely different theses. Examples:
 
 - persistent navigation versus contextual navigation
 - status-first versus action-first hierarchy
@@ -158,12 +159,12 @@ Generating HTML, receiving a successful navigation response, or confirming that 
 List every required combination of:
 
 - alternative
-- representative narrow and wide viewport
+- representative viewport
 - relevant default and consequential non-default state
 - supported theme, when color or surfaces are part of the question
 - scroll position, when the viewport cannot show all relevant content or fixed chrome behavior depends on it
 
-Keep the matrix proportional, but never omit an alternative or the agreed narrow and wide viewports merely to finish faster. Use explicit defaults such as `state=default`, `theme=default`, and `scroll=top` rather than leaving dimensions ambiguous.
+Keep the matrix proportional, but never omit a required alternative or agreed viewport merely to finish faster. Use explicit defaults such as `state=default`, `theme=default`, and `scroll=top` rather than leaving dimensions ambiguous.
 
 ### 2. Stabilize each render
 
@@ -220,8 +221,8 @@ Keep the manifest beside the mockup:
 Render-input fingerprint: ...
 External dependencies: URL, resolved version if exposed, verification time
 Browser adapter: ...
-Visual inspector: model | user | user-required
-Overall status: PASS | USER VISUAL REVIEW REQUIRED | FAIL
+Visual inspector: model | reviewer | review-required
+Overall status: PASS | VISUAL REVIEW REQUIRED | FAIL
 
 | Alternative | State | Viewport | Theme | Scroll | Screenshot | Input fingerprint | Screenshot SHA-256 | Runtime | Visual | Result |
 |---|---|---:|---|---|---|---|---|---|---|---|
@@ -236,54 +237,35 @@ Overall status: PASS | USER VISUAL REVIEW REQUIRED | FAIL
 
 `PASS` requires current screenshots, passing runtime checks, and direct visual inspection of every required cell. Immediately before granting `PASS`, recompute the complete local render-input fingerprint and confirm that it matches every row. Also record a SHA-256 for each screenshot. If an external CDN is used, verify that it loaded for every cell, and disclose that its mutable output is timestamped rather than covered by the local fingerprint.
 
-If the model cannot inspect images, complete the runtime checks and captures, mark `USER VISUAL REVIEW REQUIRED`, and open the artifact and uniquely named screenshots for the user. List every matrix cell and give the user the same glitch checklist from step 4. Proceed only after the user explicitly verifies every named cell. Then record `Visual inspector: user` and update each cell and the overall status to `PASS`. If the user reports defects, fix and recapture first. A general preference such as "I like B" or an unscoped "looks fine" is not verification of the matrix. Do not claim the mockup is verified or ready while user review remains outstanding.
+If the model cannot inspect images, complete the runtime checks and captures, then mark `VISUAL REVIEW REQUIRED`. Return the uniquely named screenshots, matrix cells, and step 4 checklist to the caller. A capable visual reviewer, including the user when the caller requests it, must inspect every required cell before `PASS`. Record who inspected it. Fix and recapture reported defects first. A general preference such as "I like B" or an unscoped "looks fine" is not verification of the matrix. Do not claim readiness while review remains outstanding. This gap does not itself activate an interview or a user-selection gate.
 
 If screenshots cannot be captured, mark `FAIL`, explain the missing capability, and stop. Do not silently downgrade to source inspection for a visual mockup.
 
-## Presenting to the user
+## Handoff
 
-Open the mockup when possible and provide:
+Return the absolute artifact path, verification status and manifest, and the answer or uncertainty relevant to the question. Include material system implications and the consulted principles that affected the result. Explain each alternative's thesis and tradeoff when alternatives were requested.
 
-- the absolute path
-- the design question
-- a one-sentence thesis and tradeoff for each alternative
-- your recommended alternative and why
-- an invitation to select, combine named traits, revise, or reject
-- material consequences for token, reusable-module, extraction, or migration scope
-- the consulted principles that materially influenced the recommendation, and any deliberate departure
-
-Good feedback:
-
-- "B's hierarchy with A's density."
-- "C, but keep the persistent actions from A."
-- "None. Seeing these confirms the current grouping."
-
-Poor framing:
-
-- "Which one looks nicest?"
-- "Pick your favorite color."
-
-Tie the choice back to the user's task and constraints.
+The caller owns presentation, selection, and approval policy. Do not invent a user-selection gate for an autonomous task.
 
 ## Consolidation
 
-When the user combines traits, create one consolidated temp mockup if the result cannot be inferred confidently from an existing alternative. Do not silently mix unrelated decorative details.
+When the caller requests a combination of traits, create one consolidated temp mockup if an existing artifact does not answer the resulting question. Do not silently mix unrelated decorative details.
 
 Every consolidated or revised artifact starts unverified. Rerun all readiness-matrix cells affected by any render-input change and update `verification.md` before showing it. Reuse a prior row only when the render inputs are byte-identical and the alternative, state, viewport, theme, and scroll conditions are identical.
 
 Record alongside the artifact, either in the HTML or a small temp note:
 
 - the question answered
-- accepted traits
+- selected traits and their actual decision source
 - rejected traits and load-bearing reasons
 - unresolved decisions
-- accepted system delta, including any embedded-pattern promotion and migration scope
+- proposed system delta, including any embedded-pattern promotion and migration scope
 - date and source product surface
 
-These exploration notes remain temporary. After explicit direction approval, translate only the accepted design rule and system delta into a provisional root `DESIGN.md` entry. Never copy the mockup, screenshots, discarded variants, or exploratory notes into the product repository.
+These exploration notes remain temporary. Follow [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) for useful durable decisions only when the caller permits project writes. Never copy the mockup, screenshots, discarded variants, or exploratory notes into the product repository.
 
 ## Cleanup and durability
 
 Temp artifacts can disappear. Always tell the user where they are and that they are temporary.
 
-Do not write, copy, or commit mockups to the product repository. If the user wants durable mockup evidence, ask for an approved location outside that repository. Direction approval can create or update only provisional design memory. Section 9 rendered acceptance establishes it and can add approved production visual-test baselines. Prefer recording the accepted rule and production comparison rather than preserving every discarded alternative.
+Do not write, copy, or commit mockups to the product repository. If the user wants durable mockup evidence, ask for an approved location outside that repository. Production visual-test baselines require their own task authority; a mockup does not grant it. Prefer recording useful rules and production comparisons rather than preserving every discarded alternative.

@@ -22,7 +22,8 @@ Default artifact root:
   <skill-directory>/.artifacts/pdf
 
 Environment override:
-  REFINE_UI_ARTIFACTS_DIR
+  UI_DESIGN_ARTIFACTS_DIR (preferred)
+  REFINE_UI_ARTIFACTS_DIR (legacy fallback)
 EOF
 }
 
@@ -127,7 +128,7 @@ PDF="$(cd "$(dirname "$PDF")" && pwd -P)/$(basename "$PDF")"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-OUTPUT_ROOT="${OUTPUT_ROOT:-${REFINE_UI_ARTIFACTS_DIR:-$SKILL_DIR/.artifacts/pdf}}"
+OUTPUT_ROOT="${OUTPUT_ROOT:-${UI_DESIGN_ARTIFACTS_DIR:-${REFINE_UI_ARTIFACTS_DIR:-$SKILL_DIR/.artifacts/pdf}}}"
 
 require_command awk
 require_command grep

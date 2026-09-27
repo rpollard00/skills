@@ -14,7 +14,7 @@
 
 The repository's [MIT License](../LICENSE) covers Reese Pollard's original contributions and adaptations. [Third-party notices](../THIRD_PARTY_NOTICES.md) collects the full upstream copyright and license notices.
 
-Each imported or derived skill directory retains the applicable upstream `LICENSE` for its upstream portions. These notices do not assign authorship of the new contributions to upstream authors. The maintained `refine-ui`, `jj`, and writing skills keep their existing provenance.
+Each imported or derived skill directory retains the applicable upstream `LICENSE` for its upstream portions. These notices do not assign authorship of the new contributions to upstream authors. The maintained `refine-ui`, `jj`, and writing skills keep their existing provenance. `ui-design` extracts the reusable discipline and PDF helper from `refine-ui`; it adds no upstream import or licensed book content.
 
 [upstream-imports.json](upstream-imports.json) maps source files to local destinations. Its `sha256` values identify upstream bytes before adaptation, not the final local files. The TypeScript entry point also has a `list_format_sha256`, computed from the verified upstream text using `scripts/markdown_lists.py`, to protect its content after table-to-list conversion. The manifest is a provenance record, not a generated discovery index or an update mechanism.
 

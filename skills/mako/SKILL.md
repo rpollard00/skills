@@ -48,7 +48,7 @@ Use the skill-name lookup and path fallback in [execution](references/execution.
 - Diagnose an existing capture: [Trace forensics](playbooks/trace-forensics.md)
 - Settle a behavioral or timing uncertainty experimentally: [Prototype](playbooks/prototype.md)
 - Explore UI direction with the user: `refine-ui`
-- Implement a UI goal without an interactive design session: [Feature](playbooks/feature.md), with rendered verification
+- Implement a UI goal without an interactive design session: [Feature](playbooks/feature.md), with `ui-design` and rendered verification
 - Preserve appearance across implementations: [Visual parity](playbooks/visual-parity.md)
 - Assess downstream change impact: `blast-radius`
 - Challenge a design or review a diff: `interrogate`
@@ -72,6 +72,7 @@ Autonomy is the default, not exclusive to autonomous playbooks. Those playbooks 
 
 Read a dependency before the action it governs. Reuse instructions already present and current in context.
 
+- Applicable UI work, including investigation, bug fix, visual parity, and autonomous routes: `ui-design` before planning, design, delegation, or implementation. Carry it and relevant references into UI delegate briefs. Preserve the selected route's authority: read-only stays read-only, bug fixes do not become restyles, and parity baselines stay fixed. This dependency does not force `refine-ui` or a user-approval gate.
 - Nontrivial change, architecture decision, or “are we sure?”: `how`
 - Domain terminology is ambiguous or a consequential decision is settled: `domain-modeling`
 - Write stateful logic or choose data shapes: `principle-model-the-domain`

@@ -147,9 +147,9 @@ Do not put screenshots, copied reference passages, browser dumps, or long implem
 Give each delegate a compact contract containing:
 
 - **Goal.** One concrete phase outcome.
-- **Inputs.** The exact direction-packet, skill-reference, and evidence-artifact paths, plus repository scope, routes, states, and accepted decisions.
+- **Inputs.** The exact direction-packet, skill-reference, and evidence-artifact paths, plus repository scope, routes, states, and accepted decisions. Include `ui-design` and its applicable references before any UI implementation.
 - **Authority.** Read-only, temporary-artifact writer, or approved production writer. Include the actions it must not take.
-- **Invariants.** Gates, privacy, accessibility, artifact location, system scope, and reference constraints.
+- **Invariants.** Gates, privacy, accessibility, artifact location, system scope, and reference constraints. Shared evidence requirements come from [ui-design](../../ui-design/SKILL.md); this workflow retains all three human gates.
 - **Acceptance.** The checks and evidence required before returning pass.
 - **Output.** The handoff schema and artifact destinations.
 - **Stop rules.** Unresolved user, product, scope, architecture, credential, or destructive decisions return to the main agent instead of being guessed.

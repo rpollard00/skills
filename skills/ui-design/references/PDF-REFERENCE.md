@@ -4,7 +4,7 @@ Use a PDF only when the user supplies a path to a copy they are authorized to us
 
 ## Optional source, mandatory consultation
 
-A source PDF is optional. When a validated page-labelled text cache is already available, or the user supplies an authorized source, consultation is a mandatory workflow checkpoint. Run it before you diagnose gaps, recommend a selected direction, or construct mockups. Page images strengthen visual interpretation but are not required for the text-search checkpoint.
+A source PDF is optional. For tasks that need design judgment, consultation is mandatory when a usable licensed cache exists or the user supplies an authorized source. Search before making the relevant diagnosis, recommendation, or mockup. Tasks that do not need that reference do not require PDF access. Page images strengthen visual interpretation but are not required for the text-search checkpoint.
 
 Do not claim to apply *Refactoring UI* from memory while skipping an available local reference. The independent design discipline supplies a fallback when no prepared source exists. It does not replace targeted source consultation when one exists.
 
@@ -19,7 +19,13 @@ Use two representations:
 
 ## Prepared-cache discovery
 
-Before asking for a PDF path or running extraction, inspect the installed skill's `.artifacts/pdf/` directory for `*/reference.md` and `*/manifest.txt`.
+Before asking for a PDF path or running extraction, inspect these private locations for `*/reference.md` and `*/manifest.txt`:
+
+- This skill's `.artifacts/pdf/` directory.
+- The sibling `refine-ui/.artifacts/pdf/` directory, which can retain a legacy cache.
+- An explicitly configured external cache, including `UI_DESIGN_ARTIFACTS_DIR` or the legacy `REFINE_UI_ARTIFACTS_DIR`.
+
+Resolve these paths from the installed skill directory, not the product repository. Reuse a usable legacy cache in place. Do not move, duplicate, delete, or publish it as part of discovery.
 
 - A usable text cache has a `manifest.txt` and page-labelled `reference.md` whose page headings match `page_count`. It is sufficient for mandatory searching even when some or all PNGs are absent.
 - If one usable text cache exists, reuse it without requiring the source PDF.
@@ -30,7 +36,7 @@ Before asking for a PDF path or running extraction, inspect the installed skill'
 
 ## Extraction helper
 
-Use the bundled script from the skill directory:
+Use the [bundled helper](../scripts/extract-pdf-reference.sh) from the `ui-design` skill directory:
 
 ```bash
 ./scripts/extract-pdf-reference.sh "/path/to/reference.pdf"
@@ -69,7 +75,7 @@ The source PDF is never copied. A content hash separates editions without puttin
 
 This collection ignores every `.artifacts/` directory, so the cache remains available through the same skill symlink without appearing in commits. Gitignore is a safety net, not permission to distribute the contents. Before publishing, packaging, or copying a skill, verify that ignored artifacts are excluded.
 
-If the installed skill directory is read-only, pass `--output-dir` or set `REFINE_UI_ARTIFACTS_DIR` to a private writable directory outside the user's product repository. Never fall back to the product repository.
+If the installed skill directory is read-only, pass `--output-dir` or set `UI_DESIGN_ARTIFACTS_DIR` to a private writable directory outside the product repository. The legacy `REFINE_UI_ARTIFACTS_DIR` remains a fallback. An explicit `--output-dir` takes precedence over both. To extend an existing legacy cache, point the helper at its artifact root. Never fall back to the product repository.
 
 To delete one PDF's derived cache:
 
@@ -79,10 +85,7 @@ To delete one PDF's derived cache:
 
 ## Mandatory-use procedure
 
-Run this procedure twice when a usable prepared reference is available:
-
-- a broad pass before classifying and ranking visual gaps, or after confirming a greenfield scope
-- a focused pass after the user selects a gap or confirms a greenfield scope, and before recommending or mocking up a direction
+Run a targeted pass for the caller's current design question when a usable prepared reference is available. Revisit it when the question or evidence changes materially. The caller can require additional passes.
 
 For each pass:
 
@@ -144,8 +147,8 @@ Use one to three principles, not a book summary. The brief makes consultation ob
 - Never track the source PDF, extracted text, metadata, or rendered pages.
 - Never include book pages in the visual gap report or HTML/CSS mockup.
 - Do not quote substantial passages. Summarize the applicable principle in original language, and cite the user's local page or chapter when helpful.
-- Do not upload the PDF or derived pages to remote services unless the user explicitly authorizes that service and upload.
-- Remove the private cache when it is no longer useful.
+- Do not upload the PDF, extracted text, or derived pages to external services as part of this workflow.
+- Do not remove an existing private cache without explicit cleanup authority.
 
 The user's possession of a PDF is not permission to redistribute it.
 

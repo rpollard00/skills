@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -96,6 +97,27 @@ class ValidationTests(unittest.TestCase):
         selected = set(root.glob("*/SKILL.md"))
         self.assertEqual({p.resolve() for p in selected} - seen, set())
         self.assertEqual(len(list(root.glob("principle-*/SKILL.md"))), 23)
+
+    def test_ui_design_extraction_wiring(self):
+        root = REPO / "skills"
+        skills = {p.parent.name: p for p in root.glob("*/SKILL.md")}
+        self.assertEqual(len(skills), 53)
+        shared = skills["ui-design"]
+        for caller in (skills["mako"], root / "mako/playbooks/feature.md", skills["refine-ui"]):
+            with self.subTest(caller=caller):
+                self.assertIn(shared, named_skill_dependencies(caller, skills))
+        for name in ("DESIGN-DISCIPLINE", "DESIGN-SYSTEM", "BROWSER-OBSERVATION", "VISUAL-MOCKUPS", "PDF-REFERENCE"):
+            reference = root / f"ui-design/references/{name}.md"
+            self.assertIn(reference, local_links(shared))
+            self.assertFalse((root / f"refine-ui/references/{name}.md").exists())
+        self.assertTrue((root / "ui-design/scripts/extract-pdf-reference.sh").is_file())
+        self.assertFalse((root / "refine-ui/scripts/extract-pdf-reference.sh").exists())
+        for name in ("DELEGATION", "HTML-REPORT"):
+            self.assertTrue((root / f"refine-ui/references/{name}.md").is_file())
+        pdf_reference = (root / "ui-design/references/PDF-REFERENCE.md").read_text()
+        self.assertIn("refine-ui/.artifacts/pdf/", pdf_reference)
+        self.assertIn("UI_DESIGN_ARTIFACTS_DIR", pdf_reference)
+        self.assertIn("REFINE_UI_ARTIFACTS_DIR", pdf_reference)
 
     def test_named_dependencies_use_inventory_and_ignore_fenced_examples(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -316,6 +338,77 @@ class MarkdownListTests(unittest.TestCase):
                 self.assertEqual(to_lists(content), content)
                 for target in local_links(path):
                     self.assertTrue(target.exists(), target)
+
+
+@unittest.skipUnless(all(shutil.which(command) for command in ("pdfinfo", "pdftotext", "pdftoppm")), "Poppler is not installed")
+class PdfReferenceTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.helper = REPO / "skills/ui-design/scripts/extract-pdf-reference.sh"
+        self.pdf = self.root / "synthetic.pdf"
+        stream = b"BT /F1 12 Tf 20 100 Td (Synthetic UI reference fixture) Tj ET\n"
+        objects = [
+            b"<< /Type /Catalog /Pages 2 0 R >>",
+            b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+            f"<< /Length {len(stream)} >>\nstream\n".encode() + stream + b"endstream",
+        ]
+        data = b"%PDF-1.4\n"
+        offsets = [0]
+        for number, obj in enumerate(objects, 1):
+            offsets.append(len(data))
+            data += f"{number} 0 obj\n".encode() + obj + b"\nendobj\n"
+        xref = len(data)
+        data += f"xref\n0 {len(offsets)}\n0000000000 65535 f \n".encode()
+        data += b"".join(f"{offset:010d} 00000 n \n".encode() for offset in offsets[1:])
+        data += f"trailer\n<< /Size {len(offsets)} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+        self.pdf.write_bytes(data)
+        self.env = {key: value for key, value in os.environ.items()
+                    if key not in ("UI_DESIGN_ARTIFACTS_DIR", "REFINE_UI_ARTIFACTS_DIR")}
+
+    def run_helper(self, *args, env=None):
+        result = subprocess.run([str(self.helper), *args, str(self.pdf)],
+                                env=env or self.env, text=True, capture_output=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return dict(line.split("=", 1) for line in result.stdout.splitlines())
+
+    def test_extract_render_reuse_and_clean_synthetic_reference(self):
+        output = self.root / "cache"
+        args = ("--output-dir", str(output), "--render-all", "--dpi", "72")
+        result = self.run_helper(*args)
+        cache = Path(result["artifact_dir"])
+        self.assertEqual(result["page_count"], "1")
+        text = (cache / "reference.md").read_text()
+        self.assertIn("## Page 1", text)
+        self.assertIn("Synthetic UI reference fixture", text)
+        image = cache / "pages/page-001.png"
+        self.assertEqual(image.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+        before = {p.relative_to(cache): (p.read_bytes(), p.stat().st_mtime_ns)
+                  for p in cache.rglob("*") if p.is_file()}
+        self.run_helper(*args)
+        after = {p.relative_to(cache): (p.read_bytes(), p.stat().st_mtime_ns)
+                 for p in cache.rglob("*") if p.is_file()}
+        self.assertEqual(before, after)
+        self.assertFalse(list(cache.glob("*.pdf")))
+        self.run_helper("--output-dir", str(output), "--clean")
+        self.assertFalse(cache.exists())
+        self.assertTrue(self.pdf.exists())
+
+    def test_cache_override_precedence_and_legacy_fallback(self):
+        legacy = self.root / "legacy"
+        shared = self.root / "shared"
+        explicit = self.root / "explicit"
+        env = {**self.env, "REFINE_UI_ARTIFACTS_DIR": str(legacy)}
+        result = self.run_helper(env=env)
+        self.assertEqual(Path(result["artifact_dir"]).parent, legacy)
+        env["UI_DESIGN_ARTIFACTS_DIR"] = str(shared)
+        result = self.run_helper(env=env)
+        self.assertEqual(Path(result["artifact_dir"]).parent, shared)
+        result = self.run_helper("--output-dir", str(explicit), env=env)
+        self.assertEqual(Path(result["artifact_dir"]).parent, explicit)
 
 
 class DecisionLogTests(unittest.TestCase):

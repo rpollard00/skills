@@ -30,7 +30,8 @@ A technical blog post goes to unslop. It explains, but it argues and entertains;
 - **User names STE, ASD-STE100, or strict mode** → simple-technical-english, even for marketing copy. Say that STE deletes persuasion and offer unslop for that part.
 - **User asks for voice, personality, or fun** → unslop, even for technical topics.
 - **Mixed documents** (README with a friendly intro) → one skill per document: simple-technical-english. Keep the intro, de-slop it by hand.
-- **Code** is not a writing task. Comments and commit messages in it follow simple-technical-english.
+- **Code syntax and identifiers** are not prose. Do not edit them as writing. User-visible strings are writing even inside templates, JSX, source code, or localization files. Factual UI copy follows simple-technical-english; persuasive or brand prose follows unslop. Comments and commit messages follow simple-technical-english.
+- **UI labels** quoted in documentation stay exact. Newly authored or edited labels require clarity and consistent terminology; their location in code does not exempt them.
 - **Throwaway notes** (TODO comment) simple-technical-english.
 
 ## Do not blend

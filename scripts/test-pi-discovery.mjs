@@ -30,10 +30,19 @@ try {
   }
   const mako = result.skills.find((s) => s.name === "mako");
   assert.ok(mako?.disableModelInvocation);
+  const uiDesign = result.skills.find((s) => s.name === "ui-design");
+  assert.ok(uiDesign?.disableModelInvocation);
   for (const relative of [
     "../architect/SKILL.md",
     "../principle-model-the-domain/SKILL.md",
     "../writing/SKILL.md",
+    "../ui-design/SKILL.md",
+    "../ui-design/references/DESIGN-DISCIPLINE.md",
+    "../ui-design/references/DESIGN-SYSTEM.md",
+    "../ui-design/references/BROWSER-OBSERVATION.md",
+    "../ui-design/references/VISUAL-MOCKUPS.md",
+    "../ui-design/references/PDF-REFERENCE.md",
+    "../ui-design/scripts/extract-pdf-reference.sh",
     "playbooks/feature.md",
   ]) {
     const fromLink = await realpath(resolve(mako.baseDir, relative));

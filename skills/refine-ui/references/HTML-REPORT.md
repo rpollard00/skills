@@ -1,6 +1,6 @@
 # Visual gap report
 
-The report presents evidence-backed gaps so the user can choose what to explore. It is a decision artifact, not a style guide or an implementation plan.
+The report presents evidence-backed gaps so the user can choose what to explore. It is a decision artifact, not a style guide or an implementation plan. Apply [ui-design](../../ui-design/SKILL.md) to content purpose, hierarchy, and rendered evidence. This report and its selection gate belong to refine-ui, not to every UI task.
 
 ## Location and packaging
 

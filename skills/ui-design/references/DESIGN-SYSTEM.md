@@ -11,7 +11,7 @@ Treat these as related but distinct evidence:
 3. **Executable system.** Tokens, reusable modules, assets, and patterns constrain production choices.
 4. **Rendered proof.** Representative product surfaces and states show whether the other layers work in composition.
 
-The rendered product is authoritative evidence of the current experience, not necessarily of intended design. A disagreement among documented intent, executable constraints, and rendered output is itself a finding. Do not "fix" the rendering to match stale documentation without user confirmation.
+The rendered product is authoritative evidence of the current experience, not necessarily of intended design. A disagreement among documented intent, executable constraints, and rendered output is itself a finding. Resolve it against the task's authority and current evidence. Do not change a parity baseline or restyle a scoped bug fix to match stale documentation.
 
 ## System model
 
@@ -39,7 +39,7 @@ Before diagnosing system impact, locate and compare:
 
 Do not assume a component catalog is current, or that similarly named source values render equivalently.
 
-During observation, keep a temporary design-system profile outside the repository. Record whether root `DESIGN.md` exists and what a future entry would index. Do not modify project design memory before the user approves a direction.
+During read-only observation, keep findings in the caller's output or an approved external artifact. Record whether root `DESIGN.md` exists and what a useful entry would index. Do not modify project design memory during an audit.
 
 ## Classify the system relationship
 
@@ -79,9 +79,9 @@ Reject or defer promotion when it would require:
 
 A strong interface names intent, such as `emphasis="status"`, rather than implementation, such as `grayHeader` or `largePadding`. The reusable module must hide more design and behavior complexity than its callers learn.
 
-## Candidate and direction artifacts
+## Decisions with system implications
 
-A visual-gap candidate with system implications states:
+When a decision affects the system, record useful implications in the caller's artifact:
 
 - current system relationship: reuse, deepen, promote, add, or keep local
 - evidence for that classification
@@ -97,11 +97,11 @@ During mockups, preserve accepted project constraints unless changing one is the
 - deliberate exceptions
 - unresolved system decisions
 
-The direction gate approves both the visual direction and its stated system delta. Do not hide an extraction or migration inside production implementation.
+Keep extraction and migration within the caller's authority. State their scope before implementation instead of hiding them inside a visual change.
 
 ## Production slice for a promotion
 
-When promotion is approved, the smallest trustworthy slice usually includes:
+When promotion is authorized, the smallest trustworthy slice usually includes:
 
 1. the extracted reusable module
 2. the original embedded consumer, migrated to it
@@ -109,13 +109,13 @@ When promotion is approved, the smallest trustworthy slice usually includes:
 4. focused tests at the module's interface, where useful
 5. rendered comparison of both consumers and relevant states
 
-Preserve the original consumer's behavior unless the approved direction explicitly changes it. Avoid migrating additional callers until both concrete consumers validate the interface. If two consumers reveal incompatible semantics, keep them local or redesign the interface rather than adding escape hatches.
+Preserve the original consumer's behavior unless the authorized task explicitly changes it. Avoid migrating additional callers until both concrete consumers validate the interface. If two consumers reveal incompatible semantics, keep them local or redesign the interface rather than adding escape hatches.
 
 ## `DESIGN.md` policy
 
-Root `DESIGN.md` is the canonical design-memory entry point. Existing component catalogs, token docs, framework documentation, and deeper guidelines remain valuable sources, but they do not waive the root file. Link to them from a minimal root index instead of duplicating them. If an explicit repository policy forbids even a root index, stop at the direction gate, surface the conflict, and ask the user where design memory must live. Never silently omit the root file or choose another location.
+Root `DESIGN.md` is the design-memory entry point when durable decisions warrant it. Link deeper guidelines, component catalogs, and executable tokens instead of duplicating them. Respect read-only tasks and explicit project restrictions. If project policy forbids a root index, report the restriction and use only an authorized location.
 
-Create the file lazily, when the first design direction is approved, not merely because the skill ran. Update it as later decisions settle instead of batching design memory into a final cleanup phase.
+Create or update design memory only when the task permits writes and a useful durable decision exists, not merely because this skill ran. Record the actual decision source: agent-selected under task authority, explicitly user-approved, or inherited project intent. Never describe an autonomous choice as user-approved.
 
 `DESIGN.md` documents the system's human- and agent-facing interface:
 
@@ -131,67 +131,19 @@ Create the file lazily, when the first design direction is approved, not merely 
 
 Do not manually duplicate exhaustive raw token values when code already owns them. Point to the executable source and document meanings and selection rules. If a rendered or generated token catalog exists, link it rather than reproducing it by hand.
 
-A useful starting shape is:
+Record only the intent, selection rule, invariants, implementation links, exceptions, and reference surfaces that help the next task. Do not fill empty sections or invent a complete system.
 
-```markdown
-# Design
+## Decision source and verification state
 
-## Product character
-## Hierarchy and composition
-## Foundations
-### Typography
-### Spacing and sizing
-### Color
-### Shape and depth
-### Motion and imagery
-## Semantic tokens
-## Primitives and patterns
-## Responsive behavior
-## Accessibility invariants
-## Reference surfaces
-## Exceptions and legacy drift
-```
+Keep authority and evidence separate. A user-approved direction can still be unverified. An agent-selected decision can have rendered evidence without user acceptance.
 
-For each documented system or reusable module, capture only what is useful:
+For each consequential rule, make clear:
 
-```markdown
-### Summary panel
+- who selected it and under what task authority
+- whether it is proposed, under validation, supported by rendered evidence, or superseded
+- which surfaces and states support it, and which remain unverified
+- whether an exception or legacy drift conflicts with the current intent
 
-Status: established
-Intent: Summarize current status, supporting facts, and relevant actions.
-Choose it when: ...
-Invariants: ...
-Semantic variants: ...
-Avoid: ...
-Implementation: `src/design-system/patterns/SummaryPanel`
-Reference surfaces: Account overview; Billing overview
-```
+Update or remove stale decisions when new evidence or authorized choices replace them. Do not record a rejected direction as active intent. The caller owns any provisional/established lifecycle and approval gates; this reference adds none.
 
-Use status labels only when they clarify truth:
-
-- **Established.** Approved and represented in production.
-- **Provisional.** Direction-approved and deliberately under rendered validation.
-- **Legacy.** Observed behavior that conflicts with accepted intent.
-- **Exception.** An approved divergence with a load-bearing reason.
-
-## Active design-memory lifecycle
-
-Maintain design memory as decisions happen:
-
-1. **Direction approved.** Create root `DESIGN.md` if absent, and add or update the accepted rule as provisional. Include its validation surface and proposed system delta.
-2. **Slice refined.** Update the provisional entry inline when the accepted intent changes.
-3. **Direction abandoned or replaced.** Remove, supersede, or clearly reject its provisional entry before returning to exploration.
-4. **Rendered result accepted.** Mark supported rules established, and reconcile implementation paths, consumers, and reference surfaces.
-5. **Wider rollout approved.** Extend the established entry only as far as the migrated evidence justifies.
-
-Do not fill empty sections speculatively. A minimal first file containing one resolved decision is better than an impressive fictional system.
-
-After rendered acceptance:
-
-- encode accepted choices in the appropriate token, primitive, or pattern
-- migrate only the consumers justified by the user's rollout decision
-- update a component catalog or reference surface when one exists
-- record deliberate exceptions rather than hiding them
-- remove stale documentation contradicted by the accepted result
-
-Every approved direction can bootstrap design memory, including a local rule whose scope is stated honestly. Promotions, semantic token changes, new selection rules, and load-bearing exceptions must always update it.
+After verification, encode supported choices in tokens, primitives, or patterns when warranted. Migrate only authorized consumers, reconcile implementation links, and record exceptions with their reasons. Update an existing catalog or reference surface when the choice affects it. Keep raw token values canonical in executable sources.

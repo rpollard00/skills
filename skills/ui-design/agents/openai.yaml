@@ -1,0 +1,5 @@
+interface:
+  display_name: "UI Design"
+  short_description: "Shared UI judgment and rendered evidence"
+policy:
+  allow_implicit_invocation: false

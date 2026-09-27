@@ -219,3 +219,13 @@ Remaining work:
 2. Verify interactive invocation in each harness.
 3. Resolve runtime mission-completion enforcement and jj isolation integration.
 The full bundle is now installed through `~/.agents/skills/reese`. The user authorized deleting the four older architecture copies without comparison or backup. The installer migrated owned aliases and preserved unrelated skills.
+
+## Superseding decision: shared UI discipline
+
+The approved extraction adds explicit-only `ui-design`, bringing the collection to 53 skills. It owns reusable UI judgment, system choices and memory, browser evidence, temporary mockups, and licensed reference consultation. The helper moves with those references; private legacy caches stay in place and remain discoverable.
+
+Mako loads this discipline before applicable UI planning or implementation, including read-only, bug-fix, parity, and autonomous routes. It adds no authority to restyle, write during audits, alter baselines, or impose interactive approval. Feature checks content purpose and placement alongside rendered behavior.
+
+`refine-ui` retains scope selection, grilling, its two-to-four alternatives default, consolidated readiness, empty-frontier requirement, provisional memory, and all three human gates. Explicit rendered acceptance establishes decisions; only the user's rollout decision permits broader migration.
+
+User-visible strings are writing even in source code. Existing quoted labels remain exact; new labels require clarity and consistent terminology. Factual copy uses STE and persuasive copy uses unslop. Static wiring and discovery checks are evidence of bundle structure, not model compliance.

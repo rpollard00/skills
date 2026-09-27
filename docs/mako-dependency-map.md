@@ -2,6 +2,8 @@
 
 This design map preceded implementation. The executable dependency references now live in [Mako](../skills/mako/SKILL.md) and its [principle index](../skills/mako/references/principles.md).
 
+Superseding UI ownership: applicable UI routes load `ui-design` before planning or implementation. Feature composes it for content and rendered verification. `refine-ui` uses it for shared discipline and retains interactive exploration, all three human gates, and rollout authority. The original map below remains historical.
+
 ## Ownership
 
 - Mako

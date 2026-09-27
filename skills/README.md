@@ -1,6 +1,6 @@
 # Skills
 
-Each skill lives directly in `skills/<name>/`. Its references, scripts, metadata, and upstream notices stay beside it. Instructions refer to other skills by exact name. The shared [lookup rule](mako/references/execution.md#resolve-dependencies) uses harness discovery with a sibling-path fallback. Links below are navigation for readers.
+The collection contains 53 skills. Each skill lives directly in `skills/<name>/`. Its references, scripts, metadata, and upstream notices stay beside it. Instructions refer to other skills by exact name. The shared [lookup rule](mako/references/execution.md#resolve-dependencies) uses harness discovery with a sibling-path fallback. Links below are navigation for readers.
 
 [Mako](mako/SKILL.md) routes engineering tasks. Invoke it with a task; it stays active in that conversation until you opt out. Reusable skills also work independently.
 
@@ -14,7 +14,7 @@ The 23 principle skills remain independent. Select them through [the trigger ind
 
 [Execution](mako/references/execution.md) supplies shared capability, isolation, repository, continuation, and completion rules. Reading that reference does not activate Mako.
 
-The existing owners remain in place: [refine-ui](refine-ui/SKILL.md) for visual approval gates, [jj](jj/SKILL.md) for Jujutsu, and [writing](writing/SKILL.md) for prose.
+[ui-design](ui-design/SKILL.md) owns shared UI discipline. [refine-ui](refine-ui/SKILL.md) retains interactive exploration and visual approval gates, [jj](jj/SKILL.md) owns Jujutsu, and [writing](writing/SKILL.md) routes prose, including user-visible strings in code.
 
 ## Index
 
@@ -67,6 +67,7 @@ The existing owners remain in place: [refine-ui](refine-ui/SKILL.md) for visual 
 - [swarm](swarm/SKILL.md)
 - [teach](teach/SKILL.md)
 - [typescript-best-practices](typescript-best-practices/SKILL.md)
+- [ui-design](ui-design/SKILL.md)
 - [unslop](unslop/SKILL.md)
 - [why](why/SKILL.md)
 - [writing](writing/SKILL.md)

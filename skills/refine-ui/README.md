@@ -6,7 +6,7 @@ It inspects a rendered product, presents visual gaps for the user to choose from
 
 ## Status
 
-Active personal workflow. The delegation, visual-mockup, and design-system disciplines remain references inside this package so they can evolve in context and be extracted into peer skills later without changing their interfaces.
+Active interactive workflow. [ui-design](../ui-design/SKILL.md) owns shared UI judgment, design-system guidance, browser evidence, temporary mockups, and licensed reference consultation. Refine UI owns the three human gates, grilling, reports, and rollout. Install the sibling skills together.
 
 ## Package
 
@@ -15,16 +15,9 @@ Active personal workflow. The delegation, visual-mockup, and design-system disci
 ├── SKILL.md
 ├── agents/
 │   └── openai.yaml
-├── scripts/
-│   └── extract-pdf-reference.sh
 └── references/
-    ├── BROWSER-OBSERVATION.md
     ├── DELEGATION.md
-    ├── DESIGN-DISCIPLINE.md
-    ├── DESIGN-SYSTEM.md
-    ├── HTML-REPORT.md
-    ├── PDF-REFERENCE.md
-    └── VISUAL-MOCKUPS.md
+    └── HTML-REPORT.md
 ```
 
 ## Use with Pi
@@ -35,13 +28,13 @@ Load the repository as an explicit skill:
 pi --skill /absolute/path/to/skills/skills/refine-ui
 ```
 
-Or install/copy the directory into one of Pi's discovered skill locations and invoke:
+Or install the bundle into one of Pi's discovered skill locations and invoke:
 
 ```text
 /skill:refine-ui
 ```
 
-The skill is user-invoked only. It does not install browser or PDF tooling. It discovers already available capabilities and asks before adding anything. Its PDF helper uses existing Poppler commands to build page-labelled Markdown and an optional all-page PNG cache in the skill's ignored `.artifacts/` directory.
+The skill is user-invoked only. It does not install browser or PDF tooling. It discovers already available capabilities and asks before adding anything. The [shared PDF helper](../ui-design/scripts/extract-pdf-reference.sh) uses existing Poppler commands. [Cache discovery](../ui-design/references/PDF-REFERENCE.md) reuses private artifacts here or under `ui-design` without moving or duplicating them.
 
 ## Recommended peer skill
 

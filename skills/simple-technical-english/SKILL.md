@@ -18,7 +18,7 @@ When asked to write or rewrite technical text:
 3. **Correct your vocabulary before drafting.** In strict mode, the dictionary rejects check/verify/confirm/ensure as verbs. Replace them by intent: `make sure that` (verify a state), `examine` (look for faults), `measure` (get a value). In pragmatic mode, pick one and keep it. Pick ONE noun for config/settings (all are valid technical nouns, so pick one and keep it). Use no other word for these concepts in the whole document.
 4. **Apply the rules** from the catalog that follows.
 5. **Do the self-check** before you deliver. This step is not optional.
-6. **Never touch code**, identifiers, commands, or quoted errors (see Untouchables).
+6. **Never prose-edit code syntax**, identifiers, commands, or quoted errors (see Untouchables). User-visible strings remain writing, including inside code.
 
 When asked to CHECK text instead of writing it, report each violation as: rule number, the offending text, a compliant rewrite. Cite only rule numbers that exist in this file. Do not cite rule numbers from memory. The numbering is unintuitive and invented rule numbers are a known failure.
 
@@ -267,11 +267,13 @@ The dictionary introduction lists the words that writers get wrong most often. T
 
 These are technical names (Rules 1.5, 8.6). Leave them exact, even when they break vocabulary rules:
 
-- Code blocks, inline code, identifiers, CLI commands, flags, file paths
+- Code syntax, identifiers, CLI commands, flags, file paths, and exact code examples quoted in documentation
 - Quoted error messages and log lines
 - Product names, API endpoint names, config keys
-- UI labels and button names ("click the **Save** button". Quoted text counts as one word)
+- Existing UI labels and button names quoted in documentation ("click the **Save** button". Quoted text counts as one word)
 - Numbers with units. Each counts as one word in the sentence limit
+
+Newly authored or edited user-visible strings are not exempt. Apply these rules to factual labels, messages, accessible names, and instructions in templates, JSX, source code, and localization files. Preserve the surrounding syntax, identifiers, interpolation, and functional formatting. Quoted-text word counting does not excuse unclear labels or inconsistent terminology. Persuasive and brand prose still belongs to `unslop`.
 
 Facts are untouchable too. Rewrite the style, not the content. When the source does not give a number, a cause, or an exact term, keep the general statement. Do not invent specifics to look concrete.
 

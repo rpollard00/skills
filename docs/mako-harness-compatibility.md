@@ -5,12 +5,12 @@ The bundle contains one directory per skill under one `reese -> <checkout>/skill
 ## Tested capabilities
 
 - Installed pi loader
-  - Discovery evidence: All 52 skills through the bundle symlink, no diagnostics; sibling dependency reads resolve
+  - Discovery evidence: All 53 skills through the bundle symlink, no diagnostics; sibling dependency reads resolve, including ui-design's moved references and PDF helper
   - Explicit-only evidence: All hidden skills absent from `formatSkillsForPrompt`; visible skills remain
-- Codex CLI 0.155.0
+- Codex CLI 0.155.0 (prior 52-skill bundle; not rerun for the ui-design extraction)
   - Discovery evidence: All 52 enabled skills returned by `skills/list` through both `.agents/skills` and `.codex/skills`
   - Explicit-only evidence: All 45 explicit-only skills absent from `debug prompt-input`; seven model-invoked bundle skills remain
-- OpenCode v2.0.15
+- OpenCode v2.0.15 (prior 52-skill bundle; not rerun for the ui-design extraction)
   - Discovery evidence: All 52 skills returned by the persistent server's skill API through both `.agents/skills` and native configuration roots; dependency reads resolve
   - Explicit-only evidence: All 45 explicit-only skills return `autoinvoke: false`; the installed prompt-filtering implementation excludes that flag
 
@@ -38,7 +38,7 @@ metadata:
   opencode/autoinvoke: "false"
 ```
 
-The new explicit-only skills carry all three. `refine-ui` received the OpenCode metadata without changing its body. A permission denial is not a substitute: explicit-only skills remain available for deliberate loading.
+The explicit-only skills, including `ui-design`, carry all three. At the original import, `refine-ui` received the OpenCode metadata without a body change; it now composes ui-design. A permission denial is not a substitute: explicit-only skills remain available for deliberate loading.
 
 ## Repeat the checks
 
@@ -87,6 +87,6 @@ Tune instructions through actual use. Passing metadata and path checks does not 
 
 `scripts/link-skills.sh` previews by default. It validates the bundle and checks common discovery roots before any mutation. `--apply` creates the bundle link; `--migrate-owned-flat` additionally permits removal of matching symlinks owned by this checkout, including dangling targets from the former category layout.
 
-The full bundle is installed at `~/.agents/skills/reese`, linked to this checkout's `skills/` directory. All 52 installed skills pass validation, and a second installer preview reports no collisions or pending migrations. Reload the harness to refresh discovery.
+The original 52-skill installation linked `~/.agents/skills/reese` to this checkout's `skills/` directory. Its validation and second installer preview passed without collisions or pending migrations. The ui-design extraction changes source only and does not replace installed links or configuration. Its isolated Pi discovery check passes for 53 skills. Reload the harness to refresh discovery.
 
 The user authorized deleting the four separate copies of `domain-modeling`, `grilling`, `codebase-design`, and `improve-codebase-architecture` without comparison or backup. The installer then replaced the ten repo-owned per-skill aliases under `~/.agents/skills` and `~/.claude/skills` with the shared bundle installation. Unrelated skills and harness configuration files were left untouched. No new Claude-native bundle link was created; the tested targets are pi, Codex, and OpenCode 2.

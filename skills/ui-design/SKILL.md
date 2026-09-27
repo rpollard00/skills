@@ -1,0 +1,49 @@
+---
+name: ui-design
+description: Shared UI design discipline for scoped investigation, implementation, review, and rendered verification. Load explicitly or as a dependency before UI planning or implementation. Does not activate an interactive workflow or expand authority.
+disable-model-invocation: true
+metadata:
+  opencode/autoinvoke: "false"
+---
+
+# UI design
+
+Make the user's task clear through controls, information hierarchy, and realistic content. This is a reusable working discipline, not an end-to-end workflow.
+
+## Interface and authority
+
+Use the caller's task, scope and authority, project context and design constraints, and available artifacts. Artifacts can include source, design memory, fixtures, screenshots, or a running product. Return or record only useful decisions, implementation implications, verification evidence, and gaps. Use the caller's output format; do not create a report just to fill a template.
+
+The caller owns workflow, approval gates, and delivery. An autonomous UI task does not require an interactive design session. Use `refine-ui` when the user requests interactive exploration. This skill never grants permission to widen scope, restyle a bug fix, change a parity baseline, or write project files during an audit. Read-only work returns findings without changing root `DESIGN.md`.
+
+Reuse accepted project intent and executable constraints. Do not perpetuate known filler solely because it exists. Report out-of-scope defects instead of silently correcting them.
+
+## Core discipline
+
+- Start with the user's task and realistic data, including consequential states and density.
+- Set controls, information hierarchy, grouping, and interaction before polishing labels. Prefer precise labels and placement to explanatory paragraphs.
+- Add explanatory text only for ambiguity that remains. Ask the counterfactual: if this text disappeared, what task, distinction, or decision would become unclear?
+- Apply the same necessity test to containers. A card, banner, heading, or panel must establish a useful relationship or interaction. Do not add dashboard containers or decorative copy automatically.
+- Do not print requirements as disclaimers. Summarize active restrictions where they affect a decision instead of narrating every default.
+- Show actions available in the current state. Preserve the status, reason, or recovery path when an unavailable action matters.
+- Preserve important uncertainty, risk, accessibility names, status, warnings, and required terms. Brevity does not justify deleting them.
+- Match expression and density to the product. Brand voice, rich imagery, and expressive UI remain valid when they serve the context.
+- Apply `writing` to user-visible strings, including strings in templates, JSX, source code, and localization. Factual copy uses `simple-technical-english`; persuasive or brand prose uses `unslop`.
+
+## Load references progressively
+
+Read each applicable reference before the action it governs:
+
+- For design judgment about content, hierarchy, composition, or appearance: [Design discipline](references/DESIGN-DISCIPLINE.md).
+- For design-system choices or durable design memory: [Design system](references/DESIGN-SYSTEM.md). Root `DESIGN.md` indexes useful decisions and deeper sources, not a template to fill.
+- For browser observation or rendered verification: [Browser observation](references/BROWSER-OBSERVATION.md).
+- When a temporary mockup can resolve the caller's question: [Visual mockups](references/VISUAL-MOCKUPS.md). The caller decides whether a mockup is needed and its artifact scope.
+- When the task needs design judgment: [Licensed reference consultation](references/PDF-REFERENCE.md). Search a usable licensed cache when available, including the legacy private cache. PDF access is not required for tasks that do not need that reference.
+
+Before delegating UI implementation, include this skill and the relevant references in the brief. Pass the task, authority limits, accepted constraints, and evidence pointers before the delegate writes UI.
+
+## Evidence
+
+Verify on the matching rendered surface with a proportional viewport, state, and theme matrix. Inspect actual images when image capability is available, together with runtime and interaction evidence. Source, clean console output, and screenshot existence alone do not prove visual correctness.
+
+Use stable capture conditions. Edits invalidate affected evidence; fix defects and recapture before claiming success. A caller can omit an unnecessary mockup, but cannot count uninspected images as verified. Report missing capabilities and unverified cells honestly. Keep temporary reports, screenshots, and mockups outside the product repository. Do not install tools or dependencies without approval.

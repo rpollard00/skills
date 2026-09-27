@@ -107,7 +107,8 @@ If the current model accepts images, inspect screenshots directly. If not:
 
 - use semantic snapshots and computed styles for facts
 - still capture screenshots for the user
-- ask the user to judge visual alternatives
+- report which visual judgments remain unverified
+- use a capable visual reviewer when the caller provides one
 - lower confidence on aesthetic findings that cannot be verified visually
 
 Do not pretend that file dimensions, OCR, a DOM tree, or CSS values amount to visual inspection.
@@ -116,7 +117,7 @@ Do not pretend that file dimensions, OCR, a DOM tree, or CSS values amount to vi
 
 Temporary mockups have a stricter handoff requirement than source-only diagnosis. Follow the blocking gate in [VISUAL-MOCKUPS.md](VISUAL-MOCKUPS.md). Capture every required alternative, viewport, and state. Inspect runtime and layout evidence. Visually open every screenshot when vision is available. Fix and recapture defects. Write the temporary verification manifest.
 
-If the current model lacks vision, objective browser checks can establish runtime health but not visual readiness. Capture the screenshots, mark user visual review as required, and wait for that review before asking the user to choose a direction. If screenshot capture itself is unavailable, do not claim the mockup is ready.
+If the current model lacks vision, objective browser checks can establish runtime health but not visual readiness. Capture the screenshots and mark visual review as required. Return that gap to the caller without activating an interview or direction-selection gate. A capable reviewer must inspect the images before visual readiness can pass. If screenshot capture itself is unavailable, do not claim the mockup is ready.
 
 ## Privacy and browser profiles
 

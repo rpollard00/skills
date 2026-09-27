@@ -8,14 +8,15 @@ Agent skills for repeatable engineering, design, version-control, and writing wo
 
 It owns the goal through verified completion: make engineering decisions, investigate uncertainty, and proceed without routine permission questions. Explicit scope limits and dangerous-action boundaries remain binding. It reports progress, consequential choices, and evidence without narrating skill selection.
 
-The collection contains 52 skills: 24 engineering skills, 23 independent engineering principles, and the five existing design, version-control, and writing skills. Mako also owns 19 task playbooks.
+The collection contains 53 skills: 24 engineering skills, 23 independent engineering principles, and six design, version-control, and writing skills. Mako also owns 19 task playbooks.
 
 ## Skills
 
 Every skill has its own directory directly under `skills/`, without categories. See the [skill index](skills/README.md).
 
 - [Mako](skills/mako/SKILL.md): engineering workflows and selective loading of [independent principles](skills/mako/references/principles.md).
-- [refine-ui](skills/refine-ui/SKILL.md): visual exploration and approval gates.
+- [ui-design](skills/ui-design/SKILL.md): shared UI judgment and rendered evidence under the caller's scope.
+- [refine-ui](skills/refine-ui/SKILL.md): interactive visual exploration and approval gates, using ui-design.
 - [jj](skills/jj/SKILL.md): repository operations when `.jj` exists.
 - [writing](skills/writing/SKILL.md): the existing router for simple-technical-english and unslop.
 

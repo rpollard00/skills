@@ -24,6 +24,10 @@ Work from structural questions toward decoration. Do not polish a hierarchy that
 
 Prefer real domain language and representative data over placeholder copy. A sparse mockup cannot validate a data-dense product.
 
+Set the control, hierarchy, grouping, and interaction before adding explanation. For each text element, ask what becomes unclear if it disappears. Try a precise label or better placement before a paragraph. Keep explanation for the ambiguity that remains.
+
+Do not turn implementation requirements into visible disclaimers or narrate every default. Summarize active restrictions at the decision they affect. Show actions available in the current state, with reasons or recovery paths where unavailable actions matter. Preserve consequential uncertainty, risk, status, warnings, accessible names, and required terms.
+
 ### 2. Information and visual hierarchy
 
 - What should attract attention first, second, and third?
@@ -43,7 +47,7 @@ Keep required form labels and accessible names. Advice to reduce labels applies 
 - Does the layout match content and task rather than a default grid?
 - Is density appropriate for expertise and frequency of use?
 
-Start with generous space, then remove it where information density earns its place. A constrained spacing scale is a decision aid, not a ban on optical correction.
+Preserve density appropriate to the task, expertise, and frequency of use. More space is not automatically better. A constrained spacing scale is a decision aid, not a ban on optical correction.
 
 ### 4. Typography
 
@@ -73,7 +77,7 @@ Do not create arbitrary shades because an existing shade is slightly inconvenien
 - Are shadows consistent with an implied light source?
 - If every element floats, which one is actually elevated?
 
-Use fewer borders. Prefer the least decoration that makes structure clear.
+For each container, ask what relationship or interaction becomes unclear if it disappears. Prefer the least decoration that makes structure clear. Do not add cards, banners, or dashboard panels just to fill a layout.
 
 ### 7. Images and icons
 

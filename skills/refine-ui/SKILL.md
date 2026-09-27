@@ -10,6 +10,8 @@ metadata:
 
 Improve interfaces through rendered evidence and explicit user decisions.
 
+Read `ui-design` before observation, planning, or UI implementation. It owns the shared design discipline, design-system choices, reference consultation, and rendered evidence requirements. This workflow owns scope selection, grilling, direction approval, rendered production acceptance, and rollout authority.
+
 The workflow is:
 
 > Observe → find a gap or frame a greenfield scope → user chooses → grill ↔ mock up until the frontier is empty → user confirms → implement a slice → compare → user accepts → record and optionally roll out
@@ -25,7 +27,7 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 ## Non-negotiables
 
 - Treat the rendered interface as the source of truth for the current experience. Compare it with documented intent and the executable design system. Disagreement among them is evidence, not permission to assume that one is correct.
-- Keep the user in control at three gates: gap selection or greenfield-scope confirmation, direction selection or approval, and rendered production acceptance with a rollout decision. Only explicit user approval advances through a gate. Delegation never transfers these gates or final synthesis away from the main agent.
+- Keep the user in control at three gates: gap selection or greenfield-scope confirmation, direction selection or approval, and rendered production acceptance with a rollout decision. Only explicit user approval advances through a gate. Silence is not approval. Delegation never transfers these gates or final synthesis away from the main agent.
 - Do not hide token changes, reusable-module extraction, migration, or `DESIGN.md` updates inside implementation. Present the proposed system delta at the direction gate. Immediately after direction approval, create or update root `DESIGN.md` with the accepted decision marked provisional. After rendered production acceptance, establish, revise, or remove it.
 - Find environmental facts yourself. Ask the user for decisions, intent, taste, and constraints. Do not ask for facts available in the repository or the running application.
 - When a preference is easier to react to than describe, suspend grilling and show alternatives instead of asking the user to imagine them.
@@ -37,7 +39,7 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 - When a prepared design reference is available, do not recommend gaps, directions, or mockups from memory alone. Search the reference for the current question. Inspect the smallest relevant passages, and inspect page images when visual examples matter and vision is available. Record what the reference changed or confirmed.
 - Never describe a mockup as ready merely because its HTML was generated or opened. The phase owner must render every required alternative, viewport, and state, capture screenshots, and inspect runtime evidence and the screenshots themselves when vision is available. The owner must fix defects and recapture before handoff.
 - When a suitable delegate is available, delegate context-heavy phases before loading their raw evidence into the main conversation. Otherwise keep the phase inline while using the canonical packet, approved external evidence artifacts, and compact phase notes. Delegation changes context ownership, never the phase's quality bar.
-- Do not distribute or track user-provided copyrighted references or their derivatives. Keep derived PDF artifacts only in the skill's private ignored cache or another approved external location. See [references/PDF-REFERENCE.md](references/PDF-REFERENCE.md).
+- Do not distribute or track user-provided copyrighted references or their derivatives. Keep derived PDF artifacts only in the skill's private ignored cache or another approved external location. See [PDF reference](../ui-design/references/PDF-REFERENCE.md).
 
 ## Load references progressively
 
@@ -45,12 +47,10 @@ Read only what the current phase requires. Treat every applicable "before" instr
 
 - At the interview phase, load and follow the installed model-invoked `grilling` skill. If `grilling` is unavailable, say that you will use a reduced fallback interview, then follow section 5 directly.
 - Before assigning or performing a context-heavy phase, read [references/DELEGATION.md](references/DELEGATION.md).
-- Before diagnosing or creating a direction, read [references/DESIGN-DISCIPLINE.md](references/DESIGN-DISCIPLINE.md).
-- Before inventorying, changing, or documenting a project's design system, read [references/DESIGN-SYSTEM.md](references/DESIGN-SYSTEM.md).
-- Before controlling or inspecting a browser, read [references/BROWSER-OBSERVATION.md](references/BROWSER-OBSERVATION.md).
+- Load the applicable progressive references from `ui-design` before design judgment, design-system work, browser observation, or rendered verification.
 - Before writing the candidate report, read [references/HTML-REPORT.md](references/HTML-REPORT.md).
-- Before creating HTML/CSS mockups, read [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md).
-- Before diagnosing or creating a direction, read [references/PDF-REFERENCE.md](references/PDF-REFERENCE.md) and check the skill's `.artifacts/pdf/` directory for a prepared `reference.md`. Source availability is optional. Consultation is mandatory when a prepared cache exists or the user supplies a licensed PDF. Use an existing cache without requiring the source PDF again.
+- Before creating HTML/CSS mockups, read [Visual mockups](../ui-design/references/VISUAL-MOCKUPS.md).
+- Before diagnosing or creating a direction, read [PDF reference](../ui-design/references/PDF-REFERENCE.md) and discover prepared caches in both `ui-design/.artifacts/pdf/` and the legacy `refine-ui/.artifacts/pdf/` location. Source availability is optional. Consultation is mandatory when a prepared cache exists or the user supplies a licensed PDF. Use an existing cache without requiring the source PDF again.
 
 ## 1. Determine the entry mode
 
@@ -123,7 +123,7 @@ The main agent owns and updates the compact direction packet defined in [referen
 
 ### Reference checkpoint
 
-Before classifying or ranking gaps, follow the mandatory-use procedure in [references/PDF-REFERENCE.md](references/PDF-REFERENCE.md). If a prepared reference is available:
+Before classifying or ranking gaps, follow the targeted mandatory-use procedure in [PDF reference](../ui-design/references/PDF-REFERENCE.md). If a prepared reference is available:
 
 1. derive search terms from the observed hierarchy, composition, typography, color, depth, image, responsive, or state problem
 2. search page-labelled Markdown rather than relying on remembered advice
@@ -165,13 +165,13 @@ Classify each credible gap on two axes.
 
 Do not infer a systemic cause from one occurrence. Do not recommend a local override for repeated system evidence.
 
-Also classify the likely system relationship as reuse, deepen, promote, add, or keep local, following [references/DESIGN-SYSTEM.md](references/DESIGN-SYSTEM.md). An existing embedded element plus the proposed refined usage can provide two concrete consumers. Promotion is credible only when they share semantics and admit a small interface, not merely similar markup.
+Also classify the likely system relationship as reuse, deepen, promote, add, or keep local, following [Design system](../ui-design/references/DESIGN-SYSTEM.md). An existing embedded element plus the proposed refined usage can provide two concrete consumers. Promotion is credible only when they share semantics and admit a small interface, not merely similar markup.
 
 ## 4. Present gaps and stop
 
 The phase owner writes one visual candidate report to a fresh approved external directory, following [references/HTML-REPORT.md](references/HTML-REPORT.md). If a delegate already produced it under the phase contract, the main agent validates the handoff rather than regenerating the report.
 
-A candidate identifies an observable gap and frames the decision it opens. It can name a likely design lever, but it must not pretend that the first proposed treatment is settled. Include a concise reference lens from the temporary brief when an applicable prepared source exists. When system evidence exists, include the likely relationship (reuse, deepen, promote, add, or keep local) and identify existing and proposed consumers of any promotion candidate.
+Apply `ui-design` to the report's own content and hierarchy as well as the product under review. A candidate identifies an observable gap and frames the decision it opens. It can name a likely design lever, but it must not pretend that the first proposed treatment is settled. Include a concise reference lens from the temporary brief when an applicable prepared source exists. When system evidence exists, include the likely relationship (reuse, deepen, promote, add, or keep local) and identify existing and proposed consumers of any promotion candidate.
 
 Rank candidates qualitatively by user impact, recurrence, confidence, and change scope. Do not assign numeric design scores.
 
@@ -218,17 +218,17 @@ If no meaningful visual uncertainty remains, continue grilling until the frontie
 
 ## 6. Create temporary HTML/CSS mockups
 
-Follow [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md). Prefer its Tailwind Play CDN adapter for temporary mockups when external requests are available and allowed. Use its embedded-CSS fallback otherwise. Never add Tailwind to the user's repository.
+Follow [Visual mockups](../ui-design/references/VISUAL-MOCKUPS.md) with the question, alternatives, and readiness matrix required by this workflow. Include representative narrow and wide viewports. Prefer its Tailwind Play CDN adapter for temporary mockups when external requests are available and allowed. Use its embedded-CSS fallback otherwise. Never add Tailwind to the user's repository.
 
 Before consuming mockup implementation or screenshot context in the main conversation, assign one capable phase owner when delegation is available. Prefer one delegate for the whole loop: focused evidence consumption, alternative construction, browser rendering, screenshot inspection, defect repair, recapture, and the verification manifest. Do not split that loop among several delegates merely to parallelize it. The main agent provides the direction packet and remains responsible for presenting the result and receiving the user's decision.
 
 Create two to four alternatives that answer the selected question. Use three by default. Keep content and state constant so the structural difference is legible. Preserve accepted project-system constraints unless changing one is the design question. For each alternative, record its proposed system delta and which consulted principle it applies, deliberately challenges, or finds inapplicable. References inform coherent choices. Do not copy the book's examples or turn alternatives into cosmetic demonstrations of one rule.
 
-The designated phase owner runs the blocking mockup-readiness gate in [references/VISUAL-MOCKUPS.md](references/VISUAL-MOCKUPS.md). Render every required alternative × viewport × state. Capture current screenshots. Inspect console and layout evidence. Visually inspect each screenshot when vision is available. Fix defects, and recapture anything that an edit invalidated. Write the temporary verification manifest. Do not proceed while any required cell is failed, stale, or uninspected. When delegated, the main agent validates the compact handoff and manifest status without duplicating the full screenshot inspection unless a spot-check trigger fires.
+The designated phase owner runs the blocking mockup-readiness gate in [Visual mockups](../ui-design/references/VISUAL-MOCKUPS.md). Render every required alternative × viewport × state. Capture current screenshots. Inspect console and layout evidence. Visually inspect each screenshot when vision is available. Fix defects, and recapture anything that an edit invalidated. Write the temporary verification manifest. Do not proceed while any required cell is failed, stale, or uninspected. When delegated, the main agent validates the compact handoff and manifest status without duplicating the full screenshot inspection unless a spot-check trigger fires.
 
-If the phase owner's model cannot inspect images, complete the objective checks and captures, mark the manifest `USER VISUAL REVIEW REQUIRED`, and hand off only to request visual verification. Name every matrix cell and provide the same visual checklist used by an image-capable model. Do not describe the mockup as ready or ask for direction selection yet. Wait until the user explicitly verifies every cell, reported defects are fixed and recaptured, and the manifest is updated to `PASS`.
+If the phase owner's model cannot inspect images, complete the objective checks and captures, mark the manifest `VISUAL REVIEW REQUIRED` with the user as required inspector, and hand off only to request visual verification. Name every matrix cell and provide the same visual checklist used by an image-capable model. Do not describe the mockup as ready or ask for direction selection yet. Wait until the user explicitly verifies every cell, reported defects are fixed and recaptured, and the manifest is updated to `PASS`.
 
-Only after the gate passes, open the mockup for the user. Provide its absolute path and verification summary. Explain each alternative's thesis and tradeoff briefly. Then ask the user to:
+Only after the gate passes, open the mockup for the user. Provide its absolute path and verification summary. Explain each alternative's thesis and tradeoff briefly. Recommend an alternative with reasons tied to the user's task and constraints, not a preference for decoration. Present material token, reusable-module, extraction, and migration consequences. Name the consulted principles that affected the recommendation and any deliberate departure. Then ask the user to:
 
 - select one
 - combine named traits from several
@@ -263,6 +263,10 @@ Capture:
 Whenever a consolidated or revised mockup is created, or any render input changes, invalidate and rerun every affected readiness-matrix cell before showing it. Reuse prior verification only for byte-identical render inputs under identical matrix conditions. Visual similarity is not evidence freshness. For a mockup-free proposal, present the consolidated direction in words. Summarize the settled tree and get explicit shared-understanding confirmation before production work. Whether the direction came from mockups or a mockup-free proposal, production work cannot begin while the frontier is non-empty or without this direction approval.
 
 Immediately after approval, create root `DESIGN.md` if absent or update it if present. Capture only the accepted intent, selection rule, invariants, proposed system delta, implementation or validation surface, and unresolved risks. Mark new or changed rules **provisional**. Link deeper existing design sources rather than duplicating them. Do not wait until implementation cleanup, and do not invent unrelated foundations to make the file appear complete.
+
+This workflow requires the root entry point before production. If repository policy forbids even a minimal root index, stop at the direction gate and resolve the location with the user. Do not bypass the policy or silently substitute a deeper file.
+
+Here, **provisional** means explicitly direction-approved and under rendered validation. **Established** means the user accepted the rendered production result. Record observed conflicts as legacy drift and approved divergences as exceptions with their reasons. Track the decision source separately from verification evidence. Update provisional memory as the slice changes, and revise or remove it when a direction is abandoned. Only rendered acceptance establishes it; only an explicit rollout decision permits wider migration.
 
 ## 8. Implement one production slice
 
@@ -318,7 +322,7 @@ Do not roll out merely because the implementation matches the mockup. The user a
 
 After option 2, propagate the accepted decision only as far as the evidence justifies. Consolidate repeated values, update affected primitives or patterns, migrate relevant surfaces, and add visual regression coverage where it will protect an intentional result. After option 4, retain only the accepted validation slice and do not migrate additional surfaces.
 
-For either accepted option, follow [references/DESIGN-SYSTEM.md](references/DESIGN-SYSTEM.md), mark the corresponding root `DESIGN.md` entries established, and reconcile their implementation paths and reference surfaces with the accepted result. Keep raw values canonical in executable tokens. The root file records meanings, selection rules, invariants, links to deeper sources, and accepted exceptions.
+For either accepted option, follow [Design system](../ui-design/references/DESIGN-SYSTEM.md), mark the corresponding root `DESIGN.md` entries established, and reconcile their implementation paths and reference surfaces with the accepted result. Keep raw values canonical in executable tokens. The root file records meanings, selection rules, invariants, links to deeper sources, and accepted exceptions.
 
 Keep temporary reports, screenshots, and mockups out of the user's repository. Persist only approved production implementation and durable project knowledge justified by the result. Keep domain terminology in `CONTEXT.md`. Keep visual and interaction intent discoverable from root `DESIGN.md` and its linked deeper sources.
 

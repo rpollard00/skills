@@ -57,7 +57,11 @@ Mode: strict. STE's original purpose was making English readable for non-native 
 
 ## UI copy and empty states
 
-Mode: procedural, hard length limits. Buttons and labels are technical names (exempt). Body copy follows the rules: "No projects yet. Create a project to start." Nothing else survives at this length anyway.
+Mode: pragmatic by default. Classify the text by purpose, not its length. A state such as "No projects yet" is descriptive. An instruction such as "Create a project" is procedural. Button labels name the available action; status labels describe the actual state.
+
+Existing labels quoted in documentation remain exact. Newly authored or edited labels require clear wording and consistent terminology. This applies inside templates, JSX, source code, and localization files. Preserve syntax, identifiers, interpolation, and functional formatting.
+
+Short text can still be ambiguous or unnecessary. Prefer a precise control label and useful placement to extra explanation. Preserve required warnings, uncertainty, accessible names, and recovery guidance. Route persuasive or brand prose through `unslop`.
 
 ## Where STE does not fit
 
