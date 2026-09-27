@@ -28,6 +28,10 @@ Set the control, hierarchy, grouping, and interaction before adding explanation.
 
 Do not turn implementation requirements into visible disclaimers or narrate every default. Summarize active restrictions at the decision they affect. Show actions available in the current state, with reasons or recovery paths where unavailable actions matter. Preserve consequential uncertainty, risk, status, warnings, accessible names, and required terms.
 
+Give each fact one primary place near the decision it supports. An eyebrow, title, and subtitle do not each need to announce the same subject. A chart caption can explain its unit, scope, or uncertainty without narrating what the heading and axes already show. Repeat information when another task context needs it, not to fill a standard layout slot.
+
+Data fidelity does not require a visible copy of the storage schema. Use one readable representation with the required precision and units. Keep exact identifiers when they support lookup or communication. Put diagnostic fields and additional formats behind a useful disclosure, or omit them when no user task needs them. A developer tool can legitimately require raw values; an operational screen does not inherit that requirement merely because an API supplies them.
+
 ### 2. Information and visual hierarchy
 
 - What should attract attention first, second, and third?
@@ -95,6 +99,8 @@ For each container, ask what relationship or interaction becomes unclear if it d
 - Does motion explain cause, continuity, or status?
 - Is reduced motion respected?
 
+An empty dataset has different recovery options from a filter that matches nothing. Preserve filters or reset controls that can recover results. Remove data-dependent controls and framing that cannot help in the current state. A known zero can still answer a useful question; missing or unavailable data must not masquerade as zero. Keep the explanation near the affected value or recovery action rather than filling the page with repeated warnings.
+
 ## Local versus systemic change
 
 A recurring visual symptom can originate at different levels:
@@ -139,6 +145,18 @@ At every phase, preserve or improve:
 - understandable errors and state changes
 
 An attractive inaccessible mockup is not a viable direction.
+
+## Content-removal pass
+
+Before delivery, review the rendered result specifically for content and structure that can disappear:
+
+1. Inspect the required viewports and states, including the initial view and relevant details or recovery states.
+2. Identify repeated orientation, restated labels, obvious chart narration, diagnostic data, and empty containers as removal candidates.
+3. For each candidate, name the user task or distinction that would fail without it. Accuracy alone does not justify inclusion.
+4. Within writable scope, remove candidates with no such purpose. Improve a label or placement before adding replacement explanation.
+5. Recheck orientation, data meaning, warnings, accessible names, and recovery actions. Recapture every state affected by an edit.
+
+Respect read-only scope, accepted project constraints, and fixed parity baselines. Return out-of-scope findings instead of editing them. Do not force deletions, impose a word quota, or remove useful brand expression to make the result look sparse. The deliverable is the improved interface, not a mandatory inventory of every retained sentence.
 
 ## Practical visual tests
 

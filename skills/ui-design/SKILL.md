@@ -23,9 +23,11 @@ Reuse accepted project intent and executable constraints. Do not perpetuate know
 - Start with the user's task and realistic data, including consequential states and density.
 - Set controls, information hierarchy, grouping, and interaction before polishing labels. Prefer precise labels and placement to explanatory paragraphs.
 - Add explanatory text only for ambiguity that remains. Ask the counterfactual: if this text disappeared, what task, distinction, or decision would become unclear?
+- Give each fact one primary home. Repeat it only when a separate task context or necessary warning earns the repetition. Do not restate nearby headings, labels, or obvious chart encodings in extra prose.
 - Apply the same necessity test to containers. A card, banner, heading, or panel must establish a useful relationship or interaction. Do not add dashboard containers or decorative copy automatically.
 - Do not print requirements as disclaimers. Summarize active restrictions where they affect a decision instead of narrating every default.
-- Show actions available in the current state. Preserve the status, reason, or recovery path when an unavailable action matters.
+- Present data in the user's terms, not its storage format. Raw field names, literal nulls, or duplicate formats need a task-specific purpose. Preserve identifiers, precision, units, and exact values when users need them.
+- Distinguish an empty dataset, no matching results, and unavailable data. Keep recovery controls that can help. Omit data-dependent charts, tabs, or pagination when they offer no useful comparison or action. Preserve meaningful zero values and unavailable-action explanations.
 - Preserve important uncertainty, risk, accessibility names, status, warnings, and required terms. Brevity does not justify deleting them.
 - Match expression and density to the product. Brand voice, rich imagery, and expressive UI remain valid when they serve the context.
 - Apply `writing` to user-visible strings, including strings in templates, JSX, source code, and localization. Factual copy uses `simple-technical-english`; persuasive or brand prose uses `unslop`.
@@ -45,5 +47,7 @@ Before delegating UI implementation, include this skill and the relevant referen
 ## Evidence
 
 Verify on the matching rendered surface with a proportional viewport, state, and theme matrix. Inspect actual images when image capability is available, together with runtime and interaction evidence. Source, clean console output, and screenshot existence alone do not prove visual correctness.
+
+Include a [content-removal pass](references/DESIGN-DISCIPLINE.md#content-removal-pass) in rendered verification. Within writable scope, remove unnecessary copy and framing rather than merely noting them in the handoff. For read-only or fixed-baseline work, return findings without changing the artifact.
 
 Use stable capture conditions. Edits invalidate affected evidence; fix defects and recapture before claiming success. A caller can omit an unnecessary mockup, but cannot count uninspected images as verified. Report missing capabilities and unverified cells honestly. Keep temporary reports, screenshots, and mockups outside the product repository. Do not install tools or dependencies without approval.
