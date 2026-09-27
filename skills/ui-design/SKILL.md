@@ -21,15 +21,8 @@ Reuse accepted project intent and executable constraints. Do not perpetuate know
 ## Core discipline
 
 - For new UI, [compose from the task](references/DESIGN-DISCIPLINE.md#compose-from-the-task) before choosing a page shell or component arrangement. Reuse accepted project structure for scoped changes.
-- Select the facts and actions users need in each consequential state. Group them by the question or action they support. Establish the primary task region with realistic data before elaborating the surrounding page.
-- Choose information hierarchy, placement, and interaction before writing copy. Use labels to identify, values to inform, and actions to name outcomes. Add explanation for a specific ambiguity, consequence, or recovery need.
-- Give each fact one primary home. Repeat it when another task context or necessary warning needs it. Optional component slots are not content requirements: write a heading, caption, or subtitle only for a distinct purpose.
-- Choose containers and navigation to support the selected content and relationships. Cards, sidebars, and expressive layouts are valid choices, not defaults or defects by themselves.
-- Put active restrictions at the decisions they affect. Describe their consequence or available action rather than restating implementation requirements or narrating every default.
-- Present data in the user's terms, not its storage format. Raw field names, literal nulls, or duplicate formats need a task-specific purpose. Preserve identifiers, precision, units, and exact values when users need them.
-- Distinguish an empty dataset, no matching results, and unavailable data. Keep recovery controls that can help. Omit data-dependent charts, tabs, or pagination when they offer no useful comparison or action. Preserve meaningful zero values and unavailable-action explanations.
-- Preserve important uncertainty, risk, accessibility names, status, warnings, and required terms. Brevity does not justify deleting them.
-- Match expression and density to the product. Brand voice, rich imagery, and expressive UI remain valid when they serve the context.
+- Use [User task and content](references/DESIGN-DISCIPLINE.md#1-user-task-and-content) for copy and data presentation, and [States](references/DESIGN-DISCIPLINE.md#8-states-responsiveness-and-motion) for recovery and unavailable data.
+- Match containers, navigation, expression, and density to the product. Cards, sidebars, brand voice, and rich imagery are valid choices, not defaults or defects.
 - Apply `writing` to user-visible strings, including strings in templates, JSX, source code, and localization. Factual copy uses `simple-technical-english`; persuasive or brand prose uses `unslop`.
 
 ## Load references progressively

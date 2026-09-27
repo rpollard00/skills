@@ -13,8 +13,6 @@ For new UI or an authorized redesign, choose content before choosing the page sh
 
 Establish the primary task region with realistic content before elaborating the surrounding page. Reuse accepted shells, components, and project rules for scoped work. These choices do not require a separate document, mockup, or approval gate. Carry consequential choices into the caller's existing plan or implementation brief when useful.
 
-An optional subtitle, banner, or caption is an available capability, not a request for text. Create it for a distinct user need. A familiar template does not establish that need. Let the product's character guide typography, color, imagery, and purposeful brand expression without inventing extra subject matter.
-
 ## Rendered evidence first
 
 A source value is not a visual result. Cascades, inherited styles, fonts, content density, viewport size, and neighboring elements determine what users see.
@@ -37,13 +35,15 @@ Work from structural questions toward decoration. Do not polish a hierarchy that
 
 Prefer real domain language and representative data over placeholder copy. A sparse mockup cannot validate a data-dense product.
 
-Choose copy by its role in the task. Labels identify controls and values. Actions name outcomes. Explanations resolve specific ambiguity, consequences, or recovery needs. Prefer a precise label and clear placement when those already communicate the meaning.
+Labels identify controls and values. Actions name outcomes. Add explanation only for a specific ambiguity, consequence, or recovery need.
 
-Do not turn implementation requirements into visible disclaimers or narrate every default. Summarize active restrictions at the decision they affect. Show actions available in the current state, with reasons or recovery paths where unavailable actions matter. Preserve consequential uncertainty, risk, status, warnings, accessible names, and required terms.
+Implementation constraints do not belong in UI copy.
 
-Give each fact one primary place near the decision it supports. An eyebrow, title, and subtitle do not each need to announce the same subject. A chart caption can explain its unit, scope, or uncertainty without narrating what the heading and axes already show. Repeat information when another task context needs it, not to fill a standard layout slot.
+Give each fact one primary home near the decision it supports. If the context already conveys the meaning, omit the explanation. Optional component slots do not require text. Repeat information when another task context needs it.
 
-Data fidelity does not require a visible copy of the storage schema. Use one readable representation with the required precision and units. Keep exact identifiers when they support lookup or communication. Put diagnostic fields and additional formats behind a useful disclosure, or omit them when no user task needs them. A developer tool can legitimately require raw values; an operational screen does not inherit that requirement merely because an API supplies them.
+State concrete consequences of uncertainty or restrictions where they affect users. Preserve meaningful warnings, risk, status, accessible names, and required terms. Brevity must not hide them.
+
+Present data in the user's terms with the required precision and units. Preserve identifiers needed for lookup or communication. Raw fields, literal nulls, and duplicate formats need a task-specific purpose.
 
 ### 2. Information and visual hierarchy
 
