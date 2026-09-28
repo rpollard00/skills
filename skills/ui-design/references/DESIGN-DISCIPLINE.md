@@ -28,20 +28,21 @@ Work from structural questions toward decoration. Do not polish a hierarchy that
 
 ### 1. User task and content
 
-- What is the user here to decide, understand, or do?
-- What information is essential to that task?
-- Is the interface organized around the feature or around a convenient layout template?
-- Does realistic content reveal missing space, weak grouping, or inappropriate density?
-
-Prefer real domain language and representative data over placeholder copy. A sparse mockup cannot validate a data-dense product.
-
-Labels identify controls and values. Actions name outcomes. Add explanation only for a specific ambiguity, consequence, or recovery need.
+Use real domain language and representative data. Labels identify controls and values. Actions name outcomes. Add explanation only for a specific ambiguity, consequence, or recovery need. Optional component slots do not require text.
 
 Implementation constraints do not belong in UI copy.
 
-Give each fact one primary home near the decision it supports. If the context already conveys the meaning, omit the explanation. Optional component slots do not require text. Repeat information when another task context needs it.
+#### Copy cleanup
 
-State concrete consequences of uncertainty or restrictions where they affect users. Preserve meaningful warnings, risk, status, accessible names, and required terms. Brevity must not hide them.
+For UI creation or authorized copy changes, complete this pass after rendering and before delivery. Read the user-visible copy in the relevant default, detail, empty, and error states. Remove:
+
+- Implementation narration and abstract disclaimers.
+- Explanations that duplicate visible information.
+- Instructions that merely describe obvious controls.
+- Instructions that do not apply in the current state.
+- Copy that reads like marketing material, when marketing is not a goal.
+
+Preserve required labels, warnings, uncertainty, accessibility text, task information, and recovery actions. Keep repetition that serves a separate task context. Do not add replacement copy merely because you removed text. Verify the resulting states again.
 
 Present data in the user's terms with the required precision and units. Preserve identifiers needed for lookup or communication. Raw fields, literal nulls, and duplicate formats need a task-specific purpose.
 

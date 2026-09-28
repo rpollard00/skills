@@ -41,6 +41,6 @@ Before delegating UI implementation, include this skill and the relevant referen
 
 Verify on the matching rendered surface with a proportional viewport, state, and theme matrix. Inspect actual images when image capability is available, together with runtime and interaction evidence. Source, clean console output, and screenshot existence alone do not prove visual correctness.
 
-Verify the planned content, hierarchy, and state behavior. Assess content purpose separately from layout efficiency: a large card or an offscreen action does not alone establish unnecessary content. Diagnose sizing, spacing, grouping, and order before cutting useful information. For read-only or fixed-baseline work, return findings without changing the artifact.
+Verify planned content, hierarchy, and state behavior. Complete the applicable [Copy cleanup](references/DESIGN-DISCIPLINE.md#copy-cleanup) before delivery. Assess content purpose separately from layout efficiency. For read-only or fixed-baseline work, return findings without changing the artifact.
 
 Use stable capture conditions. Edits invalidate affected evidence; fix defects and recapture before claiming success. A caller can omit an unnecessary mockup, but cannot count uninspected images as verified. Report missing capabilities and unverified cells honestly. Keep temporary reports, screenshots, and mockups outside the product repository. Do not install tools or dependencies without approval.
