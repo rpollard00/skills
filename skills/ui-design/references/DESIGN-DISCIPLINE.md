@@ -32,10 +32,10 @@ Use real domain language and representative data. Labels identify controls and v
 
 Implementation constraints do not belong in UI copy.
 
-Remove text with no distinct user value, including unnecessary labels:
+Avoid **UI filler**: unnecessary labels or generic framing around otherwise clear content. Short or technically accurate text can still be filler. Omit:
 
-- Implementation narration and abstract disclaimers.
-- Explanations that duplicate visible information.
+- Implementation narration and abstract disclaimers, including lists of unrelated things that correctly labeled data does not measure.
+- Redundant introductions ("happy talk"), vague section summaries, and explanations that duplicate visible information.
 - Instructions that merely describe obvious controls.
 - Instructions that do not apply in the current state.
 - Copy that reads like marketing material, when marketing is not a goal.
