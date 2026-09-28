@@ -32,19 +32,7 @@ Use real domain language and representative data. Labels identify controls and v
 
 Implementation constraints do not belong in UI copy.
 
-#### Text audit
-
-For UI creation or authorized copy changes, complete this audit after rendering and before delivery. Cover every user-facing string in the new UI or authorized scope. Audit line by line, treating each sentence or standalone string as a unit.
-
-Include labels, headings, buttons, navigation, placeholders, table headers, status badges, captions, messages, tooltips, and accessible text. Find units in source and rendered states, including dynamic templates, conditional text, and content outside the default viewport. Evaluate repeated or dynamic text in each distinct context.
-
-In a temporary audit file, record each unit, its location/state, decision, and specific end-user reason:
-
-- **Keep:** Identify the user question, decision, action, necessary identification, or product goal it serves. Verify that the wording matches the actual meaning or behavior.
-- **Rewrite:** Preserve necessary meaning but correct unclear, repetitive, misleading, or inappropriate wording. Record the replacement.
-- **Remove:** Delete text with no distinct user value.
-
-Labels do not get an automatic keep. Remove:
+Remove text with no distinct user value, including unnecessary labels:
 
 - Implementation narration and abstract disclaimers.
 - Explanations that duplicate visible information.
@@ -53,8 +41,6 @@ Labels do not get an automatic keep. Remove:
 - Copy that reads like marketing material, when marketing is not a goal.
 
 Preserve required form labels, accessible names, warnings, consequential uncertainty, accessibility text, task information, and recovery. Keep repetition that serves a separate task context. Do not replace deleted text without a user need.
-
-Apply the decisions. Reinspect affected states. Verify that every unit has a decision and that replacements and new text also pass the audit.
 
 Present data in the user's terms with the required precision and units. Preserve identifiers needed for lookup or communication. Raw fields, literal nulls, and duplicate formats need a task-specific purpose.
 

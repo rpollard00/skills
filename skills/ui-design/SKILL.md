@@ -41,6 +41,6 @@ Before UI delegation, pass this skill, applicable references, task, authority li
 
 Verify the matching rendered surface across proportional viewport, state, and theme coverage. Inspect actual images alongside runtime and interaction evidence. Report missing capabilities and unverified states. Source, console output, and screenshot existence alone do not prove visual correctness.
 
-Verify planned content, hierarchy, and state behavior. Complete the applicable [Text audit](references/DESIGN-DISCIPLINE.md#text-audit) before delivery. Assess content purpose separately from layout efficiency. Read-only or fixed-baseline work returns findings without changes.
+Verify planned content, hierarchy, and state behavior. Assess content purpose separately from layout efficiency. Read-only or fixed-baseline work returns findings without changes.
 
 Use stable capture conditions. Recapture affected states after edits. Keep temporary artifacts in a fresh task-owned directory outside the product repository. Do not overwrite or adopt another task's temporary files. Do not install tools or dependencies without approval.
