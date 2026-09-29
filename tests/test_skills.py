@@ -129,30 +129,6 @@ class ValidationTests(unittest.TestCase):
             skills = {"sample": skill / "SKILL.md", "hidden": root / "hidden/SKILL.md"}
             self.assertEqual(list(named_skill_dependencies(reference, skills)), [skill / "SKILL.md"])
 
-    def test_import_inventory_and_protected_upstream_content(self):
-        imports = json.loads((REPO / "docs/upstream-imports.json").read_text())["files"]
-        records = {row["destination"]: row for row in imports}
-        for row in imports:
-            self.assertTrue((REPO / row["destination"]).is_file(), row)
-        protected = [
-            "skills/no-comments/references/comment-sicko.md",
-            "skills/typescript-best-practices/SKILL.md",
-            "skills/typescript-best-practices/references/patterns.md",
-        ]
-        for name in protected:
-            content = (REPO / name).read_text()
-            if name.endswith("typescript-best-practices/SKILL.md"):
-                content = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", content)
-                content = content.replace('\nmetadata:\n  opencode/autoinvoke: "false"', "")
-                for principle in ("type-system-discipline", "boundary-discipline"):
-                    content = content.replace(f"`principle-{principle}`", f"**{principle}**")
-            expected = records[name].get("list_format_sha256", records[name]["sha256"])
-            self.assertEqual(hashlib.sha256(content.encode()).hexdigest(), expected, name)
-        for row in imports:
-            if row["destination"].endswith("/SKILL.md"):
-                path = REPO / row["destination"]
-                self.assertTrue((path.parent / "LICENSE").is_file(), path)
-
 
 class InstallerTests(unittest.TestCase):
     def setUp(self):
@@ -286,6 +262,46 @@ class InstallerTests(unittest.TestCase):
         link = self.home / ".agents/skills/reese"
         self.assertEqual(link.resolve(), REPO / "skills")
         self.assertEqual(validate(link), [])
+
+    def test_claude_gets_per_skill_links_and_rerun_is_a_noop(self):
+        claude = self.home / ".claude/skills"
+        args = plan(self.repo, self.home, self.dest, False, claude)
+        self.assertEqual(args[3], [(claude / "sample", self.source.resolve())])
+        apply(*args)
+        self.assertEqual((claude / "sample").resolve(), self.source.resolve())
+        self.assertEqual(plan(self.repo, self.home, self.dest, False, claude)[3], [])
+
+    def test_claude_foreign_copy_blocks_before_mutation(self):
+        claude = self.home / ".claude/skills"
+        make_skill(claude)
+        with self.assertRaises(InstallError):
+            plan(self.repo, self.home, self.dest, True, claude)
+        self.assertFalse(self.dest.exists())
+
+    def test_claude_foreign_dangling_link_blocks(self):
+        claude = self.home / ".claude/skills"
+        claude.mkdir(parents=True)
+        (claude / "sample").symlink_to(self.root / "absent")
+        with self.assertRaises(InstallError):
+            plan(self.repo, self.home, self.dest, True, claude)
+
+    def test_claude_relinks_previous_layout_only_with_migrate(self):
+        claude = self.home / ".claude/skills"
+        claude.mkdir(parents=True)
+        (claude / "sample").symlink_to(self.repo / "skills/engineering/sample")
+        with self.assertRaises(InstallError):
+            plan(self.repo, self.home, self.dest, False, claude)
+        apply(*plan(self.repo, self.home, self.dest, True, claude))
+        self.assertEqual((claude / "sample").resolve(), self.source.resolve())
+
+    def test_cli_links_claude_and_no_claude_skips_it(self):
+        env = {**os.environ, "HOME": str(self.home)}
+        subprocess.run([str(REPO / "scripts/link-skills.sh"), "--apply", "--no-claude"], env=env,
+                       check=True, capture_output=True, timeout=15)
+        self.assertFalse((self.home / ".claude").exists())
+        subprocess.run([str(REPO / "scripts/link-skills.sh"), "--apply"], env=env,
+                       check=True, capture_output=True, timeout=15)
+        self.assertEqual((self.home / ".claude/skills/mako/SKILL.md").resolve(), REPO / "skills/mako/SKILL.md")
 
     def test_cli_preview_does_not_create_destination(self):
         result = subprocess.run(

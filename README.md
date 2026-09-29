@@ -53,6 +53,8 @@ The default target is:
 ~/.agents/skills/reese -> <checkout>/skills
 ```
 
+Claude Code does not scan nested directories, so the installer also links each skill individually into `~/.claude/skills/<name>`. Existing links to the same skill are left alone. Use `--claude-destination /path` to change that root or `--no-claude` to skip it.
+
 The script makes no changes unless you add `--apply`. For a prior per-skill installation, preview removal of this checkout's own links, including links left dangling by the directory move:
 
 ```bash
@@ -69,7 +71,7 @@ The installer refuses foreign links, separately installed copies, duplicate name
 
 Use `--destination /path/to/skills` for a different discovery root. Common user roots are checked for collisions; project-local roots and custom configuration paths are not exhaustively audited. No harness configuration file is changed.
 
-Reload the harness after installation. Native entry points are `/skill:mako` in pi, `$mako` in Codex, and the `@mako` skill completion in OpenCode 2. Supply the task after selecting the skill. Interactive UI behavior remains separate from the discovery tests.
+Reload the harness after installation. Native entry points are `/skill:mako` in pi, `$mako` in Codex, the `@mako` skill completion in OpenCode 2, and `/mako` in Claude Code. Supply the task after selecting the skill. Interactive UI behavior remains separate from the discovery tests.
 
 ## Validate
 
