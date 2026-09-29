@@ -4,7 +4,9 @@ Use only the section relevant to the current host. The shared [execution rules](
 
 ## Pi
 
-When delegation is permitted, discover the installed pi-subagents tools and read their current skill and guides. Use the governed workflow, native notifications, and documented evidence/output routing. Do not reproduce a version-specific tool schema here.
+An explicit Mako invocation supplies user authorization for delegation under its [activation policy](../SKILL.md#activation). Do not ask the user to repeat that authorization separately for pi-subagents. Explicit user limits and host restrictions still apply.
+
+Discover the installed pi-subagents tools and read their current skill and guides. Use the governed workflow, native notifications, and documented evidence/output routing. Do not reproduce a version-specific tool schema here.
 
 The inspected pi-subagents implementation does not enforce mission-wide acceptance when closing a mission. Mako requires evidence reconciliation, but does not claim runtime enforcement. Its automatic Git-worktree isolation is also not a verified jj integration.
 

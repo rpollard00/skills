@@ -20,7 +20,7 @@ A missing dependency is a bundle defect. Report its exact path. Do not silently 
 
 ## Discover capabilities
 
-Use delegation when the task and host permit it. Follow the host's tool contract, restrictions, and budget. A skill cannot grant itself extra tool access. Read [harness notes](harnesses.md) only for the relevant integration; use installed documentation for current tool contracts.
+Treat explicit Mako invocation as user authorization to delegate under its [activation policy](../SKILL.md#activation). Do not require a separate request for subagents. Follow the host's tool contract, restrictions, and budget. A skill cannot grant itself extra tool access. Read [harness notes](harnesses.md) only for the relevant integration; use installed documentation for current tool contracts.
 
 Discover supported agents, models, context isolation, writable locations, notifications, verification tools, and continuation controls. Never guess model identifiers or copy tool parameters from another harness.
 
