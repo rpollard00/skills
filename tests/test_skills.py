@@ -13,7 +13,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 from link_skills import InstallError, apply, plan
 from markdown_lists import markdown_files, to_lists
-from validate_skills import local_links, named_skill_dependencies, validate
+from validate_skills import frontmatter, local_links, named_skill_dependencies, validate
 
 
 def make_skill(root, name="sample", *, category="", hidden=False):
@@ -97,6 +97,22 @@ class ValidationTests(unittest.TestCase):
         selected = set(root.glob("*/SKILL.md"))
         self.assertEqual({p.resolve() for p in selected} - seen, set())
         self.assertEqual(len(list(root.glob("principle-*/SKILL.md"))), 23)
+
+    def test_claude_adapter_preserves_source_policies_and_loads_dependencies(self):
+        with tempfile.TemporaryDirectory() as temp:
+            home = Path(temp)
+            claude = home / ".claude/skills"
+            before = {p: p.read_bytes() for p in (REPO / "skills").glob("*/SKILL.md")}
+            apply(*plan(REPO, home, home / ".agents/skills", False, claude))
+            generated = claude / ".reese-adapter/skills"
+            self.assertEqual(validate(generated), [])
+            for source, content in before.items():
+                self.assertEqual(source.read_bytes(), content)
+                installed = claude / source.parent.name / "SKILL.md"
+                expected = source.parent.name == "mako"
+                self.assertEqual(bool(frontmatter(installed).get("disable-model-invocation")), expected)
+                for reference in local_links(installed):
+                    self.assertTrue(reference.exists(), reference)
 
     def test_ui_design_extraction_wiring(self):
         root = REPO / "skills"
@@ -266,10 +282,111 @@ class InstallerTests(unittest.TestCase):
     def test_claude_gets_per_skill_links_and_rerun_is_a_noop(self):
         claude = self.home / ".claude/skills"
         args = plan(self.repo, self.home, self.dest, False, claude)
-        self.assertEqual(args[3], [(claude / "sample", self.source.resolve())])
+        self.assertEqual(args[3], [(claude / "sample", claude / ".reese-adapter/skills/sample", None)])
         apply(*args)
-        self.assertEqual((claude / "sample").resolve(), self.source.resolve())
+        self.assertEqual((claude / "sample").resolve(), claude / ".reese-adapter/skills/sample")
         self.assertEqual(plan(self.repo, self.home, self.dest, False, claude)[3], [])
+
+    def test_claude_symlinked_destination_is_idempotent(self):
+        actual = self.root / "actual-claude-skills"
+        actual.mkdir()
+        claude = self.home / ".claude/skills"
+        claude.parent.mkdir(parents=True)
+        claude.symlink_to(actual, target_is_directory=True)
+        apply(*plan(self.repo, self.home, self.dest, False, claude))
+        args = plan(self.repo, self.home, self.dest, False, claude)
+        self.assertEqual(args[3], [])
+        apply(*args)
+        self.assertEqual((claude / "sample").resolve(), actual / ".reese-adapter/skills/sample")
+        self.assertTrue(claude.is_symlink())
+
+    def test_claude_migrates_current_source_links_without_legacy_flag(self):
+        claude = self.home / ".claude/skills"
+        claude.mkdir(parents=True)
+        (claude / "sample").symlink_to(self.source)
+        apply(*plan(self.repo, self.home, self.dest, False, claude))
+        self.assertEqual((claude / "sample").resolve(), claude / ".reese-adapter/skills/sample")
+        self.assertTrue((self.source / "SKILL.md").is_file())
+
+    def test_claude_refreshes_owned_copies_preserving_resources_and_modes(self):
+        claude = self.home / ".claude/skills"
+        resource = self.source / "scripts/helper.sh"
+        resource.parent.mkdir()
+        resource.write_text("#!/bin/sh\necho first\n")
+        resource.chmod(0o755)
+        apply(*plan(self.repo, self.home, self.dest, False, claude))
+        installed = claude / "sample/scripts/helper.sh"
+        self.assertEqual(installed.read_bytes(), resource.read_bytes())
+        self.assertEqual(installed.stat().st_mode & 0o777, 0o755)
+        before = (claude / "sample/SKILL.md").stat().st_mtime_ns
+        apply(*plan(self.repo, self.home, self.dest, False, claude))
+        self.assertEqual((claude / "sample/SKILL.md").stat().st_mtime_ns, before)
+        resource.write_text("#!/bin/sh\necho second\n")
+        with (self.source / "SKILL.md").open("a") as entry:
+            entry.write("Updated instructions.\n")
+        apply(*plan(self.repo, self.home, self.dest, False, claude))
+        self.assertEqual(installed.read_bytes(), resource.read_bytes())
+        self.assertIn("Updated instructions.", (claude / "sample/SKILL.md").read_text())
+
+    def test_claude_excludes_private_artifacts_and_python_cache(self):
+        claude = self.home / ".claude/skills"
+        for name in (".artifacts", "__pycache__"):
+            directory = self.source / name
+            directory.mkdir()
+            (directory / "private").write_text("Do not distribute")
+        apply(*plan(self.repo, self.home, self.dest, False, claude))
+        for name in (".artifacts", "__pycache__"):
+            self.assertFalse((claude / "sample" / name).exists())
+            self.assertTrue((self.source / name / "private").exists())
+
+    def test_no_claude_preserves_existing_adapter(self):
+        claude = self.home / ".claude/skills"
+        apply(*plan(self.repo, self.home, self.dest, False, claude))
+        manifest = claude / ".reese-adapter/manifest.json"
+        before = manifest.stat().st_mtime_ns
+        apply(*plan(self.repo, self.home, self.dest, False))
+        self.assertEqual(manifest.stat().st_mtime_ns, before)
+        self.assertTrue((claude / "sample/SKILL.md").is_file())
+
+    def test_claude_rejects_external_source_resources(self):
+        claude = self.home / ".claude/skills"
+        (self.source / "external").symlink_to(self.root / "outside")
+        with self.assertRaisesRegex(InstallError, "source contains a symlink"):
+            plan(self.repo, self.home, self.dest, False, claude)
+        self.assertFalse(self.home.exists())
+
+    def test_claude_rejects_foreign_or_symlink_adapter(self):
+        claude = self.home / ".claude/skills"
+        claude.mkdir(parents=True)
+        adapter = claude / ".reese-adapter"
+        adapter.symlink_to(self.repo)
+        with self.assertRaises(InstallError):
+            plan(self.repo, self.home, self.dest, False, claude)
+        self.assertEqual(adapter.resolve(), self.repo)
+        adapter.unlink()
+        adapter.mkdir()
+        (adapter / "manifest.json").write_text("[]")
+        with self.assertRaises(InstallError):
+            plan(self.repo, self.home, self.dest, False, claude)
+
+    def test_claude_refuses_modified_generated_copy(self):
+        claude = self.home / ".claude/skills"
+        apply(*plan(self.repo, self.home, self.dest, False, claude))
+        installed = claude / "sample/SKILL.md"
+        installed.write_text("User changes\n")
+        with self.assertRaisesRegex(InstallError, "local changes"):
+            plan(self.repo, self.home, self.dest, False, claude)
+        self.assertEqual(installed.read_text(), "User changes\n")
+
+    def test_claude_refuses_changes_after_preflight(self):
+        claude = self.home / ".claude/skills"
+        apply(*plan(self.repo, self.home, self.dest, False, claude))
+        args = plan(self.repo, self.home, self.dest, False, claude)
+        installed = claude / "sample/SKILL.md"
+        installed.write_text("User changes\n")
+        with self.assertRaises(InstallError):
+            apply(*args)
+        self.assertEqual(installed.read_text(), "User changes\n")
 
     def test_claude_foreign_copy_blocks_before_mutation(self):
         claude = self.home / ".claude/skills"
@@ -292,7 +409,7 @@ class InstallerTests(unittest.TestCase):
         with self.assertRaises(InstallError):
             plan(self.repo, self.home, self.dest, False, claude)
         apply(*plan(self.repo, self.home, self.dest, True, claude))
-        self.assertEqual((claude / "sample").resolve(), self.source.resolve())
+        self.assertEqual((claude / "sample").resolve(), claude / ".reese-adapter/skills/sample")
 
     def test_cli_links_claude_and_no_claude_skips_it(self):
         env = {**os.environ, "HOME": str(self.home)}
@@ -301,7 +418,7 @@ class InstallerTests(unittest.TestCase):
         self.assertFalse((self.home / ".claude").exists())
         subprocess.run([str(REPO / "scripts/link-skills.sh"), "--apply"], env=env,
                        check=True, capture_output=True, timeout=15)
-        self.assertEqual((self.home / ".claude/skills/mako/SKILL.md").resolve(), REPO / "skills/mako/SKILL.md")
+        self.assertTrue(frontmatter(self.home / ".claude/skills/mako/SKILL.md")["disable-model-invocation"])
 
     def test_cli_preview_does_not_create_destination(self):
         result = subprocess.run(

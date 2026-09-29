@@ -27,7 +27,7 @@ def main():
     if not binary:
         parser.error("OpenCode 2 is not installed")
     source = Path(__file__).resolve().parents[1] / "skills"
-    expected = {frontmatter(p)["name"]: frontmatter(p).get("disable-model-invocation", False)
+    expected = {frontmatter(p)["name"]: frontmatter(p).get("metadata", {}).get("opencode/autoinvoke") in (False, "false")
                 for p in skill_files(source)}
     with tempfile.TemporaryDirectory(prefix="mako-opencode-") as temp:
         root = Path(temp)

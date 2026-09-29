@@ -7,16 +7,18 @@ The bundle contains one directory per skill under one `reese -> <checkout>/skill
 - Installed pi loader
   - Discovery evidence: All 53 skills through the bundle symlink, no diagnostics; sibling dependency reads resolve, including ui-design's moved references and PDF helper
   - Explicit-only evidence: All hidden skills absent from `formatSkillsForPrompt`; visible skills remain
-- Codex CLI 0.155.0 (prior 52-skill bundle; not rerun for the ui-design extraction)
-  - Discovery evidence: All 52 enabled skills returned by `skills/list` through both `.agents/skills` and `.codex/skills`
-  - Explicit-only evidence: All 45 explicit-only skills absent from `debug prompt-input`; seven model-invoked bundle skills remain
-- OpenCode v2.0.15 (prior 52-skill bundle; not rerun for the ui-design extraction)
-  - Discovery evidence: All 52 skills returned by the persistent server's skill API through both `.agents/skills` and native configuration roots; dependency reads resolve
-  - Explicit-only evidence: All 45 explicit-only skills return `autoinvoke: false`; the installed prompt-filtering implementation excludes that flag
+- Codex CLI 0.158.0
+  - Discovery evidence: All 53 enabled skills returned by `skills/list` through both `.agents/skills` and `.codex/skills`
+  - Explicit-only evidence: All 46 explicit-only skills absent from `debug prompt-input`; seven model-invoked bundle skills remain
+- OpenCode v2.0.15
+  - Discovery evidence: All 53 skills returned by the persistent server's skill API through both `.agents/skills` and native configuration roots; dependency reads resolve
+  - Explicit-only evidence: All 46 explicit-only skills return `autoinvoke: false`; the installed prompt-filtering implementation excludes that flag
 
 The OpenCode check does not render a model prompt. Its API result and version-matched source inspection are separate evidence from pi and Codex's rendered-prompt checks.
 
 ## Metadata
+
+Shared source metadata preserves the existing Pi, Codex, and OpenCode invocation policies. Claude Code uses the installation adapter described below.
 
 Pi uses:
 
@@ -39,6 +41,18 @@ metadata:
 ```
 
 The explicit-only skills, including `ui-design`, carry all three. At the original import, `refine-ui` received the OpenCode metadata without a body change; it now composes ui-design. A permission denial is not a substitute: explicit-only skills remain available for deliberate loading.
+
+## Claude Code adapter
+
+Claude Code's `disable-model-invocation` blocks agent invocation and subagent preloading. The shared source flag therefore cannot support automatic dependency loading in Claude. See [Claude's skill controls](https://code.claude.com/docs/en/skills#control-who-invokes-a-skill).
+
+The installer generates `.reese-adapter/skills/` under the Claude destination and links individual skills to that bundle. Mako retains the flag. Dependency entrypoints omit it. The source bundle stays unchanged, preserving Pi's behavior. Supporting resources and sibling references remain in the generated bundle.
+
+The manifest records ownership and generated content. Preview and apply refuse local modifications to generated files. Run the installer with `--apply` after source changes to refresh the adapter. Existing source-owned discovery links migrate during apply. `--no-claude` skips this work. No Claude settings file is changed.
+
+Adapter tests establish generated metadata, dependency paths, refresh behavior, and preservation of local edits. They do not establish Claude model compliance or a complete delegated workflow.
+
+Live validation on Claude Code 2.1.283 passed after applying the adapter. Explicit `/mako` invocation loaded the investigation playbook, invoked `how` through the Skill tool, read its explainer reference, and correctly explained a temporary Python fixture. The session had read-only tools, no delegation, and no permission denials. A separate negative probe confirmed that the Skill tool rejects agent invocation of `mako` because its explicit-only flag remains set. Installed validation found all 53 skills and valid resource links; a second apply left files and the manifest unchanged. This establishes the tested dependency-loading path, not a full feature or delegated workflow.
 
 ## Repeat the checks
 

@@ -16,6 +16,14 @@ If a Relentless run is active, keep it as the continuation owner. Delegate bound
 
 Explicit-only skills include `agents/openai.yaml` with `policy.allow_implicit_invocation: false`. Invoke Mako explicitly with `$mako` when registered. Discover this installation's delegation and continuation capabilities rather than assume they match pi.
 
+## Claude Code
+
+Invoke Mako with `/mako`. Claude Code blocks agent invocation and subagent preloading of skills with `disable-model-invocation: true`. Mako's dependencies must be loadable by the agent.
+
+Use the bundle installer's Claude adapter. It keeps Mako explicit-only and removes that flag from generated dependency entrypoints. Shared source metadata stays unchanged for Pi, Codex, and OpenCode. Refresh generated entrypoints through the installer after source changes. Do not edit generated copies.
+
+Respect skill permission denials. A denied invocation is not permission to load the same instructions through the file fallback. See [Claude Code's skill controls](https://code.claude.com/docs/en/skills#control-who-invokes-a-skill).
+
 ## OpenCode 2
 
 OpenCode 2 uses `metadata.opencode/autoinvoke: "false"` for explicit-only skills. Its skill API still lists them for explicit selection. The inspected v2 implementation excludes them from automatic skill guidance.

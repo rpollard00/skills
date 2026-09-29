@@ -53,7 +53,9 @@ The default target is:
 ~/.agents/skills/reese -> <checkout>/skills
 ```
 
-Claude Code does not scan nested directories, so the installer also links each skill individually into `~/.claude/skills/<name>`. Existing links to the same skill are left alone. Use `--claude-destination /path` to change that root or `--no-claude` to skip it.
+Claude Code gets a generated bundle at `~/.claude/skills/.reese-adapter/skills/`, with individual discovery links at `~/.claude/skills/<name>`. The adapter keeps Mako explicit-only and permits agent loading of its dependencies. The shared source flags remain unchanged for Pi, Codex, and OpenCode.
+
+Run the installer again after source changes to refresh the Claude copies. It refuses modified generated files rather than overwriting local work. Existing links to this checkout migrate to the adapter on `--apply`. Use `--claude-destination /path` to change that root or `--no-claude` to skip it.
 
 The script makes no changes unless you add `--apply`. For a prior per-skill installation, preview removal of this checkout's own links, including links left dangling by the directory move:
 

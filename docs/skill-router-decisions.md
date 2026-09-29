@@ -89,7 +89,7 @@ Merging the repair or replacing the installed skill is separate from proposing i
 - `arena`: Keep candidate generation, independent judgment, base selection, synthesis, and verification. Support both identical and deliberately contrasting briefs.
 - `swarm`: Keep parallel coverage and races, exact revision/method evidence, explicit gaps, and consolidated reports.
 - `interrogate`: Keep independent review and lead judgment. Prefer diverse models; disclose same-model review. Treat crossing 1,000 lines as an inspection trigger, not a blocker. Remove the five-actionable-findings heuristic.
-- `no-comments`: Keep upstream behavior and persona as-is. Only adapt harness and repository mechanics. The user will tune aggressiveness later.
+- `no-comments`: Keep the upstream persona and deletion policy. Adapt harness and repository mechanics. Constraint encoding inherits the caller's implementation authority; honor explicitly reserved checkpoints rather than adding routine approval gates.
 - `deslop`: Keep the cleanup checkpoint from cursor-team-kit, with repository-aware version-control mechanics.
 - `blast-radius`: Keep evidence-backed change-impact investigation beyond immediate callers.
 - `reflect`: Keep session-based improvement proposals and approval before skill edits. Adapt transcript access. Do not create backlog entries without authorization.

@@ -2,8 +2,14 @@
 """Preview or install the skill bundle for pi, Codex, OpenCode 2, and Claude Code."""
 
 import argparse
+import hashlib
+import json
 import os
+import re
+import shutil
 import sys
+import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 
 from yaml import YAMLError
@@ -13,6 +19,92 @@ from validate_skills import frontmatter, skill_files, validate
 
 class InstallError(Exception):
     pass
+
+
+def tree_state(root):
+    """Record contents and permissions, rejecting links in generated copies."""
+    state = {}
+    for path in sorted(root.rglob("*")):
+        if path.is_symlink():
+            raise InstallError(f"unexpected link in Claude adapter: {path}")
+        key = path.relative_to(root).as_posix()
+        if path.is_dir():
+            state[key] = {"directory": True}
+        elif path.is_file():
+            state[key] = {"sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                          "mode": path.stat().st_mode & 0o777}
+        else:
+            raise InstallError(f"unsupported file in Claude adapter: {path}")
+    return state
+
+
+def check_adapter_source(source):
+    for path in source.rglob("*"):
+        if {".artifacts", "__pycache__"}.intersection(path.relative_to(source).parts):
+            continue
+        if path.is_symlink():
+            raise InstallError(f"Claude adapter source contains a symlink: {path}")
+
+
+def adapter_state(root, source):
+    if not os.path.lexists(root):
+        return None
+    if root.is_symlink() or not root.is_dir():
+        raise InstallError(f"refusing to replace Claude adapter: {root}")
+    manifest = root / "manifest.json"
+    try:
+        data = json.loads(manifest.read_text())
+    except (OSError, ValueError) as error:
+        raise InstallError(f"unrecognized Claude adapter: {root}") from error
+    actual = tree_state(root)
+    actual.pop("manifest.json", None)
+    if not isinstance(data, dict) or data.get("source") != str(source) or data.get("files") != actual:
+        raise InstallError(f"Claude adapter has local changes or another owner: {root}")
+    return tree_state(root)
+
+
+@dataclass
+class ClaudeAdapter:
+    root: Path
+    source: Path
+    expected: dict | None
+
+    def install(self):
+        check_adapter_source(self.source)
+        if adapter_state(self.root, self.source) != self.expected:
+            raise InstallError(f"Claude adapter changed after preflight: {self.root}")
+        self.root.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix=".reese-stage-", dir=self.root.parent) as temp:
+            staged = Path(temp) / "adapter"
+            for entry in skill_files(self.source):
+                shutil.copytree(entry.parent, staged / "skills" / entry.parent.name,
+                                ignore=shutil.ignore_patterns(".artifacts", "__pycache__"))
+            for entry in (staged / "skills").glob("*/SKILL.md"):
+                if entry.parent.name == "mako":
+                    continue
+                text = entry.read_text(encoding="utf-8")
+                header, body = text[4:].split("\n---\n", 1)
+                header = re.sub(r"(?m)^disable-model-invocation:[^\n]*\n?", "", header)
+                entry.write_text("---\n" + header.rstrip("\n") + "\n---\n" + body, encoding="utf-8")
+            for name in ("LICENSE", "THIRD_PARTY_NOTICES.md"):
+                notice = self.source.parent / name
+                if notice.is_file():
+                    shutil.copy2(notice, staged / name)
+            manifest = {"source": str(self.source), "files": tree_state(staged)}
+            (staged / "manifest.json").write_text(json.dumps(manifest, sort_keys=True, indent=2) + "\n")
+            if tree_state(staged) == self.expected:
+                return
+            if adapter_state(self.root, self.source) != self.expected:
+                raise InstallError(f"Claude adapter changed during generation: {self.root}")
+            backup = Path(temp) / "previous"
+            if self.expected is not None:
+                self.root.rename(backup)
+            try:
+                staged.rename(self.root)
+            except OSError:
+                if backup.exists():
+                    backup.rename(self.root)
+                raise
 
 
 def installed_skills(root, ignored):
@@ -67,12 +159,15 @@ def plan(repo, home, destination, migrate, claude=None):
     legacy_roots = roots | ({home / ".claude/skills"} if claude is None else set())
     removals = []
     claude_links = []
+    adapter = None
     if claude is not None:
-        # Claude Code does not scan nested directories, so each skill gets its own link.
         if claude.resolve().is_relative_to(repo):
             raise InstallError(f"Claude destination resolves inside this repository: {claude}")
         if os.path.lexists(claude) and not claude.is_dir():
             raise InstallError(f"Claude destination is not a directory: {claude}")
+        check_adapter_source(source)
+        generated = claude / ".reese-adapter"
+        adapter = ClaudeAdapter(generated, source, adapter_state(generated, source))
     for root in sorted(legacy_roots):
         for name, directory in sources.items():
             candidate = root / name
@@ -85,7 +180,12 @@ def plan(repo, home, destination, migrate, claude=None):
     if claude is not None:
         for name, directory in sources.items():
             link = claude / name
+            target = adapter.root / "skills" / name
+            if link.is_symlink() and link.resolve() == target.resolve():
+                claude_ok.add(link)
+                continue
             if link.is_symlink() and link.resolve() == directory:
+                claude_links.append((link, target, directory))
                 claude_ok.add(link)
                 continue
             if link.is_symlink() and link.resolve() == previous_source(repo, name):
@@ -95,7 +195,7 @@ def plan(repo, home, destination, migrate, claude=None):
                 continue
             elif os.path.lexists(link):
                 continue
-            claude_links.append((link, directory))
+            claude_links.append((link, target, None))
     if removals and not migrate:
         paths = "\n".join(str(p) for p, _ in removals)
         raise InstallError(f"repo-owned flat links require --migrate-owned-flat:\n{paths}")
@@ -121,10 +221,12 @@ def plan(repo, home, destination, migrate, claude=None):
                 collisions.append(f"{name}: {entry}")
     if collisions:
         raise InstallError("existing skills collide; no copies or foreign links will be replaced:\n" + "\n".join(collisions))
-    return source, bundle, removals, claude_links
+    return source, bundle, removals, claude_links, adapter
 
 
-def apply(source, bundle, removals, claude_links=()):
+def apply(source, bundle, removals, claude_links=(), adapter=None):
+    if adapter is not None:
+        adapter.install()
     # Create the bundle before removing old aliases. A failed creation preserves
     # the old installation. Never overwrite a path created after preflight.
     bundle.parent.mkdir(parents=True, exist_ok=True)
@@ -136,7 +238,11 @@ def apply(source, bundle, removals, claude_links=()):
         if not path.is_symlink() or path.resolve() != expected:
             raise InstallError(f"flat link changed after preflight; left untouched: {path}")
         path.unlink()
-    for link, target in claude_links:
+    for link, target, previous in claude_links:
+        if previous is not None:
+            if not link.is_symlink() or link.resolve() != previous:
+                raise InstallError(f"Claude link changed after preflight; left untouched: {link}")
+            link.unlink()
         if os.path.lexists(link):
             raise InstallError(f"Claude link changed after preflight; left untouched: {link}")
         link.parent.mkdir(parents=True, exist_ok=True)
@@ -156,14 +262,16 @@ def main():
     claude = None if args.no_claude else (args.claude_destination or home / ".claude/skills").expanduser().absolute()
     repo = Path(__file__).resolve().parents[1]
     try:
-        source, bundle, removals, claude_links = plan(repo, home, destination, args.migrate_owned_flat, claude)
+        source, bundle, removals, claude_links, adapter = plan(repo, home, destination, args.migrate_owned_flat, claude)
         print(f"Bundle: {bundle} -> {source}")
         for path, expected in removals:
             print(f"Remove owned flat link: {path} -> {expected}")
-        for link, target in claude_links:
+        if adapter is not None:
+            print(f"Claude adapter: {adapter.root} (dependencies callable; Mako explicit-only)")
+        for link, target, previous in claude_links:
             print(f"Claude link: {link} -> {target}")
         if args.apply:
-            apply(source, bundle, removals, claude_links)
+            apply(source, bundle, removals, claude_links, adapter)
             print("Installed. Reload your harness. No harness configuration files were changed.")
         else:
             print("Preview only. Add --apply to install. Project-local and custom skill paths are not audited.")

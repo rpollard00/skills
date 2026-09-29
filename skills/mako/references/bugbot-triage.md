@@ -10,7 +10,7 @@ Classify each Bugbot thread before acting:
 - `dismiss`: The comment matches a documented low-risk noisy pattern, and the current code/context proves the concern does not need a code change. Reply with a short reason and resolve the thread.
 - `ask`: Investigation leaves a consequential product or security-policy decision unresolved, or the fix requires a dangerous action outside clear authority. State the evidence and the specific decision needed. Novelty, severity, or an ambiguous comment alone calls for investigation, not an automatic permission pause.
 
-When in doubt, ask. Skipping a noisy code-quality comment is cheap; skipping a real data or security bug is not.
+When in doubt, investigate before classification. Fix verified issues within existing task authority. Ask only for unresolved consequential choices or actions outside that authority. Honor explicit human checkpoints. Do not dismiss an unresolved risk merely because similar comments were noise.
 
 ## Learned pattern format
 
@@ -72,7 +72,7 @@ Use `candidate` for one or two examples. Use `recurring` after multiple real dis
 - Do not skip when: The only evidence is a human saying "false positive" on a high-risk issue without explanation.
 - Example signal: A file-naming rule comment whose body says the file is already compliant.
 
-## Ask by default
+## Investigate before dismissal
 
 Do not auto-skip these categories, even if a previous PR dismissed something similar:
 
@@ -81,7 +81,7 @@ Do not auto-skip these categories, even if a previous PR dismissed something sim
 - Migration, schema, idempotency, concurrency, and cross-system behavior findings.
 - Comments where the suggested fix is small and clearly reduces risk without changing product intent.
 
-Historical data showed humans sometimes dismiss security/data-flow comments. Treat those as owner judgment calls, not team-wide skip rules.
+Apply the decision rubric after investigation. Severity alone does not require permission for an authorized fix. Historical data showed humans sometimes dismiss security/data-flow comments. Treat those as owner judgment calls, not team-wide skip rules.
 
 ## Candidate learnings from recent babysits
 

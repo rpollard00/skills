@@ -15,6 +15,8 @@ Use `drive` for an explicit babysit request unless the user narrows it. Use `che
 
 Read [execution](../references/execution.md). Keep one babysitter and one topology owner per stack. Work the lowest unmerged PR first; batch upper-stack threads without restarting the frontier's checks unnecessarily.
 
+Independent PRs can have separate babysitters before stack admission. End those independent loops when ownership transfers to the stack babysitter. PR owners then handle assigned fixes and self-proof under that coordination.
+
 A babysitter can resolve conflicts and rebase within assigned authority. If another owner controls topology, coordinate the operation rather than mutate concurrently. When `.jj` exists, use `jj`.
 
 If a fix belongs to a merged PR, create a follow-up within the repair goal instead of rewriting merged history. Reconcile the tracked queue with the new work.

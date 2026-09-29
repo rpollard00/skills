@@ -22,7 +22,7 @@ Each imported or derived skill directory retains the applicable upstream `LICENS
 
 Pstack supplies the selected investigation, design, review, verification, execution, and principle content. Mako's routing contract and harness reference implement the reviewed decisions. Its playbooks derive from the selected `poteto-mode` playbooks, without importing that router or its excluded orchestration runtime.
 
-`no-comments/references/comment-sicko.md` preserves the upstream reviewer file byte-for-byte. Its parent skill changes invocation and repository mechanics, not the persona or deletion policy.
+`no-comments/references/comment-sicko.md` preserves the upstream reviewer file byte-for-byte. Its parent skill changes invocation, repository mechanics, and approval inheritance, not the persona or deletion policy. Routine constraint encodings use the caller's existing implementation authority.
 
 TypeScript's patterns file is byte-for-byte upstream. Its entry point changes only dependency references, explicit-only harness metadata, and table formatting. Tests normalize dependency links or exact skill names back to the upstream labels, remove the added metadata, then compare against the list-formatted upstream hash.
 
@@ -47,6 +47,7 @@ The authoritative selection is [skill-router-decisions.md](skill-router-decision
 - Use jj when present; remove destructive Git reset shortcuts and blanket rebases.
 - Retain real measurement and queryable forensics without mandating SQLite or an arbitrary attempt count.
 - Keep readiness separate from landing, and stack delivery separate from merge authority.
+- Preserve Pstack's independent PR readiness lifecycle before stack admission. Transfer monitoring to one stack babysitter after admission. The pinned upstream assigns owner-level babysitting and one babysitter per stack, but leaves this handoff implicit. This adaptation makes the phase boundary explicit.
 - Reuse an adequate native decision journal; use the upstream TSV format and helper only as the fallback. Do not duplicate mission state.
 
 No automatic upstream updater is included. Future upgrades require a fresh comparison against these adaptations and the protected-content tests.

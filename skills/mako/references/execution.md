@@ -16,6 +16,8 @@ Load skills by their exact names through the harness. If name-based loading is u
 
 Read a skill before applying it; a name or description is not its instructions. Load only current dependencies. Resolve links to specific playbooks, references, and scripts relative to the file containing them, not the task repository. Give fresh delegates the required skill names and, when using the fallback, resolved paths.
 
+The file fallback covers unavailable name lookup, not denied invocation. Honor host permission and invocation restrictions; use the supported harness adapter when required.
+
 A missing dependency is a bundle defect. Report its exact path. Do not silently replace it with remembered guidance or an excluded upstream skill.
 
 ## Discover capabilities
