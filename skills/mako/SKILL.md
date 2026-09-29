@@ -94,6 +94,6 @@ Consult the compact [principle index](references/principles.md) for additional t
 
 ## Completion
 
-Verify the requested behavior or artifact with current evidence. Compilation and self-reports do not establish runtime correctness. Report incomplete or inconclusive checks as gaps, not passes.
+Verify the requested behavior or artifact with current evidence. Before ending an implementation task, satisfy the [completion gate](references/execution.md#completion-gate). Keep required checks open until the evidence proves their acceptance conditions.
 
 Report the result, verification, remaining risks, and delivery state. Do not recite every skill used.
