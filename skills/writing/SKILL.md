@@ -1,11 +1,23 @@
 ---
 name: writing
-description: ALWAYS invoke this writing skill. Must always apply.
+description: Apply to all prose, including every chat response. Routes technical instructions to simple-technical-english and conversational or persuasive prose to unslop. Reuse instructions already in context; read only missing or changed guidance.
 ---
 
 # Writing
 
-ALWAYS Load both `simple-technical-english` and `unslop`, and understand these guidelines on where to apply both styles.  
+## Application and loading
+
+Apply this skill whenever you produce prose, across turns and after compaction.
+
+Use the routing rules below to select the required style. Read this skill and the selected dependency when their instructions are absent from context. Reuse instructions already present unless you have evidence that the source changed.
+
+A new turn does not require another read. Load only the dependency needed for the current prose.
+
+## Compaction
+
+Preserve this skill's applicability, routing rules, and the active style's instructions in the compaction summary.
+
+After compaction, reuse retained instructions. Read any missing guidance before writing. A note that a skill was previously loaded does not preserve its instructions.
 
 ## Styles: 
 
