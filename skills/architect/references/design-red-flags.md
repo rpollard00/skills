@@ -20,6 +20,10 @@ Information leakage makes multiple modules depend on the same internal decision.
 
 Public re-exports of transport or wire types are leakage. Parse external data into domain types behind the interface. Keep storage schemas, framework objects, and protocol details private.
 
+Internal data exposed through public fields, getters, or import paths remains accessible. Documentation that calls it private changes nothing. Check whether callers can bypass the intended boundary or mutate state without its invariant checks. Make unintended external access fail a build or CI check. Expose required behavior through a deliberate domain operation. Documentation alone does not enforce the boundary.
+
+Hand-synchronized lists duplicate one fact across registries, enums, dispatch tables, exports, or documentation. Ask whether adding one member requires coordinated edits elsewhere. Generate dependent lists from one authoritative source. If generation does not fit, make a build or CI check fail when the lists disagree. Separate lists with distinct domain meanings are not duplicates merely because their current values match.
+
 ## Temporal decomposition
 
 Temporal decomposition organizes modules by execution order instead of the knowledge they own. Separate load, validate, transform, and save stages often repeat one representation and its invariants across several boundaries.
