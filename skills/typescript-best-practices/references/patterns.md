@@ -40,7 +40,7 @@ Pick one discriminant name (`kind`, `type`, `tag`) and stick to it.
 
 ## Constructive modeling
 
-Build the type from parts that are all legal instead of restricting a loose type with runtime checks.
+Build types from valid parts. Structural modeling removes some invalid combinations. Validate constituent values at the boundary when their primitive types admit invalid values.
 
 Non-empty, via a variadic tuple:
 
@@ -71,17 +71,38 @@ Even length, as pairs:
 type Pairs<T> = [T, T][];
 ```
 
-A time range, as start plus duration:
+A time range, as start plus a validated duration:
 
 ```ts
 // Don't: a comment holds the invariant
 type TimeRange = { start: Date; end: Date }; // start <= end
-
-// Do: a negative range can't be written; derive end when needed
-type TimeRange = { start: Date; durationMs: number };
 ```
 
-Keep `durationMs` a plain number. Brand it (per Branded types) only if a raw number could be passed where a duration is expected, not by reflex. Pick the representation that makes the bad state unconstructable, then expose the reading you need on top (`pairs.flat()`, a `rangeEnd()` helper).
+The duration parser owns the numeric checks. The range requires its validated result:
+
+<!-- typescript-example: validated-duration -->
+```ts
+type DurationMs = number & { readonly __brand: "DurationMs" };
+type TimeRange = { start: Date; durationMs: DurationMs };
+
+function parseDurationMs(input: unknown): DurationMs {
+  if (typeof input !== "number" || !Number.isFinite(input) || input < 0) {
+    throw new Error("Expected finite, nonnegative milliseconds");
+  }
+  return input as DurationMs;
+}
+
+const requestDuration: unknown = 90_000;
+const meeting: TimeRange = {
+  start: new Date("2026-10-06T12:00:00Z"),
+  durationMs: parseDurationMs(requestDuration),
+};
+```
+<!-- /typescript-example: validated-duration -->
+
+The parser accepts finite, nonnegative milliseconds, including zero, negative zero, and fractions. Checked construction requires a `DurationMs`. Raw numbers do not satisfy that type.
+
+The start-plus-duration shape removes endpoint synchronization. It does not validate `start`, prevent `Date` mutation, or guarantee a representable end. Type assertions and `any` can bypass the brand. Arithmetic loses the brand. Validate an arithmetic result before assigning this brand again.
 
 ## Simplest total type
 
@@ -150,22 +171,18 @@ Use `safeParse` when failure is an expected branch. Use the equivalent inference
 
 ## No `as` casts
 
-Every `as` is a potential runtime crash. Cast only after the type system has verified the claim.
+An unchecked assertion can hide a runtime error. Prefer narrowing or the existing schema. Reserve assertions for facts established by complete validation, such as the duration brand.
 
 ```ts
 // Don't
 const user = data as User;
+```
 
-// Do. Earn the cast at the boundary.
+Parse unknown input with the authoritative `UserSchema` from the schema example. Reuse the schema system that the repository already trusts:
+
+```ts
 function parseUser(data: unknown): User {
-  if (typeof data !== "object" || data === null) {
-    throw new Error("expected object");
-  }
-  if (!("id" in data) || typeof (data as Record<string, unknown>).id !== "string") {
-    throw new Error("expected id");
-  }
-  // ... validate all fields
-  return data as User; // OK, earned cast after full validation
+  return UserSchema.parse(data);
 }
 ```
 

@@ -16,15 +16,15 @@ The repository's [MIT License](../LICENSE) covers Reese Pollard's original contr
 
 Each imported or derived skill directory retains the applicable upstream `LICENSE` for its upstream portions. These notices do not assign authorship of the new contributions to upstream authors. The maintained `refine-ui`, `jj`, and writing skills keep their existing provenance. `ui-design` extracts the reusable discipline and PDF helper from `refine-ui`; it adds no upstream import or licensed book content.
 
-[upstream-imports.json](upstream-imports.json) maps source files to local destinations. Its `sha256` values identify upstream bytes before adaptation, not the final local files. The TypeScript entry point also has a `list_format_sha256`, computed from the verified upstream text using `scripts/markdown_lists.py`, to protect its content after table-to-list conversion. The manifest is a provenance record, not a generated discovery index or an update mechanism.
+[upstream-imports.json](upstream-imports.json) maps source files to local destinations. Its `sha256` values identify upstream bytes before adaptation, not the final local files. The TypeScript entry point also has a historical `list_format_sha256`, computed from upstream text using `scripts/markdown_lists.py`. That value records the table-to-list conversion baseline. Current tests do not compare adapted prose against these hashes. The manifest is a provenance record, not a generated discovery index or an update mechanism.
 
 ## Import boundaries
 
 Pstack supplies the selected investigation, design, review, verification, execution, and principle content. Mako's routing contract and harness reference implement the reviewed decisions. Its playbooks derive from the selected `poteto-mode` playbooks, without importing that router or its excluded orchestration runtime.
 
-`no-comments/references/comment-sicko.md` preserves the upstream reviewer file byte-for-byte. Its parent skill changes invocation, repository mechanics, and approval inheritance, not the persona or deletion policy. Routine constraint encodings use the caller's existing implementation authority.
+`no-comments` retains the upstream reviewer persona with two safety exceptions. Verified negative type tests survive comment cleanup. Constraint guidance stays until replacement enforcement passes. Routine constraint encodings use the caller's existing implementation authority. An unavailable or out-of-scope encoding does not authorize deleting the constraint.
 
-TypeScript's patterns file is byte-for-byte upstream. Its entry point changes only dependency references, explicit-only harness metadata, and table formatting. Tests normalize dependency links or exact skill names back to the upstream labels, remove the added metadata, then compare against the list-formatted upstream hash.
+TypeScript guidance adapts the upstream examples and matching principle. The duration example validates finite, nonnegative values instead of claiming that a plain number enforces the invariant. The cast example delegates validation to the repository's existing schema. Metadata, dependency references, and list formatting remain local adaptations.
 
 Matt's imported skills are `codebase-design`, `domain-modeling`, `grilling`, and `improve-codebase-architecture`. `grill-me` implements the documented-grilling composition from `grill-with-docs`; it does not install two competing wrappers.
 
@@ -50,4 +50,14 @@ The authoritative selection is [skill-router-decisions.md](skill-router-decision
 - Preserve Pstack's independent PR readiness lifecycle before stack admission. Transfer monitoring to one stack babysitter after admission. The pinned upstream assigns owner-level babysitting and one babysitter per stack, but leaves this handoff implicit. This adaptation makes the phase boundary explicit.
 - Reuse an adequate native decision journal; use the upstream TSV format and helper only as the fallback. Do not duplicate mission state.
 
-No automatic upstream updater is included. Future upgrades require a fresh comparison against these adaptations and the protected-content tests.
+No automatic upstream updater is included. Future upgrades require a fresh comparison against these adaptations and the current validation commands. Provenance hashes identify source bytes; they are not active content-preservation checks.
+
+## Focused review against newer pstack
+
+The October 2026 review compared pstack at [df581122cde17e6e27686b5a448bde23e4ad4318](https://github.com/cursor/plugins/tree/df581122cde17e6e27686b5a448bde23e4ad4318/pstack) with the original import. The original manifest pins remain unchanged. These are selective adaptations, not a full upstream upgrade:
+
+- [Benchmark checklist](https://github.com/cursor/plugins/blob/df581122cde17e6e27686b5a448bde23e4ad4318/pstack/skills/benchmark-checklist/SKILL.md): add validity, completed-work, comparison, variability, and end-to-end checks to Hillclimb. Keep the checks independent of tools and fixed sample counts.
+- [Architecture red flags](https://github.com/cursor/plugins/blob/df581122cde17e6e27686b5a448bde23e4ad4318/pstack/skills/architect/references/design-red-flags.md): reject importable internals and hand-synchronized lists without generation or consistency checks.
+- [TypeScript patterns](https://github.com/cursor/plugins/blob/df581122cde17e6e27686b5a448bde23e4ad4318/pstack/skills/typescript-best-practices/references/patterns.md): replace the incomplete validator-and-cast example with schema-owned parsing. Preserve the existing-library policy.
+
+The constraint, negative-type-test, duration, and premise fixes are local corrections. The premise skill uses a falsifiable hypothesis; actor census applies only to an imbalance hypothesis. Cursor model directives, fixed tool choices, and a second correction workflow remain excluded. Existing upstream license notices still apply.

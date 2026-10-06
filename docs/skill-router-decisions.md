@@ -89,7 +89,7 @@ Merging the repair or replacing the installed skill is separate from proposing i
 - `arena`: Keep candidate generation, independent judgment, base selection, synthesis, and verification. Support both identical and deliberately contrasting briefs.
 - `swarm`: Keep parallel coverage and races, exact revision/method evidence, explicit gaps, and consolidated reports.
 - `interrogate`: Keep independent review and lead judgment. Prefer diverse models; disclose same-model review. Treat crossing 1,000 lines as an inspection trigger, not a blocker. Remove the five-actionable-findings heuristic.
-- `no-comments`: Keep the upstream persona and deletion policy. Adapt harness and repository mechanics. Constraint encoding inherits the caller's implementation authority; honor explicitly reserved checkpoints rather than adding routine approval gates.
+- `no-comments`: Keep the upstream persona and focused cleanup. Preserve verified negative type tests and retain constraint guidance until replacement enforcement passes. Adapt harness and repository mechanics. Constraint encoding inherits the caller's implementation authority; honor explicitly reserved checkpoints rather than adding routine approval gates.
 - `deslop`: Keep the cleanup checkpoint from cursor-team-kit, with repository-aware version-control mechanics.
 - `blast-radius`: Keep evidence-backed change-impact investigation beyond immediate callers.
 - `reflect`: Keep session-based improvement proposals and approval before skill edits. Adapt transcript access. Do not create backlog entries without authorization.
@@ -97,7 +97,7 @@ Merging the repair or replacing the installed skill is separate from proposing i
 - `maintain-verification-skill`: Keep source and live coverage, verification-tool maintenance, and separate reporting of product regressions. Adapt placement and delivery.
 - `figure-it-out`: Keep task-specific workflow construction and evidence checkpoints. It does not depend on importing the multi-phase-plan template.
 - `show-me-your-work`: Keep the decision-trail capability. Format, storage, and integration remain open.
-- `typescript-best-practices`: Keep substantive guidance as-is. The user will review its technical policies later.
+- `typescript-best-practices`: Preserve the selected type-system guidance. Correct the duration invariant and incomplete validator example after review. Validate finite, nonnegative durations at construction and reuse existing schema validators.
 - `bro`: Keep as a user-invoked plain-language reset.
 - `recall`: Exclude. No stub or automatic route. Revisit as a separate task.
 - `automate-me`, `make-bot-ui`: Exclude.

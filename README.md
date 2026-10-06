@@ -83,7 +83,15 @@ python3 scripts/markdown_lists.py
 python3 -m unittest discover -s tests -v
 ```
 
-[Harness compatibility](docs/mako-harness-compatibility.md) records tested versions and commands. The checks cover metadata, dependency reachability, protected upstream content, logging, safe installation, and actual harness discovery. These checks do not establish model compliance. Instruction tuning follows actual use, not a separate behavioral test suite.
+Run the executable TypeScript example check separately with Node.js and TypeScript available:
+
+```bash
+python3 scripts/check_typescript_examples.py
+```
+
+Use `--tsc /path/to/tsc` or `--node /path/to/node` for tools outside `PATH`. Missing tools fail this check. It compiles the documented duration example, verifies negative type tests, and exercises valid and invalid inputs. The Python suite alone does not establish this example's behavior.
+
+[Harness compatibility](docs/mako-harness-compatibility.md) records tested versions and commands. The Python checks cover metadata, dependency reachability, logging, and safe installation. Separate harness checks cover discovery and invocation metadata. These checks do not enforce byte-for-byte preservation of upstream prose. These checks do not establish model compliance. Instruction tuning follows actual use, not a separate behavioral test suite.
 
 Mako requires completion evidence, but it does not add runtime mission enforcement. pi-subagents' automatic Git-worktree isolation is not a verified jj integration. The [execution contract](skills/mako/references/execution.md) states these limits.
 
