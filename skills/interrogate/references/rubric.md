@@ -53,6 +53,17 @@ Can you tell that this code works from reading it?
 - Check the real thing, not a proxy. If the code checks liveness via file mtime or cached state instead of reading the actual value, that's a verification gap.
 - For delegated or async work: does the code verify actual output artifacts, or does it trust self-reports and summaries?
 
+## UI Composition and Rendered Evidence
+
+For UI-affecting changes, inspect rendered evidence alongside the diff. Apply `ui-design` and its [production verification](../../ui-design/references/BROWSER-OBSERVATION.md#production-verification) guidance.
+
+- Does the change fit the parent task region, with clear hierarchy and placement rather than an appended row or banner?
+- Do control sizes, alignment, wrapping, and reflow work with realistic long content and relevant viewport and state coverage?
+- Does the evidence show the current revision under stated capture conditions? Were affected states recaptured after fixes?
+- Are findings visible in the render or supported by runtime or interaction evidence? Distinguish defects from deliberate choices and preserve scope and parity constraints.
+
+Missing or uninspected images leave visual correctness unverified. Report the gap without inventing a defect or inferring a visual pass from source alone.
+
 ## Complexity Budget
 
 Is the complexity justified by what the code accomplishes?

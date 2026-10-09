@@ -11,7 +11,18 @@ For new UI or an authorized redesign, choose content before choosing the page sh
 3. Set the hierarchy and interaction for each group. Decide what needs a label, value, action, or explanation before writing the copy.
 4. Define what each consequential state makes available, unknown, or actionable. Choose components that express those relationships instead of filling a predetermined set of slots.
 
-Establish the primary task region with realistic content before elaborating the surrounding page. Reuse accepted shells, components, and project rules for scoped work. These choices do not require a separate document, mockup, or approval gate. Carry consequential choices into the caller's existing plan or implementation brief when useful.
+Establish the primary task region with realistic content before elaborating the surrounding page.
+
+For every visible addition or change to existing UI, inspect the parent task region and its neighboring controls first:
+
+1. Identify the task the change supports and the existing primary action.
+2. Choose its hierarchy, placement, and relationship to nearby content before implementing it.
+3. Compare integration into an existing group with scoped local regrouping. Do not append a row, banner, or panel by default.
+4. Check the resulting composition with representative content and relevant states, not just the new element in isolation.
+
+Reuse accepted shells, components, and project rules. Local regrouping must serve the requested change within its authorized scope. Repairs do not authorize restyling, and parity work must preserve its baseline. Report broader composition problems without changing them.
+
+These choices do not require a separate document, mockup, or approval gate. Carry consequential choices into the caller's existing plan or implementation brief when useful.
 
 ## Rendered evidence first
 
@@ -64,6 +75,15 @@ De-emphasize to emphasize. Not every important distinction requires making its p
 Preserve density appropriate to the task, expertise, and frequency of use. More space is not automatically better. A constrained spacing scale is a decision aid, not a ban on optical correction.
 
 Separate content selection from its presentation. A card can group useful content yet use too much space. A sidebar can provide suitable navigation yet need different treatment at narrow widths. Adjust dimensions, spacing, grouping, or order when the content is useful but the composition obstructs the task. An item below the initial viewport is not, by itself, evidence of filler.
+
+For controls and repeated rows, choose geometry deliberately:
+
+- Size controls for their content, priority, and input mode. Keep peer heights, padding, and hit areas consistent where they serve the same role.
+- Align labels, values, icons, and actions on intentional baselines or edges. Check mixed text lengths and multiline rows.
+- Define which elements grow, wrap, truncate, or move to another row. Preserve access to essential values and actions.
+- Verify reflow with realistic long labels, names, identifiers, and localized text at relevant narrow and wide widths. Include zoom or text resizing when it affects the change.
+
+Accept the composition only when this content remains readable and actionable, without accidental overflow, clipping, collisions, or lost hierarchy.
 
 ### 4. Typography
 

@@ -192,18 +192,9 @@ Do not treat clean console output as visual verification.
 
 ### 4. Capture and inspect screenshots
 
-Capture a fresh viewport screenshot for every matrix cell. Give it a unique filename that contains the alternative, state, viewport, and theme, such as `b-error-390x844-dark.png`. Add a scroll suffix when you capture multiple positions. Never let states or themes overwrite the same path. When the current model can inspect images, open every screenshot and actively look for:
+Capture a fresh viewport screenshot for every matrix cell. Give it a unique filename that contains the alternative, state, viewport, and theme, such as `b-error-390x844-dark.png`. Add a scroll suffix when you capture multiple positions. Never let states or themes overwrite the same path. When the current model can inspect images, open every screenshot.
 
-- overlapping, clipped, cropped, or unexpectedly truncated content
-- horizontal scroll, off-screen actions, or broken responsive reflow
-- fixed controls covering product content
-- missing assets, icon failures, fallback fonts, or unstyled browser defaults
-- awkward wrapping, collapsed spacing, alignment drift, or inconsistent component geometry
-- incorrect stacking, transparency, shadows, borders, or background seams
-- unreadable contrast and hierarchy failures obvious in the render
-- the wrong alternative, state, content fixture, or viewport
-
-Judge deliberate design differences against the design question, but classify execution glitches separately. A screenshot file that was never visually opened is uninspected.
+Use the shared [rendered defect checklist](BROWSER-OBSERVATION.md#rendered-defect-checklist). Check the intended alternative as well as state, content fixture, and viewport. Judge deliberate design differences against the design question, but classify execution glitches separately. A screenshot file that was never visually opened is uninspected.
 
 ### 5. Fix and recapture
 

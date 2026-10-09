@@ -10,7 +10,7 @@ metadata:
 
 Use the configured review panel, or the configured reviewer role when no panel exists, to adversarially review code changes. Each reviewer gets the same prompt and rubric. Fresh contexts provide independent review. An approved multi-model panel adds cross-model evidence without assigned personas.
 
-The deliverable is a synthesized verdict. Do NOT auto-apply changes.
+The deliverable is a synthesized verdict. Do NOT auto-apply changes. Read [execution](../mako/references/execution.md) before starting.
 
 ## Step 1, Determine Scope
 
@@ -20,7 +20,7 @@ Identify what to review from context:
 - Inspect the full changeset against the actual base, including working-copy changes. Use the jj skill when `.jj` exists; otherwise use repository-aware Git commands.
 - If the user's message references recent work, gather the relevant files
 
-Package the diff (or file contents) plus any surrounding context files the reviewers need to understand the code.
+Package the diff (or file contents) plus any surrounding context files the reviewers need to understand the code. For UI-affecting changes, include current rendered evidence, capture conditions, and relevant interaction results alongside the diff. Identify unavailable evidence explicitly. Give visual reviewers access to the actual images, not only a summary.
 
 ## Step 2, State the Intent
 

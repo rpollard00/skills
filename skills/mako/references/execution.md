@@ -20,6 +20,12 @@ The file fallback covers unavailable name lookup, not denied invocation. Honor h
 
 A missing dependency is a bundle defect. Report its exact path. Do not silently replace it with remembered guidance or an excluded upstream skill.
 
+## UI dependency
+
+For UI-affecting work, load `ui-design` before planning, design, implementation, delegation, or review. This applies to direct skill entry points as well as Mako routes. Pass applicable references and rendered evidence to UI delegates.
+
+Keep the caller's authority unchanged: read-only reviews remain read-only, repairs do not become restyles, and parity baselines stay fixed. This dependency does not require interactive exploration, a new document, or an approval gate.
+
 ## Discover capabilities
 
 Treat explicit Mako invocation as user authorization to delegate under its [activation policy](../SKILL.md#activation). Do not require a separate request for subagents. Follow the host's tool contract, restrictions, and budget. A skill cannot grant itself extra tool access. Read [harness notes](harnesses.md) only for the relevant integration; use installed documentation for current tool contracts.

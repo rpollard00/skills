@@ -113,6 +113,29 @@ If the current model accepts images, inspect screenshots directly. If not:
 
 Do not pretend that file dimensions, OCR, a DOM tree, or CSS values amount to visual inspection.
 
+## Production verification
+
+Apply the scoped observation matrix to the changed production surface. Include representative long content when sizing or reflow can change. Capture the parent task region and enough surrounding context to judge integration.
+
+Inspect actual screenshots alongside runtime, semantic, and interaction evidence. Use the checklist below for each affected capture. Source review, clean console output, and screenshot existence do not establish visual correctness.
+
+Fix in-scope defects, then rerun affected checks and recapture affected states. Changes to shared layout, tokens, or content invalidate every capture they affect. Keep current evidence with the tested revision and capture conditions. Report out-of-scope defects and unavailable visual coverage instead of claiming a visual pass. Read-only reviews return findings; fixed-baseline work preserves its baseline.
+
+### Rendered defect checklist
+
+Look for:
+
+- overlapping, clipped, cropped, or unexpectedly truncated content
+- horizontal scroll, off-screen actions, or broken responsive reflow
+- fixed controls covering product content
+- missing assets, icon failures, fallback fonts, or unstyled browser defaults
+- awkward wrapping, collapsed spacing, alignment drift, or inconsistent component geometry
+- incorrect stacking, transparency, shadows, borders, or background seams
+- unreadable contrast and hierarchy failures obvious in the render
+- the wrong route, state, content fixture, or viewport
+
+Distinguish deliberate design choices from execution defects using the task, accepted design, and baseline. Apply the [vision capability](#vision-capability) rules when direct image inspection is unavailable.
+
 ## Mockup verification
 
 Temporary mockups have a stricter handoff requirement than source-only diagnosis. Follow the blocking gate in [VISUAL-MOCKUPS.md](VISUAL-MOCKUPS.md). Capture every required alternative, viewport, and state. Inspect runtime and layout evidence. Visually open every screenshot when vision is available. Fix and recapture defects. Write the temporary verification manifest.
