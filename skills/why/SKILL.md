@@ -33,7 +33,7 @@ Before spawning investigators, anchor the investigation in concrete code. You ne
 - An initial commit list. The last few commits touching the target.
 - PR numbers from merge commits (pattern `(#1234)` in the subject line)
 
-Build this inline. In a jj repository, use the `jj` for history and current-state operations. Read-only Git archaeology is permitted when it reveals required provenance. The following commands are Git examples, not a replacement for jj's working-copy model.
+As the parent, assign a bounded read-only worker to build this anchor whenever a capable subagent is available. Require a compact anchor with source pointers before deeper investigation. Assigned workers build their bounded anchors directly. If delegation is unavailable or prohibited, use the shared [execution fallback](../mako/references/execution.md#agent-and-model-routing). In a jj repository, use the `jj` for history and current-state operations. Read-only Git archaeology is permitted when it reveals required provenance. The following commands are Git examples, not a replacement for jj's working-copy model.
 
 ```bash
 # Blame target lines for last-touch commits

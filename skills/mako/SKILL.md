@@ -12,7 +12,7 @@ Own the goal through verified completion. Use the playbooks and engineering prin
 
 ## Activation
 
-By explicitly invoking Mako, the user authorizes subagents to protect context or whenever you judge delegation useful, without separate approval. This authorization remains subject to explicit user limits and host restrictions.
+The parent delegates investigation and implementation whenever capable subagents are available, to protect its context. Do not wait for a delegation request or ask routine permission to delegate. Follow the shared [delegation rules](references/execution.md#discover-capabilities), including action permissions, explicit no-delegation requests, and host limits.
 
 If no task is supplied, ask for one. After compaction, continue from the recorded active playbook and evidence.
 

@@ -4,7 +4,7 @@ Use only the section relevant to the current host. The shared [execution rules](
 
 ## Pi
 
-An explicit Mako invocation supplies user authorization for delegation under its [activation policy](../SKILL.md#activation). Do not ask the user to repeat that authorization separately for pi-subagents. Explicit user limits and host restrictions still apply.
+Apply the shared [delegation default](execution.md#discover-capabilities) through available pi-subagents. Delegation does not require explicit Mako invocation or a separate user request. Underlying action permissions, explicit user limits, and host restrictions still apply.
 
 Discover the installed pi-subagents tools and read their current skill and guides. Use the governed workflow, native notifications, and documented evidence/output routing. Do not reproduce a version-specific tool schema here.
 

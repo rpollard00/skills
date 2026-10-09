@@ -12,7 +12,7 @@ Design before implementing. Sketch types, function signatures, class shapes, and
 
 ## Start
 
-Read [execution](../mako/references/execution.md) before delegation. Apply `codebase-design` as the shared vocabulary and design criteria. Follow the caller's goal, scope limits, and explicit checkpoints.
+Read [execution](../mako/references/execution.md) before starting. Apply `codebase-design` as the shared vocabulary and design criteria. Follow the caller's goal, scope limits, and explicit checkpoints.
 
 Open a todolist with one entry per phase before starting.
 

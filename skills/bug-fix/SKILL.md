@@ -8,7 +8,7 @@ metadata:
 
 # Bug fix
 
-Own the diagnosis, plan, review, and proof. Delegate investigation and implementation when authorized and available. Read [execution](../mako/references/execution.md) before delegation or repository mutation.
+As the parent, own the diagnosis, plan, review, and proof. Delegate investigation and implementation whenever capable subagents are available. Read [execution](../mako/references/execution.md) before starting, including its worker scope and permission limits.
 
 Be scientific. Every shipped line traces to evidence. A change that might help is a hypothesis, not a fix. When evidence refutes a hypothesis, remove the change it motivated.
 

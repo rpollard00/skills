@@ -20,9 +20,15 @@ The file fallback covers unavailable name lookup, not denied invocation. Honor h
 
 A missing dependency is a bundle defect. Report its exact path. Do not silently replace it with remembered guidance or an excluded upstream skill.
 
+## UI dependency
+
+For UI-affecting work, load `ui-design` before planning, design, implementation, delegation, or review. This applies to direct skill entry points as well as Mako routes. Pass applicable references and rendered evidence to UI delegates.
+
+Keep the caller's authority unchanged: read-only reviews remain read-only, repairs do not become restyles, and parity baselines stay fixed. This dependency does not require interactive exploration, a new document, or an approval gate.
+
 ## Discover capabilities
 
-Treat explicit Mako invocation as user authorization to delegate under its [activation policy](../SKILL.md#activation). Do not require a separate request for subagents. Follow the host's tool contract, restrictions, and budget. A skill cannot grant itself extra tool access. Read [harness notes](harnesses.md) only for the relevant integration; use installed documentation for current tool contracts.
+The parent must delegate investigation and implementation whenever capable subagents are available. This default protects the parent's context and does not depend on explicit Mako invocation. Do not wait for a delegation request or ask routine permission to delegate. Preserve permissions for the underlying actions, explicit no-delegation requests, and the host's tool contract, restrictions, and budget. A skill cannot grant itself extra tool access. Read [harness notes](harnesses.md) only for the relevant integration. Use installed documentation for current tool contracts.
 
 Discover supported agents, models, context isolation, writable locations, notifications, verification tools, and continuation controls. Never guess model identifiers or copy tool parameters from another harness.
 
@@ -34,11 +40,11 @@ Prefer model diversity only within an explicitly configured or operator-approved
 
 A fresh same-model reviewer satisfies independent review, but not an explicit multi-model requirement. Separate same-model contexts are independent attempts, not multi-model evidence. Self-review is not independent review. Record actual model identities without treating same-model review alone as a capability gap. If approved routing cannot satisfy an explicit multi-model requirement, report the gap instead of selecting an unapproved alternative.
 
-With capable delegates, the feature lead owns design, coordination, review, and acceptance; separate implementers own production changes. If delegation is unavailable or prohibited, work directly and report the loss of independent review. Do not invent agents or call self-review independent. An explicitly required independent review remains a completion requirement. Follow the host's recovery rules after a launched delegate fails; this fallback is not permission to bypass them.
+The parent owns coordination, design synthesis, evidence review, and acceptance. Delegate investigation and production changes to capable workers before loading their bulk evidence into the parent context. Assigned workers execute their bounded tasks directly and report additional delegation needs to the parent. They do not recursively apply this parent-level delegation requirement. If delegation is unavailable or prohibited, work directly and report the loss of independent review. Do not invent agents or call self-review independent. An explicitly required independent review remains a completion requirement. Follow the host's recovery rules after a launched delegate fails; this fallback is not permission to bypass them.
 
 ## Assign work
 
-Every brief names the outcome, source revision, working location, scope, do-not-touch paths, required skills, verification, and output contract. Include explicit stop conditions and required engineering checks. A delegate does not inherit them by magic.
+Every brief names the outcome, source revision, working location, scope, do-not-touch paths, required skills, verification, and output contract. Include explicit stop conditions and required engineering checks. Require concise findings, verification results, blockers, and artifact pointers rather than raw logs or full source dumps. A delegate does not inherit them by magic.
 
 Keep one writer per writable resource. Separate directories are insufficient when they still share a database, browser profile, branch, or port. Identify those resources before launch.
 

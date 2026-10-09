@@ -20,7 +20,7 @@ Reuse accepted project intent and executable constraints. Report out-of-scope de
 
 ## Core discipline
 
-- For new UI, [compose from the task](references/DESIGN-DISCIPLINE.md#compose-from-the-task) before choosing components. Reuse accepted structure for scoped changes.
+- For every visible addition or change, [compose from the task](references/DESIGN-DISCIPLINE.md#compose-from-the-task) within the authorized scope. Inspect the parent task region before choosing placement or components.
 - Use [User task and content](references/DESIGN-DISCIPLINE.md#1-user-task-and-content) for text and data, and [States](references/DESIGN-DISCIPLINE.md#8-states-responsiveness-and-motion) for recovery and unavailable data.
 - Match containers, navigation, expression, and density to the product. Cards, sidebars, brand voice, and rich imagery are valid choices.
 - Apply `writing` to all user-visible strings, including code and localization. Factual text uses `simple-technical-english`. Persuasive or brand prose uses `unslop`.
