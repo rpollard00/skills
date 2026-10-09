@@ -1,0 +1,32 @@
+{
+  "name": "skills-promo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "studio": "npm run audio && remotion studio --port=3123",
+    "render": "npm run audio && remotion render Spike out/spike/spike.mp4",
+    "still": "remotion still Spike out/spike/still.png --frame=60",
+    "audio": "tsx scripts/generate-audio.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.8.1",
+    "@remotion/cli": "4.0.534",
+    "@remotion/three": "4.0.534",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.534",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/three": "0.186.0",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}

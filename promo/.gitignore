@@ -1,0 +1,13 @@
+# Dependencies and tool caches.
+node_modules/
+.remotion/
+.cache/
+
+# Rendered video, stills, and generated audio. Rebuild with the npm scripts.
+out/
+public/audio/
+*.mp4
+*.webm
+*.mov
+*.wav
+*.mp3
