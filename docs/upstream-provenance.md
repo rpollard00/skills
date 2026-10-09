@@ -43,7 +43,7 @@ The authoritative selection is [skill-router-decisions.md](skill-router-decision
 - Retain `refine-ui` and the existing writing router. Replace competing prose routes.
 - Correct the test-matcher blacklist. Preserve meaningful absence, public-contract, relational, and compile-time tests.
 - Restore Poteto's autonomy-first posture: make routine engineering decisions and use evidence-backed defaults without extra approval rounds. Preserve explicit task limits, dangerous-action boundaries, and the checkpoints of deliberately invoked interactive skills.
-- Separate harness integration notes from the shared execution rules. Prefer independent implementers and reviewers where supported; disclose direct or sequential fallback rather than blocking merely because a harness lacks delegation.
+- Separate harness integration notes from the shared execution rules. Delegate investigation and implementation whenever capable subagents are available, and use independent reviewers where supported; disclose direct or sequential fallback rather than blocking merely because a harness lacks delegation.
 - Use jj when present; remove destructive Git reset shortcuts and blanket rebases.
 - Retain real measurement and queryable forensics without mandating SQLite or an arbitrary attempt count.
 - Keep readiness separate from landing, and stack delivery separate from merge authority.

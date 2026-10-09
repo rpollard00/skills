@@ -44,7 +44,7 @@ File backlog items only with authorization. Preparing a focused repair issue or 
 
 For approved changes:
 
-- Apply a trivial correction directly in the skill's source repository.
+- Route approved trivial corrections in the skill's source repository through the parent/worker rules in [execution](../mako/references/execution.md#agent-and-model-routing).
 - Use [Authoring a skill](../mako/playbooks/authoring-a-skill.md) for substantive edits, new skills, and description tuning.
 - Run the available metadata and link validator.
 - Exercise representative behavior for changed workflow or trigger instructions.

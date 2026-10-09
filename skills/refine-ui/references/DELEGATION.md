@@ -44,27 +44,13 @@ Inspect the harness's system instructions and exposed tools for isolated or dele
 
 Use only executable delegates whose capabilities satisfy the phase. A delegate without browser control cannot own rendered observation. A delegate without vision can perform objective browser checks but cannot certify visual readiness. Do not install or configure delegation infrastructure without approval.
 
-If suitable delegation is unavailable, keep the phase in the main agent. Continue using the canonical packet, approved external evidence artifacts, and compact phase notes or pointers. Do not create a delegate contract or self-handoff when there is no receiving context.
+Apply the shared [execution rules](../../mako/references/execution.md), including action permissions, explicit no-delegation requests, and host limits. If suitable delegation is unavailable or prohibited, keep the phase in the main agent. Continue using the canonical packet, approved external evidence artifacts, and compact phase notes or pointers. Do not create a delegate contract or self-handoff when there is no receiving context.
 
 ## When to delegate
 
-Prefer delegation when a phase is:
+The main agent delegates investigation and implementation phases whenever capable subagents are available. Do not ask routine permission to delegate. Small task size and handoff cost do not waive this default.
 
-- context-heavy because it reads many files, pages, screenshots, snapshots, or logs
-- bounded by clear inputs and outputs
-- independently executable and artifact-verifiable
-- likely to require an internal inspect, fix, and reinspect loop
-- unlikely to require user judgment midway through the phase
-- supported by a delegate with all required capabilities
-
-Do not delegate merely because a task exists. Keep work in the main agent when:
-
-- the next step is a user-owned decision
-- evidence from several phases must be reconciled
-- the task is small enough that the handoff would cost more context than the work
-- the delegate would need the entire conversation to act correctly
-- the main agent would have to reread every raw artifact to trust the result
-- no delegate can meet the phase's verification contract
+Keep the user conversation, user-owned decisions, synthesis, and acceptance in the main agent. Assigned workers execute their bounded phases directly. The main agent handles further delegation when needed.
 
 Delegate before consuming the context-heavy evidence in the main conversation. Delegating after loading the screenshot gallery or full source inventory does not recover that context.
 
@@ -72,15 +58,15 @@ Delegate before consuming the context-heavy evidence in the main conversation. D
 
 ### Observation and candidate report
 
-A capable evidence delegate can own repository reconnaissance, rendered observation, the broad reference pass, UI profiling, baseline capture, and candidate-report construction. It returns candidate summaries and artifact paths. The main agent checks the handoff, presents the recommendation, and owns the gap-selection gate.
+Assign a capable evidence delegate to own repository reconnaissance, rendered observation, the broad reference pass, UI profiling, baseline capture, and candidate-report construction. It returns candidate summaries and artifact paths. The main agent checks the handoff, presents the recommendation, and owns the gap-selection gate.
 
 ### Focused reference pass
 
-A read-only delegate can search the prepared licensed reference and write the temporary reference brief. It returns only applicable principles, local section or page pointers, concrete product implications, search limitations, and the brief path. Do not inline passages or page images into the main conversation.
+Assign a capable read-only delegate to search the prepared licensed reference and write the temporary reference brief. It returns only applicable principles, local section or page pointers, concrete product implications, search limitations, and the brief path. Do not inline passages or page images into the main conversation.
 
 ### Mockup exploration
 
-Prefer one capable mockup delegate to own the complete bounded loop:
+Assign one capable mockup delegate to own the complete bounded loop:
 
 > focused evidence → alternatives → render matrix → screenshot inspection → defect fixes → recapture → verification manifest → compact handoff
 
@@ -90,7 +76,7 @@ The main agent still presents the alternatives, receives user feedback, records 
 
 ### Production implementation
 
-After direction approval and provisional design memory, one mutation-capable delegate can own the accepted production slice. Give it the canonical direction packet, repository paths, approved extraction or migration scope, and validation contract. Use one writer for a shared checkout. Parallelize reads and reviews, not overlapping writes.
+After direction approval and provisional design memory, assign one available mutation-capable delegate to own the accepted production slice. Give it the canonical direction packet, repository paths, approved extraction or migration scope, and validation contract. Use one writer for a shared checkout. Parallelize reads and reviews, not overlapping writes.
 
 ### Rendered production comparison
 

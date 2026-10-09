@@ -14,7 +14,7 @@ The review imported no skills. The selected bundle is now implemented in sibling
 
 The user requested a closer, framework-agnostic adaptation of Poteto's posture before further tuning through use. Routine engineering decisions and recovery proceed without permission checkpoints. Engineering gates are checks the agent satisfies, not human approvals. Choose reasonable defaults and record consequential assumptions; ask only about material unresolved intent with no reasonable default, explicit checkpoints, or dangerous actions outside clear authority.
 
-Prefer separate implementers and independent review when the host supports them. Missing delegation alone is not a reason to stop: use direct or sequential execution and disclose lost independence. Explicit independence requirements and host failure-recovery rules still apply. This supersedes the earlier requirement to request permission for direct implementation.
+The parent delegates investigation and implementation whenever capable subagents are available, without a separate delegation request or routine approval. Preserve underlying action permissions, explicit no-delegation requests, and host limits. Use independent review when supported. Missing delegation alone is not a reason to stop: use direct or sequential execution and disclose lost independence. Explicit independence requirements and host failure-recovery rules still apply. This supersedes the earlier requirement to request permission for direct implementation.
 
 Keep the existing interactive skills intact, but invoke interviews and visual approval sessions only when that collaboration is requested. Ordinary UI implementation uses Feature with rendered verification. Keep explicit read-only, design-only, local-only, and operator-landing limits. A request to publish or land includes its normal verified delivery steps without a second approval round; it does not imply production deployment or unrelated external commitments.
 
@@ -68,7 +68,7 @@ The remaining catalog was also declined. Matt's `teach` maintains a separate mul
 - Make engineering decisions and use reasonable defaults. Ask only for consequential unresolved intent without a reasonable default; preserve explicit checkpoints and dangerous-action boundaries.
 - Keep `how` required for nontrivial changes, architecture decisions, and “are we sure?” questions.
 - Experiment with pstack's architectural triggers rather than narrowing them upfront. Compose them with `codebase-design`.
-- Prefer separate implementers for feature work. The lead owns coordination, review, and acceptance when delegation is available. Otherwise work directly and report missing independence without adding a permission pause.
+- Delegate investigation and implementation whenever capable subagents are available. The parent owns coordination, synthesis, evidence review, and acceptance. Assigned workers execute bounded tasks directly and return concise results with artifact pointers. If delegation is unavailable or prohibited, work directly and report missing independence without adding a permission pause.
 - Route competing solutions through `arena`, parallel coverage or races through `swarm`, and adversarial review through `interrogate`.
 - Require runtime verification on the relevant surface. Discover available capabilities, including Chrome DevTools MCP, rather than require Cursor control skills.
 - Permit updates to a referenced ticket through an available MCP or CLI. Omit team-chat permissions from the imported policy.

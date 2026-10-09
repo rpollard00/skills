@@ -38,7 +38,7 @@ A model already knows how to write HTML and CSS. This skill supplies the process
 - Accessibility is a constraint throughout, not a polish pass. Visual tactics never justify hiding required labels, focus indicators, status, terms, or controls.
 - When a prepared design reference is available, do not recommend gaps, directions, or mockups from memory alone. Search the reference for the current question. Inspect the smallest relevant passages, and inspect page images when visual examples matter and vision is available. Record what the reference changed or confirmed.
 - Never describe a mockup as ready merely because its HTML was generated or opened. The phase owner must render every required alternative, viewport, and state, capture screenshots, and inspect runtime evidence and the screenshots themselves when vision is available. The owner must fix defects and recapture before handoff.
-- When a suitable delegate is available, delegate context-heavy phases before loading their raw evidence into the main conversation. Otherwise keep the phase inline while using the canonical packet, approved external evidence artifacts, and compact phase notes. Delegation changes context ownership, never the phase's quality bar.
+- When a suitable delegate is available, delegate investigation and implementation phases before loading their raw evidence into the main conversation. Otherwise keep the phase inline while using the canonical packet, approved external evidence artifacts, and compact phase notes. Delegation changes context ownership, never the phase's quality bar.
 - Do not distribute or track user-provided copyrighted references or their derivatives. Keep derived PDF artifacts only in the skill's private ignored cache or another approved external location. See [PDF reference](../ui-design/references/PDF-REFERENCE.md).
 
 ## Load references progressively
@@ -111,7 +111,7 @@ Do not modify production source during observation.
 
 ## 3. Explore and build a UI profile
 
-Apply the delegation checkpoint before broad scanning. A capable evidence delegate can own repository reconnaissance, rendered observation, the broad reference pass, baseline capture, UI profiling, and candidate-report construction as one bounded phase. The main agent receives a compact handoff and artifact paths rather than raw screenshots, snapshots, logs, or source inventories. If no suitable delegate exists, the main agent remains phase owner.
+Apply the delegation checkpoint before broad scanning. Assign a capable evidence delegate to own repository reconnaissance, rendered observation, the broad reference pass, baseline capture, UI profiling, and candidate-report construction as one bounded phase. The main agent receives a compact handoff and artifact paths rather than raw screenshots, snapshots, logs, or source inventories. If no suitable delegate exists, the main agent remains phase owner.
 
 Scope the review before scanning widely. If the user named a screen, flow, primitive, or system concern, begin there. Otherwise prioritize important and recently changing product surfaces.
 
@@ -187,9 +187,9 @@ Do not interview, create mockups, or edit production code until the user chooses
 
 The main agent loads and follows the installed model-invoked `grilling` skill. Treat the selected gap or confirmed greenfield scope as the root of the design tree. Grilling's rounds, frontier discipline, recommended answers, fact-finding responsibility, and shared-understanding confirmation govern the interview. Do not delegate the user conversation or design-tree synthesis.
 
-Before the first recommendation for the selected gap or confirmed greenfield scope, the main agent can assign a bounded read-only delegate. That delegate runs the focused reference pass and writes the temporary brief. Whether delegated or inline, use the exact design question and likely levers to search. For greenfield, derive terms from the confirmed task, fixture, constraints, personality, and proposed visual lever. Update the temporary reference brief with anything newly applicable. The broad pass does not substitute for this focused pass.
+Before the first recommendation for the selected gap or confirmed greenfield scope, the main agent assigns a capable bounded read-only delegate when available. That delegate runs the focused reference pass and writes the temporary brief. Whether delegated or inline, use the exact design question and likely levers to search. For greenfield, derive terms from the confirmed task, fixture, constraints, personality, and proposed visual lever. Update the temporary reference brief with anything newly applicable. The broad pass does not substitute for this focused pass.
 
-If `grilling` is unavailable, state that the interview uses a reduced fallback. Interview in rounds, ask the whole current frontier, number each question, and give a recommended answer. Investigate facts yourself and defer questions whose prerequisites remain unsettled.
+If `grilling` is unavailable, state that the interview uses a reduced fallback. Interview in rounds, ask the whole current frontier, number each question, and give a recommended answer. Delegate fact-finding under the delegation rules and defer questions whose prerequisites remain unsettled.
 
 Adapt grilling to visual work:
 
@@ -270,7 +270,7 @@ Here, **provisional** means explicitly direction-approved and under rendered val
 
 ## 8. Implement one production slice
 
-After direction approval and the provisional root `DESIGN.md` write, the main agent can assign one mutation-capable delegate as the sole production writer. Give it the current direction packet, relevant repository paths, approved system and migration scope, validation contract, authority limits, and required compact handoff. Do not send the entire conversation when a fresh or minimal context plus canonical artifacts is sufficient. Do not run overlapping writers in one checkout.
+After direction approval and the provisional root `DESIGN.md` write, the main agent assigns one available mutation-capable delegate as the sole production writer. Give it the current direction packet, relevant repository paths, approved system and migration scope, validation contract, authority limits, and required compact handoff. Do not send the entire conversation when a fresh or minimal context plus canonical artifacts is sufficient. Do not run overlapping writers in one checkout.
 
 Implement the smallest representative slice that can validate the direction in the real product.
 
