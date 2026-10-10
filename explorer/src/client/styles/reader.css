@@ -1,0 +1,377 @@
+.reader {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  width: var(--reader);
+  background: var(--ground);
+  border-left: 1px solid var(--line);
+}
+
+.reader-bar {
+  display: flex;
+  flex: none;
+  gap: 10px;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px 0 20px;
+  font-size: 11px;
+}
+
+.reader-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-quiet);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+}
+
+.reader-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 6px 20px 48px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--ground);
+  scrollbar-color: rgb(var(--paper) / 0.22) var(--ground);
+  scrollbar-width: thin;
+}
+
+/* The reader takes the focus when a node opens it. Its ring is a hairline inside the edge: the whole region has the focus, and a full ring around it is louder than the text. */
+.reader-scroll:focus-visible {
+  outline: 1px solid rgb(var(--paper) / 0.6);
+  outline-offset: -2px;
+}
+
+.facts {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.facts-name {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.facts-kind {
+  margin: 2px 0 0;
+  color: var(--ink-quiet);
+}
+
+.facts-purpose {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.facts dl {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 5px 12px;
+  margin: 14px 0 0;
+}
+
+.facts dl:empty {
+  display: none;
+}
+
+.facts dt {
+  color: var(--ink-quiet);
+}
+
+.facts dd {
+  margin: 0;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.facts ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.facts a {
+  color: var(--ink-soft);
+  text-underline-offset: 3px;
+}
+
+/* A route task can be longer than one line. */
+.facts .text-button {
+  text-align: left;
+}
+
+.facts .tool {
+  color: var(--tooling);
+}
+
+.files {
+  display: grid;
+  gap: 4px;
+  margin: 18px 0 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.files-group {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 0 12px;
+}
+
+.files-directory {
+  overflow: hidden;
+  color: var(--ink-quiet);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.files ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.files a {
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.files a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.files a[aria-current="page"] {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.doc {
+  margin-top: 18px;
+  color: rgb(var(--paper) / 0.8);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+
+.doc-state {
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.doc h1,
+.doc h2,
+.doc h3,
+.doc h4,
+.doc h5,
+.doc h6 {
+  margin: 1.7em 0 0.5em;
+  color: var(--ink);
+  font-stretch: 112%;
+  font-weight: 700;
+  line-height: 1.2;
+  scroll-margin-top: 8px;
+}
+
+.doc h1 {
+  margin-top: 0;
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.doc h2 {
+  font-size: 17px;
+}
+
+.doc h3 {
+  font-size: 14.5px;
+}
+
+.doc h4,
+.doc h5,
+.doc h6 {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.doc p,
+.doc ul,
+.doc ol,
+.doc blockquote,
+.doc pre {
+  margin: 0 0 0.85em;
+}
+
+.doc ul,
+.doc ol {
+  padding-left: 1.35em;
+}
+
+.doc li {
+  margin: 0.2em 0;
+}
+
+.doc li > p {
+  margin-bottom: 0.3em;
+}
+
+.doc li > ul,
+.doc li > ol {
+  margin-bottom: 0.2em;
+}
+
+.doc blockquote {
+  padding-left: 12px;
+  border-left: 1px solid rgb(var(--paper) / 0.3);
+  color: var(--ink-soft);
+}
+
+.doc strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.doc hr {
+  height: 0;
+  margin: 1.6em 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.doc a {
+  color: var(--ink);
+  text-decoration-color: rgb(var(--paper) / 0.4);
+  text-underline-offset: 3px;
+}
+
+.doc a:hover {
+  text-decoration-color: rgb(var(--paper));
+}
+
+.doc code,
+.live code,
+.facts code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+}
+
+.doc :not(pre) > code,
+.facts-purpose code {
+  color: var(--ink);
+}
+
+.doc pre,
+.source {
+  padding: 10px 0 10px 12px;
+  overflow-x: auto;
+  border-left: 1px solid rgb(var(--paper) / 0.3);
+  color: rgb(var(--paper) / 0.82);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  scrollbar-color: rgb(var(--paper) / 0.22) var(--ground);
+  scrollbar-width: thin;
+  tab-size: 2;
+  white-space: pre;
+}
+
+.doc pre code {
+  font-size: inherit;
+}
+
+.source {
+  margin: 0;
+}
+
+.html-text {
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.plain-link {
+  color: inherit;
+}
+
+.live {
+  display: inline;
+  color: var(--ink);
+  border-bottom: 1px solid rgb(var(--paper) / 0.5);
+  line-height: inherit;
+  transition:
+    color 120ms linear,
+    border-color 120ms linear;
+}
+
+.live:hover,
+.live:focus-visible {
+  color: var(--needs-bright);
+  border-bottom-color: var(--needs-bright);
+}
+
+.live:hover code,
+.live:focus-visible code {
+  color: inherit;
+}
+
+/* The mark on the block that states a relation: a paper bar on its left. */
+.marked {
+  margin-left: -12px;
+  padding-left: 10px;
+  border-left: 2px solid rgb(var(--paper));
+  color: var(--ink);
+}
+
+.marked .marked {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.doc pre.marked {
+  margin-left: 0;
+  padding-left: 11px;
+}
+
+/* In a list item the mark covers the text of the item and not the items below it. The bar sits left of the bullet. */
+.doc li > .marked {
+  position: relative;
+  margin-left: 0;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.doc li > .marked::before {
+  position: absolute;
+  top: 0.25em;
+  bottom: 0.25em;
+  left: -2.1em;
+  width: 2px;
+  background: rgb(var(--paper));
+  content: "";
+}

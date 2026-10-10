@@ -1,0 +1,95 @@
+/*
+ * The ground is black on every surface. Ink is paper at four strengths.
+ * Color means state, and each color token has the name of its state.
+ */
+:root {
+  --ground: #000000;
+  --paper: 245 240 230;
+  --ink: rgb(var(--paper) / 0.94);
+  --ink-soft: rgb(var(--paper) / 0.7);
+  --ink-quiet: rgb(var(--paper) / 0.54);
+  --ink-faint: rgb(var(--paper) / 0.26);
+  --line: rgb(var(--paper) / 0.14);
+
+  /* What the selection needs. Also the selection, the router, and a trace: each is where a relation starts. */
+  --needs-rgb: 25 195 125;
+  --needs: rgb(var(--needs-rgb));
+  --needs-bright-rgb: 125 255 181;
+  --needs-bright: rgb(var(--needs-bright-rgb));
+  --needs-deep: #0f5c46;
+  --needs-pale: #e9ffe9;
+
+  /* What needs the selection. */
+  --needed-by-rgb: 240 138 60;
+  --needed-by: rgb(var(--needed-by-rgb));
+  --needed-by-bright: #ffe08a;
+
+  /* A bundled script or a shell command. Nothing else has this color. */
+  --tooling-rgb: 255 133 194;
+  --tooling: rgb(var(--tooling-rgb));
+
+  --mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --sans: "Archivo Variable", system-ui, sans-serif;
+
+  --bar: 40px;
+  --strip: 34px;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  background: var(--ground);
+}
+
+body {
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 1.5px solid rgb(var(--paper));
+  outline-offset: 2px;
+}
+
+code,
+kbd {
+  font-family: var(--mono);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

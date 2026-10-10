@@ -1,0 +1,92 @@
+/* `--reader` comes from the app: one rule in TypeScript sets the width of the reader and the room that the camera leaves for it. */
+.app {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) var(--strip);
+  height: 100%;
+  background: var(--ground);
+}
+
+.stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--ground);
+}
+
+.text-button {
+  flex: none;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ink-faint);
+  text-underline-offset: 3px;
+}
+
+.text-button:hover {
+  text-decoration-color: var(--ink);
+}
+
+.key-button {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--ink-soft);
+}
+
+.key-button:hover {
+  border-color: var(--ink-quiet);
+  color: var(--ink);
+}
+
+.icon {
+  display: block;
+}
+
+.quiet {
+  color: var(--ink-quiet);
+}
+
+.notice {
+  position: absolute;
+  top: 28%;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  max-width: min(80ch, 80%);
+  padding: 10px 14px;
+  transform: translateX(-50%);
+  background: var(--ground);
+  border: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.notice p {
+  margin: 0;
+}
+
+.stopped {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  justify-items: start;
+  height: 100%;
+  padding: 48px 32px;
+  background: var(--ground);
+  font-size: 12px;
+}
+
+.stopped p {
+  max-width: 80ch;
+  margin: 0;
+}
+
+.stopped .detail {
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}

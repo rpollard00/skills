@@ -1,0 +1,8 @@
+{
+  "upstreams": {
+    "kit": { "repository": "https://example.invalid/kit", "revision": "0000000000000000000000000000000000000000" }
+  },
+  "files": [
+    { "source": "kit/skills/beta/SKILL.md", "destination": "skills/beta/SKILL.md", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "upstream": "kit" }
+  ]
+}

@@ -1,0 +1,221 @@
+/* `--label-size` and `--small-size` come from the layout constants, so the widths that the layout computes fit the text. */
+.map {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--ground);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.map[data-dragging="true"] {
+  cursor: grabbing;
+}
+
+.map text {
+  font-family: var(--mono);
+  dominant-baseline: central;
+}
+
+.column-title {
+  fill: var(--ink-quiet);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+}
+
+.column-title .count {
+  font-weight: 300;
+}
+
+/* The map gives the rail its stroke: a fade from the port of the router. `frame` is the rail before the index is there. */
+.rail {
+  fill: none;
+  stroke-width: 1.15;
+  transition: stroke-opacity 120ms linear;
+}
+
+.rail.frame {
+  stroke: rgb(var(--paper) / 0.34);
+  stroke-width: 1;
+}
+
+.rail-near {
+  stop-color: rgb(var(--needs-rgb) / 0.8);
+}
+
+.rail-middle {
+  stop-color: rgb(var(--needs-rgb) / 0.45);
+}
+
+.rail-far {
+  stop-color: rgb(var(--needs-rgb) / 0.26);
+}
+
+.map[data-weave="low"] .rail {
+  stroke-opacity: 0.35;
+}
+
+.weave {
+  isolation: isolate;
+  transition: opacity 120ms linear;
+}
+
+.map[data-weave="low"] .weave {
+  opacity: 0.32;
+}
+
+.cable {
+  fill: none;
+  stroke-linecap: butt;
+  stroke-linejoin: round;
+}
+
+.weave .cable {
+  stroke: rgb(var(--paper) / 0.09);
+  stroke-width: 1;
+  mix-blend-mode: screen;
+}
+
+.weave .leaders {
+  fill: none;
+  stroke: rgb(var(--paper) / 0.085);
+  stroke-width: 1;
+}
+
+.cable[data-cls="flow"] {
+  stroke-width: 1.5;
+}
+
+.weave .cable[data-cls="flow"] {
+  stroke-width: 1.15;
+}
+
+.cable[data-cls="flow"][data-conditional="true"] {
+  stroke-dasharray: 9 3 1.5 3;
+}
+
+.cable[data-cls="cite"] {
+  stroke-width: 0.9;
+}
+
+.cable[data-cls="reads"] {
+  stroke-width: 1.6;
+  stroke-dasharray: 0.01 4;
+  stroke-linecap: round;
+}
+
+.cable[data-cls="aside"] {
+  stroke-dasharray: 8 3.5;
+}
+
+.cable[data-cls="avoid"] {
+  stroke-dasharray: 3 3;
+}
+
+.cable[data-cls="unjudged"] {
+  stroke-dasharray: 3 5;
+}
+
+.lit {
+  fill: none;
+}
+
+.lit .cable {
+  stroke-width: 1.5;
+  transition:
+    stroke 120ms linear,
+    stroke-width 120ms linear;
+}
+
+.lit .cable[data-cls="cite"] {
+  stroke-width: 1.1;
+}
+
+.lit [data-tone="out"],
+.lit [data-tone="step"] {
+  --lit: var(--needs);
+  --lit-bright: var(--needs-bright);
+}
+
+.lit [data-tone="in"] {
+  --lit: var(--needed-by);
+  --lit-bright: var(--needed-by-bright);
+}
+
+.lit [data-tone="previewOut"] {
+  --lit: rgb(var(--needs-rgb) / 0.55);
+  --lit-bright: var(--needs);
+}
+
+.lit [data-tone="previewIn"] {
+  --lit: rgb(var(--needed-by-rgb) / 0.55);
+  --lit-bright: var(--needed-by);
+}
+
+.lit-cable .cable,
+.port-mark {
+  stroke: var(--lit);
+}
+
+.lit-cable[data-bright="true"] .cable,
+.port-mark[data-bright="true"] {
+  stroke: var(--lit-bright);
+  stroke-width: 2.4;
+}
+
+/* One mark for each port: an arrow where a cable ends, and a bar where a `boundary` cable ends. */
+.port-mark {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.port-mark .bar {
+  stroke-width: 2.2;
+  stroke-linecap: butt;
+}
+
+.lit-cable .hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 9;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.glow-needs {
+  filter: drop-shadow(0 0 2.5px rgb(var(--needs-rgb) / 0.7));
+}
+
+.glow-needed-by {
+  filter: drop-shadow(0 0 2.5px rgb(var(--needed-by-rgb) / 0.65));
+}
+
+.pulse {
+  fill: none;
+  stroke: var(--needs-pale);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgb(var(--needs-bright-rgb) / 0.95));
+  pointer-events: none;
+}
+
+.cursor-ring {
+  fill: none;
+  stroke: var(--needs-bright);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 4px rgb(var(--needs-bright-rgb) / 0.9));
+  pointer-events: none;
+}
+
+.frame-hub {
+  fill: none;
+  stroke: var(--needs-deep);
+  stroke-width: 1.5;
+}

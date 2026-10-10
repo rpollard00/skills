@@ -1,0 +1,277 @@
+/*
+ * A node takes each color from a variable, and a tone sets the variables. A dimmed node is dim through these
+ * variables and not through the opacity of the group, so the focus ring and the label of a node under the pointer
+ * or under keyboard focus keep their full strength.
+ */
+.node {
+  cursor: pointer;
+  --glyph: rgb(var(--paper) / 0.9);
+  --label: rgb(var(--paper) / 0.62);
+  --tick: rgb(var(--paper) / 0.55);
+  --badge: rgb(var(--paper) / 0.9);
+  --mark: var(--tooling);
+  --count: rgb(var(--paper) / 0.62);
+}
+
+.node .hit {
+  fill: transparent;
+}
+
+.node .ring {
+  fill: none;
+  stroke: rgb(var(--paper));
+  stroke-width: 1.25;
+  opacity: 0;
+}
+
+.node:focus-visible {
+  outline: none;
+}
+
+.node:focus-visible .ring {
+  opacity: 1;
+}
+
+.node .label {
+  fill: var(--label);
+  font-size: var(--label-size);
+  font-weight: 400;
+  transition: fill 120ms linear;
+}
+
+.node .label .hit-text {
+  fill: rgb(var(--paper));
+  font-weight: 700;
+}
+
+.node .shape {
+  fill: none;
+  stroke: var(--glyph);
+  stroke-width: 1.4;
+  transition:
+    stroke 120ms linear,
+    fill 120ms linear;
+}
+
+.node .shape.solid {
+  fill: var(--glyph);
+}
+
+.node .tick {
+  fill: var(--tick);
+  stroke: var(--tick);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.node .tick[data-mako="trigger"],
+.node .tick[data-mako="named"] {
+  fill: none;
+}
+
+.node .tick[data-mako="named"] {
+  stroke-width: 1.25;
+}
+
+.node .mark {
+  fill: var(--mark);
+  stroke: none;
+}
+
+.node .mark.line {
+  fill: none;
+  stroke: var(--mark);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.node .chip-text {
+  fill: var(--tooling);
+  font-size: var(--small-size);
+  font-weight: 500;
+}
+
+.node .chip-box {
+  fill: var(--ground);
+  stroke: rgb(var(--tooling-rgb) / 0.55);
+  stroke-width: 1;
+}
+
+.node .fold-count {
+  fill: var(--count);
+  font-size: var(--small-size);
+}
+
+.node .changed {
+  fill: none;
+  stroke: var(--badge);
+  stroke-width: 1;
+  stroke-dasharray: 2 2.5;
+}
+
+.node .defect {
+  fill: none;
+  stroke: var(--badge);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+
+.node[data-glyph="pip"] {
+  --glyph: rgb(var(--paper) / 0.5);
+}
+
+.node[data-glyph="pip"] .shape {
+  fill: var(--glyph);
+  stroke: none;
+}
+
+/* A folded pip shows through the count of its host until it is lit. */
+.node[data-folded="true"] .hit {
+  pointer-events: none;
+}
+
+.node[data-folded="true"][data-tone="rest"] .shape,
+.node[data-folded="true"][data-tone="dim"] .shape {
+  fill: none;
+}
+
+.node[data-glyph="hub"] {
+  --glyph: var(--needs);
+  --core: var(--needs-bright);
+  --hub-glow: rgb(var(--needs-rgb) / 0.85);
+}
+
+.node[data-glyph="hub"] .shape.core {
+  fill: var(--core);
+  stroke: none;
+}
+
+.node[data-glyph="hub"] .glyph {
+  filter: drop-shadow(0 0 5px var(--hub-glow));
+}
+
+.node[data-tone="dim"] {
+  --glyph: rgb(var(--paper) / 0.22);
+  --label: rgb(var(--paper) / 0.17);
+  --tick: rgb(var(--paper) / 0.14);
+  --badge: rgb(var(--paper) / 0.26);
+  --mark: rgb(var(--tooling-rgb) / 0.28);
+  --count: rgb(var(--paper) / 0.17);
+}
+
+.node[data-glyph="pip"][data-tone="dim"] {
+  --glyph: rgb(var(--paper) / 0.14);
+}
+
+.node[data-glyph="hub"][data-tone="dim"] {
+  --glyph: rgb(var(--needs-rgb) / 0.3);
+  --core: rgb(var(--needs-bright-rgb) / 0.3);
+  --hub-glow: transparent;
+}
+
+.node[data-tone="match"] {
+  --label: rgb(var(--paper) / 0.96);
+  --glyph: rgb(var(--paper));
+}
+
+/* After `dim`, so a dimmed node under the pointer or under keyboard focus reads at full strength. */
+.node[data-hovered="true"],
+.node:focus-visible {
+  --label: rgb(var(--paper));
+  --glyph: rgb(var(--paper));
+  --tick: rgb(var(--paper) / 0.8);
+  --count: rgb(var(--paper));
+}
+
+.node[data-glyph="hub"][data-hovered="true"],
+.node[data-glyph="hub"]:focus-visible {
+  --glyph: var(--needs);
+  --core: var(--needs-bright);
+  --hub-glow: rgb(var(--needs-rgb) / 0.85);
+}
+
+.node[data-tone="selected"] {
+  --label: rgb(var(--paper));
+  --glyph: var(--needs-bright);
+}
+
+.node[data-tone="selected"] .label {
+  font-weight: 700;
+}
+
+.node[data-tone="selected"] .shape {
+  fill: var(--needs-bright);
+}
+
+.node[data-tone="selected"] .glyph {
+  filter: drop-shadow(0 0 5px rgb(var(--needs-bright-rgb) / 0.9));
+}
+
+.node .halo {
+  fill: none;
+  stroke: var(--needs-bright);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.node[data-tone="needs"],
+.node[data-tone="origin"],
+.node[data-tone="mutual"],
+.node[data-tone="step"] {
+  --label: rgb(var(--paper));
+  --glyph: var(--needs);
+}
+
+/* `--arrival-delay` is the time at which the cable that lights the node arrives. */
+.node[data-tone="needs"] .shape,
+.node[data-tone="needs"] .label,
+.node[data-tone="step"] .shape,
+.node[data-tone="step"] .label {
+  transition-delay: var(--arrival-delay, 0ms);
+}
+
+.node[data-tone="neededBy"] {
+  --label: rgb(var(--paper));
+  --glyph: var(--needed-by);
+}
+
+.node .mutual-dot {
+  fill: var(--needed-by);
+}
+
+.node[data-tone="needs"] .shape,
+.node[data-tone="neededBy"] .shape,
+.node[data-tone="mutual"] .shape,
+.node[data-tone="origin"] .shape {
+  stroke-width: 1.75;
+}
+
+.node .step-disc {
+  fill: var(--needs);
+  stroke: var(--needs);
+  stroke-width: 1.25;
+}
+
+.node .step-disc.conditional {
+  fill: var(--ground);
+  stroke-dasharray: 2.4 1.8;
+}
+
+.node .step-number {
+  fill: #000000;
+  font-size: 9px;
+  font-weight: 800;
+  text-anchor: middle;
+}
+
+.node .step-number.conditional {
+  fill: var(--needs-bright);
+}
+
+.ring-once {
+  fill: none;
+  stroke: var(--needs-bright);
+  stroke-width: 1.5;
+  pointer-events: none;
+}

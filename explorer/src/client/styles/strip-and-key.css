@@ -1,0 +1,184 @@
+/*
+ * The strip is one line. When it has no room, its parts give up room in this order: the list of answers, the heading
+ * path, then the sentence. Each of these ends in an ellipsis. The names, the file and line, and the command with its
+ * ticket id never cut.
+ *
+ * A flex item gives up room in proportion to its shrink factor, and a part that gives up a fraction of a pixel
+ * already shows an ellipsis. The factors are far apart so that the share of the next part rounds to nothing
+ * until the part before it has no room left.
+ */
+.strip {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: var(--strip);
+  padding: 0 16px;
+  overflow: hidden;
+  background: var(--ground);
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.strip-name {
+  flex: none;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.strip-kind,
+.strip-quiet {
+  flex: none;
+  color: var(--ink-quiet);
+}
+
+.strip-text,
+.strip-headings,
+.strip-answers {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.strip-text {
+  flex: 0 1 auto;
+  color: var(--ink-soft);
+}
+
+.strip-text code {
+  color: var(--ink);
+}
+
+.strip-headings {
+  flex: 0 1000000 auto;
+  margin-left: -6px;
+  color: var(--ink-quiet);
+}
+
+.strip-answers {
+  flex: 0 1000000000000 auto;
+  margin-left: -7px;
+  color: var(--ink-quiet);
+}
+
+.strip-source {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  align-items: center;
+}
+
+.strip-place {
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-decoration-color: var(--ink-faint);
+  text-underline-offset: 3px;
+}
+
+.strip-source:hover .strip-place {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+
+.strip-command {
+  flex: none;
+  margin-left: auto;
+  color: var(--ink-quiet);
+}
+
+.strip-key {
+  flex: none;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--ink-quiet);
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.strip-steps {
+  display: flex;
+  flex: none;
+  gap: 4px;
+}
+
+.legend {
+  position: absolute;
+  bottom: 12px;
+  left: 16px;
+  z-index: 1;
+  display: grid;
+  gap: 9px;
+  padding: 6px;
+  margin: -6px;
+  color: var(--ink-quiet);
+  font-size: 10.5px;
+  line-height: 15px;
+  pointer-events: none;
+}
+
+.legend ul {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend li,
+.legend-switch {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.legend-switch {
+  color: inherit;
+  text-align: left;
+  pointer-events: auto;
+}
+
+.legend-switch:hover {
+  color: var(--ink);
+}
+
+/* The rows are close together, so the ring is on the edge of the row and not outside it. */
+.legend-switch:focus-visible {
+  outline-offset: 0;
+}
+
+.legend-switch[aria-pressed="false"] {
+  color: var(--ink-faint);
+  text-decoration: line-through;
+}
+
+.legend-switch[aria-pressed="false"] .legend-line {
+  stroke-opacity: 0.25;
+}
+
+.legend-sample {
+  flex: none;
+  overflow: visible;
+}
+
+.legend-line {
+  fill: none;
+  stroke: rgb(var(--paper) / 0.8);
+  stroke-linejoin: round;
+}
+
+.legend-line.bar {
+  stroke-width: 2.2;
+}
+
+.legend-line.needs {
+  stroke: var(--needs);
+  stroke-width: 1.5;
+}
+
+.legend-line.needed-by {
+  stroke: var(--needed-by);
+  stroke-width: 1.5;
+}
