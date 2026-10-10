@@ -1,6 +1,6 @@
 # Skills
 
-The collection contains 53 skills. Each skill lives directly in `skills/<name>/`. Its references, scripts, metadata, and upstream notices stay beside it. Instructions refer to other skills by exact name. The shared [lookup rule](mako/references/execution.md#resolve-dependencies) uses harness discovery with a sibling-path fallback. Links below are navigation for readers.
+The collection contains 54 skills. Each skill lives directly in `skills/<name>/`. Its references, scripts, metadata, and upstream notices stay beside it. Instructions refer to other skills by exact name. The shared [lookup rule](mako/references/execution.md#resolve-dependencies) uses harness discovery with a sibling-path fallback. Links below are navigation for readers.
 
 [Mako](mako/SKILL.md) routes engineering tasks. Invoke it with a task; it stays active in that conversation until you opt out. Reusable skills also work independently.
 
@@ -69,6 +69,7 @@ The 23 principle skills remain independent. Select them through [the trigger ind
 - [typescript-best-practices](typescript-best-practices/SKILL.md)
 - [ui-design](ui-design/SKILL.md)
 - [unslop](unslop/SKILL.md)
+- [update-skill-explorer](update-skill-explorer/SKILL.md)
 - [why](why/SKILL.md)
 - [writing](writing/SKILL.md)
 

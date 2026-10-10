@@ -52,6 +52,7 @@ export const SKILLS = [
   "typescript-best-practices",
   "ui-design",
   "unslop",
+  "update-skill-explorer",
   "why",
   "writing",
 ] as const;
