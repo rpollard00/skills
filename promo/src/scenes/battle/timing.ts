@@ -1,0 +1,18 @@
+export const MOTION = {
+  settle: 2.5,
+  spawn: 1,
+  step: 0.25,
+  windUp: 0.25,
+  recoil: 0.5,
+  sealClose: 0.25,
+  stripGrow: 0.5,
+  sealRetract: 1.25,
+  failFlash: 2,
+  beamLead: 0.75,
+  beamDrain: 0.5,
+  spark: 0.5,
+  kick: 0.25,
+  flash: 0.75,
+  rise: 9,
+  part: 2,
+} as const;

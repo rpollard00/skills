@@ -1,5 +1,7 @@
+import { GRID } from "./theme";
+
 export const VIDEO = {
-  width: 1920,
-  height: 1080,
+  width: GRID.cols * GRID.cell,
+  height: GRID.rows * GRID.cell,
   fps: 30,
 } as const;
