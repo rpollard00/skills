@@ -1,8 +1,10 @@
 import type { Caption } from "../focus-layout";
 import { nameOf, type Graph } from "../graph";
-import { cutMiddle, FRAME, monoAdvance, type MarkKind, type Point } from "../layout";
+import { cutMiddle, FRAME, monoAdvance, type MarkKind, type Point, type Rect } from "../layout";
 import { relationKey, type EdgeKind, type Node, type NodeId, type RelationKey } from "../model";
-import { arrangementOf, standOf, type Stand } from "./arranged";
+import { crosses } from "../polyline";
+import { arrangementOf, stageBoundsOf, standOf, type Stand } from "./arranged";
+import { wordsBeside, type WordBeside } from "./beside";
 import { classOf, isShown, weightOf, type CableClass, type Weight } from "./cable-class";
 import { litOf } from "./lit";
 import { resolveCamera } from "./camera";
@@ -67,8 +69,8 @@ export interface CableView {
   readonly words: { readonly text: string; readonly at: Point } | null;
   /** Where the gate of a conditional relation sits. Null when the relation has no condition, and for the resting weave. */
   readonly gate: Point | null;
-  /** Where the mark sits that says the target also needs the source. */
-  readonly back: Point | null;
+  /** Where the mark sits that says the target also needs the source. `conditional`: that relation back has a condition. */
+  readonly back: (Point & { readonly conditional: boolean }) | null;
   readonly end: Point;
   readonly arrives: 1 | -1;
   readonly length: number;
@@ -81,6 +83,8 @@ export interface Scene {
   /** In keyboard order. In a focus arrangement: the left zone, the node in the middle, the right zone, then the nodes that are off the stage. */
   readonly nodes: readonly NodeView[];
   readonly cables: readonly CableView[];
+  /** The relation word of each lit cable in place that has no room for it, beside the name of the lit neighbour. */
+  readonly beside: readonly WordBeside[];
   /** One quiet line from a label to the edge of its column, for each row that a resting cable leaves or enters on the right. */
   readonly leaders: readonly string[];
   readonly weave: "rest" | "low" | "off";
@@ -110,7 +114,8 @@ const glyphOf = (node: Node): Glyph => {
 
 const hasTooling = (node: Node): boolean => node.kind === "skill" && (node.tooling.scripts.length > 0 || node.tooling.commands.length > 0);
 
-export const CHIP = { pad: 5, icon: 12, gap: 5, reach: 62 } as const;
+/** `lead` and `half`: the box of a chip starts this far before its text, and it is this high above and below the middle of its row. */
+export const CHIP = { pad: 5, icon: 12, gap: 5, reach: 62, lead: 3, half: 8 } as const;
 const CHIP_CHAR = monoAdvance(FRAME.smallFontPx);
 
 const chipsOf = (node: Node, placed: Stand): Chip[] => {
@@ -133,6 +138,13 @@ const chipsOf = (node: Node, placed: Stand): Chip[] => {
     x += width + CHIP.gap;
   }
   return chips;
+};
+
+/** What the chips of one row cover. Null for a row without a chip. */
+const boxOfChips = (chips: readonly Chip[], y: number): Rect | null => {
+  const first = chips[0];
+  const last = chips.at(-1);
+  return first === undefined || last === undefined ? null : { x: first.x - CHIP.lead, y: y - CHIP.half, width: last.x + last.width - first.x, height: CHIP.half * 2 };
 };
 
 const matchRange = (label: string, query: string): readonly [number, number] | null => {
@@ -170,6 +182,32 @@ export const deriveScene = (input: Stage & { readonly state: ViewState }): Scene
   const onStage = new Set(arrangement?.order ?? []);
   const ordered = arrangement === null ? inMapOrder : [...arrangement.order.flatMap((id) => graph.nodes.get(id) ?? []), ...inMapOrder.filter((node) => !onStage.has(node.id))];
 
+  const litLines = lit.cables.filter((cable) => cable.tone === "out" || cable.tone === "in" || cable.tone === "step");
+  const chips = new Map<NodeId, Chip[]>();
+  const chipBoxes = new Map<NodeId, Rect>();
+  if (state.lens === "tools") {
+    for (const node of ordered) {
+      const at = standOf(node.id, arrangement, placement);
+      if (at === undefined || (arrangement !== null && !onStage.has(node.id))) continue;
+      const unfolded = chipsOf(node, at);
+      const box = boxOfChips(unfolded, at.centre.y);
+      // A chip is drawn over each line. Thus a row keeps its tool marks folded when a lit line, its arrowhead, or its word would be under a chip.
+      const coversALitLine = box !== null && litLines.some((cable) => crosses(cable.points, box));
+      if (coversALitLine) continue;
+      chips.set(node.id, unfolded);
+      if (box !== null) chipBoxes.set(node.id, box);
+    }
+  }
+  const beside = wordsBeside({
+    unworded: lit.unworded,
+    stands: arrangement?.nodes ?? placement.nodes,
+    cables: lit.cables,
+    captions: arrangement?.captions ?? [],
+    chipsOf: (id) => chipBoxes.get(id) ?? null,
+    isLit: (id) => lit.tones.has(id),
+    bounds: stageBoundsOf(arrangement, placement),
+  });
+
   const nodes: NodeView[] = [];
   for (const node of ordered) {
     const at = standOf(node.id, arrangement, placement);
@@ -188,7 +226,7 @@ export const deriveScene = (input: Stage & { readonly state: ViewState }): Scene
       glyph: glyphOf(node),
       tone: offStage ? { kind: "dim" } : (lit.tones.get(node.id) ?? fallback),
       mako: arrangement !== null || node.kind === "playbook" || graph.routers.has(node.id) ? "none" : makoMark(graph, node.id),
-      chips: state.lens === "tools" && !offStage ? chipsOf(node, at) : [],
+      chips: chips.get(node.id) ?? [],
       changed: graph.changed.has(node.id),
       defective: node.kind === "skill" && node.defects.length > 0,
       hovered: !offStage && hoverId === node.id,
@@ -229,7 +267,8 @@ export const deriveScene = (input: Stage & { readonly state: ViewState }): Scene
   const cursor = state.focus.kind === "route" && lit.trace !== null ? cursorNodeOf(lit.trace, state.focus.cursor) : null;
   return {
     nodes,
-    cables: [...weave, ...lit.cables],
+    cables: [...weave, ...lit.cables.map((cable) => (beside.ungated.has(cable.key) ? { ...cable, gate: null } : cable))],
+    beside: beside.words,
     leaders: [...leaders].flatMap((id) => {
       const placed = placement.nodes.get(id);
       return placed?.kind === "seat" && placed.leader !== "" ? [placed.leader] : [];

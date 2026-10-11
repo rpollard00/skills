@@ -4,6 +4,7 @@ import { LOCK_KEY } from "../shared/view/keys";
 import { LENSES, type Lens } from "../shared/view/state";
 import { Finder, type FinderProps } from "./Finder";
 import { FitFrame, LockClosed, LockOpen } from "./icons";
+import { InlineText } from "./LiveName";
 import type { LoadState } from "./useIndex";
 import { count } from "./count";
 
@@ -106,7 +107,7 @@ export const TopBar = ({ legendControl, load, lens, legendOpen, fitted, locked, 
         {load.kind === "ready" && load.problem !== null ? (
           <span className="status-part status-alert">
             <StatusMark />
-            The map can be old. {load.problem}{" "}
+            The map can be old. <InlineText text={load.problem} />{" "}
             <button type="button" className="text-button" onClick={onRetry}>
               Retry
             </button>

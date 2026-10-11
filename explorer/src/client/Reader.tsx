@@ -369,7 +369,7 @@ export const Reader = ({ graph, reading, visit, region, focus, pin, hover, onInd
           ) : null}
           {doc.kind === "failed" ? (
             <p className="doc-state" role="alert">
-              {doc.message}{" "}
+              <InlineText text={doc.message} />{" "}
               <button type="button" className="text-button" onClick={retry}>
                 Retry
               </button>

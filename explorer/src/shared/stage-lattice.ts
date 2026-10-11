@@ -1,6 +1,7 @@
-import { captionWidth, FOCUS, type Arrangement, type Row } from "./focus-layout";
-import { corners, FRAME, type Point } from "./layout";
+import { captionRect, FOCUS, type Arrangement, type Row } from "./focus-layout";
+import { corners, FRAME, rowExtent, type Point } from "./layout";
 import type { NodeId } from "./model";
+import { uprightsOf } from "./polyline";
 
 /**
  * The columns of a focus arrangement from left to right, and the one upright channel in each gutter.
@@ -44,21 +45,15 @@ export const latticeOf = (arrangement: Arrangement): Lattice => {
   const columns = glyphs.map((glyph): LatticeColumn => {
     const rows = byGlyph.get(glyph) ?? [];
     const isMirrored = rows.some((row) => row.mirrored);
-    const captions = arrangement.captions.filter((caption) => caption.column === glyph);
-    const captionEnds = captions.map((caption) => caption.at.x + (isMirrored ? -1 : 1) * captionWidth(caption.group, caption.count));
+    const captions = arrangement.captions.filter((caption) => caption.column === glyph).map(captionRect);
     return {
-      start: Math.min(...rows.map((row) => Math.min(row.left.x, row.label.x)), ...(isMirrored ? captionEnds : [])),
-      end: Math.max(...rows.map((row) => Math.max(row.right.x, row.label.x + row.label.width)), ...(isMirrored ? [] : captionEnds)),
+      start: Math.min(...rows.map((row) => rowExtent(row).from), ...captions.map((caption) => caption.x)),
+      end: Math.max(...rows.map((row) => rowExtent(row).to), ...captions.map((caption) => caption.x + caption.width)),
       isMirrored,
     };
   });
 
-  const uprights = [...arrangement.cables.values()].flatMap((cable) =>
-    cable.points.flatMap((point, index) => {
-      const before = cable.points[index - 1];
-      return before !== undefined && before.x === point.x && before.y !== point.y ? [point.x] : [];
-    }),
-  );
+  const uprights = [...arrangement.cables.values()].flatMap((cable) => uprightsOf(cable.points).map((upright) => upright.x));
   const lanes = Array.from({ length: columns.length + 1 }, (_, gutter) => {
     const left = columns[gutter - 1];
     const right = columns[gutter];

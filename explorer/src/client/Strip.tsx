@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { Answer, type Evidence, type Relation } from "../shared/model";
+import { Answer, type Relation } from "../shared/model";
 import type { Hidden } from "../shared/view/lit";
-import type { Strip as StripView } from "../shared/view/strip";
+import type { Source as SourceOfText, Strip as StripView } from "../shared/view/strip";
 import { ArrowLeft, ArrowRight } from "./icons";
 import { InlineText } from "./LiveName";
 import { count } from "./count";
@@ -10,7 +10,7 @@ const ANSWERS = Answer.literals.join("|");
 
 export const OPEN_EVIDENCE_KEY = "e";
 
-const Source = ({ evidence, onOpen }: { readonly evidence: Evidence; readonly onOpen: (file: string, line: number) => void }): ReactNode => (
+const Source = ({ evidence, onOpen }: { readonly evidence: SourceOfText; readonly onOpen: (file: string, line: number) => void }): ReactNode => (
   <>
     <button
       type="button"
@@ -81,7 +81,7 @@ const content = (strip: StripView, actions: Actions): ReactNode => {
             {strip.conditional ? ", conditional" : ""}
           </span>
           <span className="strip-name">{strip.name}</span>
-          <span className="strip-text">{strip.sentence}</span>
+          {strip.sentence === "" ? null : <span className="strip-text">{strip.sentence}</span>}
           {strip.shown === null ? null : <Source evidence={strip.shown} onOpen={actions.onOpenEvidence} />}
         </>
       );
@@ -125,13 +125,13 @@ const content = (strip: StripView, actions: Actions): ReactNode => {
   }
 };
 
-/** A relation counts when its other node is not in the view, whether the relation goes to that node or comes from it. */
+/** A relation counts when its other node is not in the view, whether the relation goes to that node or comes from it. Two relations can be with one node, so the sentence gives no number of nodes. */
 const hiddenSentence = (hidden: Hidden): string | null => {
   switch (hidden.kind) {
     case "none":
       return null;
     case "relations":
-      return hidden.count === 1 ? "1 relation is with a node that is not in this view." : `${hidden.count} relations are with nodes that are not in this view.`;
+      return hidden.count === 1 ? "1 relation is not in this view." : `${hidden.count} relations are not in this view.`;
     case "steps":
       return hidden.count === 1 ? "1 step is not in this view." : `${hidden.count} steps are not in this view.`;
     default: {

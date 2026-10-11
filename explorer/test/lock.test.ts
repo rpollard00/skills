@@ -1,27 +1,42 @@
+import { readFileSync } from "node:fs";
+import nodePath from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import { toGraph, type Graph } from "../src/shared/graph";
 import { WORD_BOX, wordWidthOf } from "../src/shared/focus-layout";
 import { distance, FRAME, layout, type Point, type Rect } from "../src/shared/layout";
-import { NodeId, relationKey, RouteId, type Relation } from "../src/shared/model";
-import { GATE } from "../src/shared/polyline";
-import { arrangementOf } from "../src/shared/view/arranged";
+import { NodeId, relationKey, RouteId, type ExplorerIndex, type Relation } from "../src/shared/model";
+import { GATE, WORD_CLEAR } from "../src/shared/polyline";
+import { arrangementOf, stageBoundsOf } from "../src/shared/view/arranged";
+import { wordsOf } from "../src/shared/view/cable-class";
 import { resolveCamera } from "../src/shared/view/camera";
 import { decodeHash, encodeHash } from "../src/shared/view/hash";
 import { historyAction, normalizePlace } from "../src/shared/view/history";
-import { togglesLock, type KeyPress } from "../src/shared/view/keys";
+import { eventsAtArrival, keyPressOf, lockKey, lockPressOf, togglesLock, type KeyPress, type PageKeyEvent } from "../src/shared/view/keys";
 import type { Hidden } from "../src/shared/view/lit";
 import { deriveScene, type CableView, type Scene } from "../src/shared/view/scene";
 import { INITIAL, placeOf, stageTargetOf, type Pin, type Stage, type StageTarget, type ViewEvent, type ViewState } from "../src/shared/view/state";
 import { step } from "../src/shared/view/step";
 import { traceOf } from "../src/shared/view/trace";
-import { indexAt, LIVE_REPO } from "./support";
+import { indexAt, LIVE_REPO, snapshotIndex } from "./support";
+import { coveredByChips, isInside, overlap, placesOf, roomOn, rowOf, strangersUnder, thingsOf, visibleRectOf, wordBoxesOf, wordsUnderNames } from "./word-rules";
+import { WORDS_LEFT_OFF } from "./words-left-off";
 
+const stageOf = (index: ExplorerIndex): Stage => {
+  const graph = toGraph(index);
+  return { graph, placement: layout(graph), viewport: { width: 1440, height: 826, reader: 460 } };
+};
+
+/** The skills as they are now. A test on this stage states a rule that holds for each content of `skills/`: it names no skill, no route, and no count of today. */
 const liveStage = Effect.gen(function* () {
-  const graph = toGraph(yield* (yield* indexAt(LIVE_REPO)).live);
-  return { graph, placement: layout(graph), viewport: { width: 1440, height: 826, reader: 460 } } satisfies Stage;
+  return stageOf(yield* (yield* indexAt(LIVE_REPO)).live);
 }).pipe(Effect.provide(NodeServices.layer));
+
+const snapshot = stageOf(snapshotIndex);
+
+/** The skills as they were at the last refresh of the snapshot. A test that names a skill, a route, a file, or a count uses this stage. */
+const snapshotStage = Effect.succeed(snapshot);
 
 const id = Schema.decodeUnknownSync(NodeId);
 const routeId = Schema.decodeUnknownSync(RouteId);
@@ -73,26 +88,24 @@ describe("a locked stage", () => {
           picks += 1;
         }
       }
-      assert.isAbove(picks, 900, "the live index has many stages and many picks to check");
+      assert.isAtLeast(picks, stage.graph.index.nodes.length, "the rest map alone has one pick for each node");
     }),
   );
 
   it.effect("moves no node for each other event: a trace, a query, a link, Escape, a click on the empty stage, a pick of a node that is not on it", () =>
     Effect.gen(function* () {
       const stage = yield* liveStage;
-      const route = stage.graph.index.routes.find((item) => item.playbook !== null);
-      assert.isDefined(route);
-      if (route === undefined) return;
+      const [route] = stage.graph.index.routes;
+      const aFile = stage.graph.index.nodes[0]?.entry ?? "skills/none/SKILL.md";
       for (const target of everyStage(stage.graph)) {
         const locked = lockedOn(stage, target);
         const scene = deriveScene({ ...stage, state: locked });
         const before = seatsOf(scene);
-        const absent = scene.nodes.find((node) => node.offStage)?.id ?? id("skill:bro");
+        const absent = scene.nodes.find((node) => node.offStage)?.id ?? id("skill:not-a-skill-of-the-index");
         const events: ViewEvent[] = [
-          { kind: "traced", route: routeId(route.id) },
-          { kind: "stepped", by: 1 },
+          ...(route === undefined ? [] : ([{ kind: "traced", route: route.id }, { kind: "stepped", by: 1 }] satisfies ViewEvent[])),
           { kind: "typed", query: "verif" },
-          { kind: "linkFollowed", path: "skills/how/SKILL.md", anchor: null, line: null },
+          { kind: "linkFollowed", path: aFile, anchor: null, line: null },
           { kind: "picked", id: absent },
           { kind: "lensed", lens: "tools" },
           { kind: "legendToggled", cls: "cite" },
@@ -114,12 +127,9 @@ describe("a locked stage", () => {
     }),
   );
 
-  it.effect("starts with no node moved and no camera move, and ends with the arrangement of the selection", () =>
+  it.effect("starts with no node moved and no camera move, on each stage and after each step of a trace", () =>
     Effect.gen(function* () {
       const stage = yield* liveStage;
-      const how = id("skill:how");
-      const architect = id("skill:architect");
-
       let locks = 0;
       for (const target of everyStage(stage.graph)) {
         const selected = run(stage, selects(target));
@@ -134,7 +144,15 @@ describe("a locked stage", () => {
           locks += 1;
         }
       }
-      assert.isAbove(locks, everyStage(stage.graph).length + stage.graph.index.routes.length, "each stage, and each route also after a step");
+      assert.isAtLeast(locks, everyStage(stage.graph).length + stage.graph.index.routes.length, "each stage, and each route also after a step");
+    }),
+  );
+
+  it.effect("keeps the camera of a locked stage for a pick, and ends with the arrangement of the selection", () =>
+    Effect.gen(function* () {
+      const stage = yield* snapshotStage;
+      const how = id("skill:how");
+      const architect = id("skill:architect");
 
       const inArchitect = run(stage, [{ kind: "picked", id: architect }, { kind: "lockToggled" }, { kind: "picked", id: how }]);
       assert.deepStrictEqual<unknown>(stageTargetOf(inArchitect), { kind: "node", id: architect }, "the stage is still the arrangement of `architect`");
@@ -172,7 +190,7 @@ describe("a locked stage", () => {
 
   it.effect("keeps the lock and the seats when Escape or a click on the empty stage ends the selection", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const locked = run(stage, [{ kind: "picked", id: id("skill:architect") }, { kind: "lockToggled" }, { kind: "picked", id: id("skill:how") }]);
       const before = seatsOf(deriveScene({ ...stage, state: locked }));
 
@@ -212,6 +230,87 @@ describe("the key of the lock", () => {
     assert.isFalse(togglesLock(press({ ctrlKey: true })), "Ctrl+L goes to the address bar");
     assert.isFalse(togglesLock(press({ metaKey: true })));
     assert.isFalse(togglesLock(press({ altKey: true })));
+  });
+});
+
+describe("the lock key before the index is there", () => {
+  const press = (change: Partial<KeyPress>): KeyPress => ({ key: "l", ctrlKey: false, metaKey: false, altKey: false, repeat: false, isTyping: false, ...change });
+
+  it("holds a press until the index arrives, and does nothing for an event that is not a press of the lock key", () => {
+    assert.strictEqual(lockPressOf(press({}), true), "toggle");
+    assert.strictEqual(lockPressOf(press({}), false), "hold");
+    for (const isIndexReady of [true, false]) {
+      assert.strictEqual(lockPressOf(press({ repeat: true }), isIndexReady), "none");
+      assert.strictEqual(lockPressOf(press({ isTyping: true }), isIndexReady), "none");
+      assert.strictEqual(lockPressOf(press({ ctrlKey: true }), isIndexReady), "none");
+      assert.strictEqual(lockPressOf(press({ key: "k" }), isIndexReady), "none");
+    }
+  });
+
+  it.effect("turns the lock when the index arrives: on for the stage of the address, off for an address that has a lock", () =>
+    Effect.gen(function* () {
+      const stage = yield* snapshotStage;
+      const arrive = (hash: string, heldPresses: number): ViewState => run(stage, eventsAtArrival(decodeHash(hash), heldPresses));
+
+      assert.deepStrictEqual<unknown>(arrive("#/", 0).pin, { kind: "unlocked" });
+      assert.deepStrictEqual<unknown>(arrive("#/", 1).pin, { kind: "locked", stage: { kind: "rest" } }, "one press before the index locks the rest map");
+      assert.deepStrictEqual<unknown>(arrive("#/skill/how", 1).pin, { kind: "locked", stage: { kind: "node", id: "skill:how" } }, "the lock holds the stage that the address shows");
+      assert.deepStrictEqual<unknown>(arrive("#/skill/how?lock=skill/architect", 1).pin, { kind: "unlocked" }, "a press on an address that has a lock turns the lock off");
+      assert.deepStrictEqual<unknown>(arrive("#/skill/how", 2).pin, { kind: "unlocked" }, "two presses give the lock of the address");
+      assert.deepStrictEqual<unknown>(arrive("#/skill/no-such-skill", 1).pin, { kind: "locked", stage: { kind: "rest" } }, "the address names no node of the index, so the stage is the rest map");
+      assert.deepStrictEqual<unknown>(arrive("#/skill/how", 3).focus, { kind: "node", id: "skill:how" });
+    }),
+  );
+});
+
+describe("the lock key of the page", () => {
+  const event = (change: Partial<PageKeyEvent>): PageKeyEvent => ({ key: "l", ctrlKey: false, metaKey: false, altKey: false, repeat: false, target: { tagName: "BODY", isContentEditable: false }, ...change });
+  const place = decodeHash("#/");
+
+  it("reads each part of a key event of the browser: the key, each modifier, the repeat, and whether the focus is in a text field", () => {
+    assert.deepStrictEqual<unknown>(keyPressOf(event({})), { key: "l", ctrlKey: false, metaKey: false, altKey: false, repeat: false, isTyping: false });
+    assert.deepStrictEqual<unknown>(keyPressOf(event({ key: "L", ctrlKey: true })), { key: "L", ctrlKey: true, metaKey: false, altKey: false, repeat: false, isTyping: false });
+    assert.isTrue(keyPressOf(event({ metaKey: true })).metaKey);
+    assert.isTrue(keyPressOf(event({ altKey: true })).altKey);
+    assert.isTrue(keyPressOf(event({ repeat: true })).repeat, "a key that stays down");
+    for (const target of [{ tagName: "INPUT" }, { tagName: "TEXTAREA" }, { tagName: "DIV", isContentEditable: true }]) assert.isTrue(keyPressOf(event({ target })).isTyping, JSON.stringify(target));
+    for (const target of [{ tagName: "DIV", isContentEditable: false }, { tagName: "BUTTON" }, null, undefined, "INPUT"]) assert.isFalse(keyPressOf(event({ target })).isTyping, JSON.stringify(target));
+  });
+
+  it("turns the lock for one press, and for no event that is not a press of the key", () => {
+    const lock = lockKey();
+    assert.deepStrictEqual<unknown>(lock.onKey(event({}), true), [{ kind: "lockToggled" }]);
+    assert.isNull(lock.onKey(event({ repeat: true }), true), "the key stays down: each repeat would turn the lock back");
+    assert.isNull(lock.onKey(event({ target: { tagName: "INPUT" } }), true), "the letter is text in the finder");
+    assert.isNull(lock.onKey(event({ ctrlKey: true }), true));
+    assert.isNull(lock.onKey(event({ key: "Escape" }), true), "the page gives the event to its other keys");
+  });
+
+  it("holds each press that comes before the index, and applies the presses one time when the index arrives", () => {
+    const arrivalAfter = (presses: number): ViewEvent[] => {
+      const lock = lockKey();
+      for (let press = 0; press < presses; press += 1) assert.deepStrictEqual(lock.onKey(event({}), false), [], "a press that waits is a press of the lock key, and it changes nothing yet");
+      return lock.onArrival(place);
+    };
+    assert.deepStrictEqual<unknown>(arrivalAfter(0), [{ kind: "restored", place }]);
+    assert.deepStrictEqual<unknown>(arrivalAfter(1), [{ kind: "restored", place }, { kind: "lockToggled" }]);
+    assert.deepStrictEqual<unknown>(arrivalAfter(2), [{ kind: "restored", place }], "two presses turn the lock on and off");
+    assert.deepStrictEqual<unknown>(arrivalAfter(3), [{ kind: "restored", place }, { kind: "lockToggled" }]);
+
+    const lock = lockKey();
+    lock.onKey(event({}), false);
+    lock.onKey(event({ repeat: true }), false);
+    lock.onKey(event({ target: { tagName: "TEXTAREA" } }), false);
+    assert.strictEqual(lock.onArrival(place).length, 2, "the repeat and the letter in a text field are not presses");
+    assert.deepStrictEqual<unknown>(lock.onArrival(place), [{ kind: "restored", place }], "the index arrives again after a refresh: the press that waited is not applied a second time");
+  });
+
+  it("is the one call of the page for a key event and for the arrival of the index", () => {
+    const app = readFileSync(nodePath.resolve(import.meta.dirname, "..", "src", "client", "App.tsx"), "utf8");
+    assert.include(app, "const lockEvents = lock.onKey(event, ready);", "the page gives the event of the browser itself to the lock key");
+    assert.include(app, "for (const event of lock.onArrival(decodeHash(window.location.hash))) dispatch(event);");
+    assert.include(app, "for (const lockEvent of lockEvents) dispatch(lockEvent);");
+    assert.notMatch(app, /event\.repeat\b|lockPressOf|eventsAtArrival|keyPressOf/, "the page reads no part of the event for the lock, and it counts no press");
   });
 });
 
@@ -271,7 +370,7 @@ describe("the address of a locked stage", () => {
 
   it.effect("drops a lock on a stage that the index does not hold, and restores a lock that it holds", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const gone = normalizePlace(decodeHash("#/skill/how?lock=skill/no-such-skill"), stage.graph);
       assert.deepStrictEqual<unknown>([gone.pin, gone.focus], [{ kind: "unlocked" }, { kind: "node", id: "skill:how" }]);
       assert.deepStrictEqual<unknown>(normalizePlace(decodeHash("#/?lock=route/no-such-route"), stage.graph).pin, { kind: "unlocked" });
@@ -317,13 +416,75 @@ interface Marked {
 interface WordFaults {
   boxesThatMeet: number;
   boxesUnderAnUpright: number;
+  boxesUnderAnUprightOfTheFrame: number;
   words: number;
+  wordsBeside: number;
   gates: number;
   /** A cable with a condition whose run next to the other node is too short for a ring, and whose bend is on a trunk. */
   conditionsWithoutRoomForAGate: number;
 }
 
-const NO_FAULTS: WordFaults = { boxesThatMeet: 0, boxesUnderAnUpright: 0, words: 0, gates: 0, conditionsWithoutRoomForAGate: 0 };
+const NO_FAULTS: WordFaults = { boxesThatMeet: 0, boxesUnderAnUpright: 0, boxesUnderAnUprightOfTheFrame: 0, words: 0, wordsBeside: 0, gates: 0, conditionsWithoutRoomForAGate: 0 };
+
+/** What the locked stages leave without a word: how many relations for each stage, and of all of these the relations with a condition that have no ring also. */
+interface LeftOff {
+  readonly byStage: { [stage: string]: number };
+  readonly withAConditionAndNoRing: string[];
+}
+
+const nothingLeftOff = (): LeftOff => ({ byStage: {}, withAConditionAndNoRing: [] });
+
+/**
+ * The rules of the relation words of one scene of a locked stage. Each rule reads the scene as the map draws it.
+ * - A lit relation shows its word in one place, with its own text and the color of its own line. The relation back of a pair shows none.
+ * - A relation shows no word only when no place that the rules permit has room for it. This notes it in `leftOff`.
+ * - A word is inside what the camera fits. It is on no line of a different relation, over no part of a row, no caption, no mark of a line, and no other word.
+ * - A word under a name has no lit row directly below it.
+ */
+const checkWords = (label: string, scene: Scene, stage: Stage, target: StageTarget, lead: NodeId | null, leftOff: LeftOff): void => {
+  const { graph } = stage;
+  const mine = lit(scene);
+  const bounds = stageBoundsOf(arrangementOf(graph, target), stage.placement);
+  const boxes = wordBoxesOf(scene);
+  const things = thingsOf(scene);
+  const hasRoom = roomOn(scene, bounds);
+
+  for (const cable of mine) {
+    const relation = graph.relations.get(cable.key);
+    assert.isDefined(relation, cable.key);
+    if (relation === undefined) continue;
+    const isTheRelationBack = lead !== null && relation.to === lead && mine.some((other) => other.key === relationKey({ from: lead, to: relation.from }));
+    const neighbour = lead === null || relation.from === lead ? relation.to : relation.from;
+    const shown = boxes.filter((word) => word.keys.includes(cable.key));
+    assert.isAtMost(shown.length, isTheRelationBack ? 0 : 1, `${label}: ${cable.key} shows its word in ${shown.length} places`);
+    const [word] = shown;
+    if (word !== undefined) {
+      assert.strictEqual(word.text, wordsOf(relation), `${label}: the word of ${cable.key}`);
+      assert.strictEqual(word.tone, cable.tone, `${label}: the word of ${cable.key} has the color of a different line`);
+      if (word.place === "beside") assert.strictEqual(word.node, rowOf(scene, neighbour)?.id, `${label}: the word of ${cable.key} is beside a node that is not at the other end from the selection`);
+    }
+    if (word !== undefined || isTheRelationBack) continue;
+    const free = placesOf(scene, cable, wordsOf(relation), neighbour).find((place) => hasRoom(place, cable, neighbour));
+    assert.isUndefined(free, `${label}: ${cable.key} shows no word, and the place ${free?.name} has room for it`);
+    leftOff.byStage[nameOfStage(target)] = (leftOff.byStage[nameOfStage(target)] ?? 0) + 1;
+    if (relation.conditional && cable.gate === null) leftOff.withAConditionAndNoRing.push(`${label}: ${cable.key}`);
+  }
+
+  for (const word of scene.beside) {
+    assert.isAbove(word.keys.length, 0, `${label}: a word beside ${word.node} is of no relation`);
+    assert.isTrue(word.keys.every((key) => mine.some((cable) => cable.key === key)), `${label}: a word beside ${word.node} is of a relation that is not lit`);
+  }
+  for (const [index, word] of boxes.entries()) {
+    const name = `${label}: the word "${word.text}" of ${word.keys.join(" and ")}`;
+    assert.isTrue(isInside(word.rect, bounds), `${name} is outside what the camera fits`);
+    assert.deepStrictEqual(strangersUnder(word, scene).map((cable) => `${cable.key} (${cable.tone})`), [], `${name} is on a line of a different relation`);
+    for (const thing of things) assert.isFalse(overlap(word.rect, thing.rect), `${name} is over ${thing.name}`);
+    for (const other of boxes.slice(index + 1)) assert.isFalse(overlap(word.rect, other.rect), `${name} is over the word "${other.text}" of ${other.keys.join(" and ")}`);
+  }
+  for (const under of wordsUnderNames(scene)) {
+    assert.deepStrictEqual(under.litBelow, [], `${label}: the word "${under.word.text}" under ${under.word.node} is over a lit row, which is as near to it as its own name`);
+  }
+};
 
 const isUnderARingAt = (centre: Point, [first, second]: [Point, Point]): boolean =>
   rectsMeet({ x: centre.x - GATE.radius, y: centre.y - GATE.radius, width: GATE.radius * 2, height: GATE.radius * 2 }, { x: Math.min(first.x, second.x), y: Math.min(first.y, second.y), width: Math.abs(first.x - second.x), height: Math.abs(first.y - second.y) });
@@ -332,14 +493,17 @@ const isUnderARingAt = (centre: Point, [first, second]: [Point, Point]): boolean
  * The rules of the words and the gates on the cables of one selection.
  * It counts two faults and does not stop at them, because the count over all picks is a number to report. Each other rule is an assertion.
  */
-const checkMarks = (label: string, marked: readonly Marked[], faults: WordFaults): void => {
-  const boxes = marked.flatMap(({ cable }) => (cable.words === null ? [] : [{ key: cable.key, box: boxOf(cable.words) }]));
+const checkMarks = (label: string, marked: readonly Marked[], faults: WordFaults, scene: Scene): void => {
+  const boxes = [...marked.flatMap(({ cable }) => (cable.words === null ? [] : [{ key: cable.key, box: boxOf(cable.words) }])), ...scene.beside.map((word) => ({ key: word.keys[0] ?? "", box: word.box }))];
+  const frame = scene.cables.filter((cable) => cable.tone === "frame");
   for (const [index, first] of boxes.entries()) {
     for (const second of boxes.slice(index + 1)) if (rectsMeet(first.box, second.box)) faults.boxesThatMeet += 1;
   }
   for (const { box } of boxes) {
     if (marked.some(({ cable }) => uprightsOf(cable).some((upright) => rectsMeet(box, upright)))) faults.boxesUnderAnUpright += 1;
+    if (frame.some((cable) => uprightsOf(cable).some((upright) => rectsMeet(box, upright)))) faults.boxesUnderAnUprightOfTheFrame += 1;
   }
+  faults.wordsBeside += scene.beside.length;
 
   const portOf = (item: Marked): string => {
     const { port } = farRunOf(item.cable, item.far);
@@ -373,7 +537,9 @@ const checkMarks = (label: string, marked: readonly Marked[], faults: WordFaults
     const { port, corner } = farRunOf(speaker.cable, speaker.far);
     const hasRoomOnItsRun = distance(port, corner) >= GATE.setBack + GATE.radius + FRAME.corner;
     if (!speaker.conditional) assert.isNull(speaker.cable.gate, `${label}: ${speaker.cable.key} has no condition, so it has no gate`);
-    else if (speaker.cable.gate === null) {
+    else if (speaker.cable.gate === null && scene.beside.some((word) => word.keys.includes(speaker.cable.key))) {
+      assert.isTrue(scene.beside.find((word) => word.keys.includes(speaker.cable.key))?.text.endsWith(" if"), `${label}: a word is in the place of the ring of ${speaker.cable.key}, so the word says the condition`);
+    } else if (speaker.cable.gate === null) {
       const strangersOnItsRun = marked.filter((other) => portOf(other) !== portOf(speaker) && segmentsOf(other.cable.points).some((segment) => isUnderARingAt({ x: port.x + Math.sign(corner.x - port.x) * GATE.setBack, y: port.y }, segment)));
       assert.isTrue(!hasRoomOnItsRun || strangersOnItsRun.length > 0, `${label}: ${speaker.cable.key} is the first cable at its port, it has a condition, and its run has room, so it has a gate`);
       faults.conditionsWithoutRoomForAGate += 1;
@@ -386,84 +552,177 @@ const checkMarks = (label: string, marked: readonly Marked[], faults: WordFaults
 };
 
 describe("what a locked stage lights", () => {
-  it.effect("draws each relation of a picked node to a node on the stage in place: clear of each label, upright only in a gutter, and counts the rest", () =>
+  /** The test of the picks of the snapshot gives its number to the test of the traces, which compares the sum. */
+  let conditionsLeftOff = 0;
+
+  /** Each pick of a node on each locked stage. It asserts each rule of the cables in place, and it returns the counts. */
+  const picksInPlace = (stage: Stage) => {
+    let cables = 0;
+    let hiddenSomewhere = 0;
+    let picks = 0;
+    const faults: WordFaults = { ...NO_FAULTS };
+    const leftOff = nothingLeftOff();
+    for (const target of everyStage(stage.graph)) {
+      const locked = lockedOn(stage, target);
+      const frozen = deriveScene({ ...stage, state: locked });
+      const present = new Set(onStage(frozen));
+      const drawn = frozen.nodes.flatMap((node) => {
+        if (node.offStage || node.at.kind === "pip") return [];
+        const start = Math.min(node.at.left.x, node.at.label.x);
+        const end = Math.max(node.at.right.x, node.at.label.x + node.at.label.width);
+        const label: Rect = { x: Math.min(node.at.centre.x - 7, node.at.label.x), y: node.at.label.y, width: Math.max(node.at.centre.x + 7, node.at.label.x + node.at.label.width) - Math.min(node.at.centre.x - 7, node.at.label.x), height: node.at.label.height };
+        return [{ id: node.id, column: node.at.centre.x, start, end, label }];
+      });
+      const columns = [...new Set(drawn.map((item) => item.column))].map((column) => {
+        const members = drawn.filter((item) => item.column === column);
+        return { start: Math.min(...members.map((item) => item.start)), end: Math.max(...members.map((item) => item.end)) };
+      });
+
+      for (const node of present) {
+        const label = `${nameOfStage(target)}, ${node} picked`;
+        const scene = deriveScene({ ...stage, state: step(locked, { kind: "picked", id: node }, stage) });
+        const mine = lit(scene);
+        const relations = relationsOf(stage.graph, node);
+        const elsewhere = relations.filter((relation) => !present.has(relation.from === node ? relation.to : relation.from));
+
+        for (const cable of mine) {
+          const [from, to] = cable.key.split(">");
+          assert.isTrue(from === node || to === node, `${label}: ${cable.key} is not a relation of the picked node`);
+          assert.isTrue(present.has(id(from ?? "")) && present.has(id(to ?? "")), `${label}: ${cable.key} joins a node that is not on the stage`);
+          for (const [first, second] of segmentsOf(cable.points)) {
+            if (first.x === second.x && first.y !== second.y) {
+              assert.isFalse(columns.some((column) => first.x >= column.start && first.x <= column.end), `${label}: ${cable.key} goes up or down inside a column at x ${first.x}`);
+            }
+            for (const item of drawn) {
+              const box: Rect = { x: Math.min(first.x, second.x), y: Math.min(first.y, second.y), width: Math.abs(first.x - second.x), height: Math.abs(first.y - second.y) };
+              assert.isFalse(rectsMeet(item.label, box), `${label}: ${cable.key} crosses the label of ${item.id}`);
+            }
+          }
+          cables += 1;
+        }
+
+        checkMarks(
+          label,
+          mine.map((cable) => {
+            const leaves = cable.key.startsWith(`${node}>`);
+            return { cable, far: leaves ? "end" : "start", precedence: (leaves ? 0 : 1000) + cable.order, conditional: stage.graph.relations.get(cable.key)?.conditional ?? false };
+          }),
+          faults,
+          scene,
+        );
+        checkWords(label, scene, stage, target, node, leftOff);
+        picks += 1;
+
+        assert.strictEqual(hiddenRelations(scene), elsewhere.length, `${label}: the count of relations that are not in this view`);
+        assert.strictEqual(hiddenOf(scene).kind === "none", elsewhere.length === 0, `${label}: the count shows only when it is more than zero`);
+        const isOwnStage = target.kind === "node" && target.id === node;
+        if (!isOwnStage) assert.strictEqual(elsewhere.length, relations.length - mine.length, `${label}: hidden is the relations of the node minus the cables that are drawn`);
+        if (elsewhere.length > 0) hiddenSomewhere += 1;
+      }
+    }
+    return { cables, hiddenSomewhere, picks, faults, leftOff };
+  };
+
+  const NO_BOX_FAULTS = { boxesThatMeet: 0, boxesUnderAnUpright: 0, boxesUnderAnUprightOfTheFrame: 0 };
+  const boxFaultsOf = (faults: WordFaults) => ({ boxesThatMeet: faults.boxesThatMeet, boxesUnderAnUpright: faults.boxesUnderAnUpright, boxesUnderAnUprightOfTheFrame: faults.boxesUnderAnUprightOfTheFrame });
+
+  it.effect("draws each relation of a picked node to a node on the stage in place: clear of each label, upright only in a gutter, with its word in one place or none", () =>
     Effect.gen(function* () {
       const stage = yield* liveStage;
-      let cables = 0;
-      let hiddenSomewhere = 0;
-      let picks = 0;
-      const faults: WordFaults = { ...NO_FAULTS };
-      for (const target of everyStage(stage.graph)) {
-        const locked = lockedOn(stage, target);
-        const frozen = deriveScene({ ...stage, state: locked });
-        const present = new Set(onStage(frozen));
-        const drawn = frozen.nodes.flatMap((node) => {
-          if (node.offStage || node.at.kind === "pip") return [];
-          const start = Math.min(node.at.left.x, node.at.label.x);
-          const end = Math.max(node.at.right.x, node.at.label.x + node.at.label.width);
-          const label: Rect = { x: Math.min(node.at.centre.x - 7, node.at.label.x), y: node.at.label.y, width: Math.max(node.at.centre.x + 7, node.at.label.x + node.at.label.width) - Math.min(node.at.centre.x - 7, node.at.label.x), height: node.at.label.height };
-          return [{ id: node.id, column: node.at.centre.x, start, end, label }];
-        });
-        const columns = [...new Set(drawn.map((item) => item.column))].map((column) => {
-          const members = drawn.filter((item) => item.column === column);
-          return { start: Math.min(...members.map((item) => item.start)), end: Math.max(...members.map((item) => item.end)) };
-        });
-
-        for (const node of present) {
-          const label = `${nameOfStage(target)}, ${node} picked`;
-          const scene = deriveScene({ ...stage, state: step(locked, { kind: "picked", id: node }, stage) });
-          const mine = lit(scene);
-          const relations = relationsOf(stage.graph, node);
-          const elsewhere = relations.filter((relation) => !present.has(relation.from === node ? relation.to : relation.from));
-
-          for (const cable of mine) {
-            const [from, to] = cable.key.split(">");
-            assert.isTrue(from === node || to === node, `${label}: ${cable.key} is not a relation of the picked node`);
-            assert.isTrue(present.has(id(from ?? "")) && present.has(id(to ?? "")), `${label}: ${cable.key} joins a node that is not on the stage`);
-            for (const [first, second] of segmentsOf(cable.points)) {
-              if (first.x === second.x && first.y !== second.y) {
-                assert.isFalse(columns.some((column) => first.x >= column.start && first.x <= column.end), `${label}: ${cable.key} goes up or down inside a column at x ${first.x}`);
-              }
-              for (const item of drawn) {
-                const box: Rect = { x: Math.min(first.x, second.x), y: Math.min(first.y, second.y), width: Math.abs(first.x - second.x), height: Math.abs(first.y - second.y) };
-                assert.isFalse(rectsMeet(item.label, box), `${label}: ${cable.key} crosses the label of ${item.id}`);
-              }
-            }
-            cables += 1;
-          }
-
-          checkMarks(
-            label,
-            mine.map((cable) => {
-              const leaves = cable.key.startsWith(`${node}>`);
-              return { cable, far: leaves ? "end" : "start", precedence: (leaves ? 0 : 1000) + cable.order, conditional: stage.graph.relations.get(cable.key)?.conditional ?? false };
-            }),
-            faults,
-          );
-          picks += 1;
-
-          assert.strictEqual(hiddenRelations(scene), elsewhere.length, `${label}: the count of relations that are not in this view`);
-          assert.strictEqual(hiddenOf(scene).kind === "none", elsewhere.length === 0, `${label}: the count shows only when it is more than zero`);
-          const isOwnStage = target.kind === "node" && target.id === node;
-          if (!isOwnStage) assert.strictEqual(elsewhere.length, relations.length - mine.length, `${label}: hidden is the relations of the node minus the cables that are drawn`);
-          if (elsewhere.length > 0) hiddenSomewhere += 1;
-        }
-      }
-      assert.isAbove(cables, 3000, "the live index has many cables in place to check");
-      assert.isAbove(hiddenSomewhere, 200);
-      assert.isAbove(picks, 900);
-      assert.deepStrictEqual({ boxesThatMeet: faults.boxesThatMeet, boxesUnderAnUpright: faults.boxesUnderAnUpright }, { boxesThatMeet: 0, boxesUnderAnUpright: 0 }, `over ${picks} picks`);
-      assert.isAbove(faults.words, 2000, "most cables have a run with room for their word");
-      assert.isAbove(faults.gates, 100);
+      const { picks, faults } = picksInPlace(stage);
+      assert.deepStrictEqual(boxFaultsOf(faults), NO_BOX_FAULTS, `over ${picks} picks`);
+      assert.isAtLeast(picks, stage.graph.index.nodes.length, "the rest map alone has one pick for each node");
     }),
   );
 
+  it.effect("leaves the listed relations of the snapshot without a word, and no other", () =>
+    Effect.gen(function* () {
+      const { cables, hiddenSomewhere, picks, faults, leftOff } = picksInPlace(yield* snapshotStage);
+      assert.deepStrictEqual(boxFaultsOf(faults), NO_BOX_FAULTS, `over ${picks} picks`);
+      assert.isAbove(cables, 3000, "the snapshot has many cables in place to check");
+      assert.isAbove(hiddenSomewhere, 200);
+      assert.isAbove(picks, 900);
+      assert.isAbove(faults.words, 2000, "most cables have a run with room for their word");
+      assert.isAbove(faults.wordsBeside, 1000, "a cable without room has its word beside the neighbour");
+      assert.isAbove(faults.gates, 100);
+      assert.deepStrictEqual(leftOff.byStage, WORDS_LEFT_OFF.picks, "the number of relations that show no word, for each locked stage. `npx tsx test/recount-words.ts --pin` writes the new numbers");
+      conditionsLeftOff += leftOff.withAConditionAndNoRing.length;
+    }),
+  );
+
+  /** The Tools lens on the locked rest map, with each pick and each trace. It returns the number of chips and of rows that keep their marks folded for a lit line. */
+  const chipsAndLitLines = (stage: Stage) => {
+    const locked = run(stage, [{ kind: "lensed", lens: "tools" }, { kind: "lockToggled" }]);
+    const unfolded = new Map(deriveScene({ ...stage, state: locked }).nodes.map((node) => [node.id, node.chips.length]));
+    const seen = { chips: 0, rowsFoldedForALine: 0 };
+    const selections: (readonly [string, ViewEvent, NodeId | null])[] = [
+      ...stage.graph.index.nodes.map((node): readonly [string, ViewEvent, NodeId | null] => [`${node.id} picked`, { kind: "picked", id: node.id }, node.id]),
+      ...stage.graph.index.routes.map((route): readonly [string, ViewEvent, NodeId | null] => [`route ${route.id} traced`, { kind: "traced", route: route.id }, null]),
+    ];
+    for (const [name, event, lead] of selections) {
+      const label = `the rest map with the Tools lens, ${name}`;
+      const scene = deriveScene({ ...stage, state: step(locked, event, stage) });
+      assert.deepStrictEqual(coveredByChips(scene), [], `${label}: a chip is drawn over each line, so it covers what is under it`);
+      checkWords(label, scene, stage, { kind: "rest" }, lead, nothingLeftOff());
+      for (const node of scene.nodes) {
+        assert.isTrue(node.chips.length === 0 || node.chips.length === unfolded.get(node.id), `${label}: ${node.id} shows a part of its chips`);
+        seen.chips += node.chips.length;
+        if (node.chips.length === 0 && (unfolded.get(node.id) ?? 0) > 0) seen.rowsFoldedForALine += 1;
+      }
+    }
+    return seen;
+  };
+
+  it.effect("keeps each tool chip of the Tools lens off each lit line, its arrowhead, its ring, and its word: a row with a lit line there keeps its marks folded", () =>
+    Effect.gen(function* () {
+      chipsAndLitLines(yield* liveStage);
+      const ofSnapshot = chipsAndLitLines(yield* snapshotStage);
+      assert.isAbove(ofSnapshot.chips, 100, "the snapshot has skills with tools, and most selections leave their chips unfolded");
+      assert.isAbove(ofSnapshot.rowsFoldedForALine, 0, "the snapshot has a selection with a lit line at a row that has tools");
+    }),
+  );
+
+  it("shows each word of the snapshot in the view at two sizes of the window, with the reader open and closed, and at the same place for each", () => {
+    const graph = toGraph(snapshotIndex);
+    const placement = layout(graph);
+    const sizes = [
+      { width: 1440, height: 826, reader: 461 },
+      { width: 1920, height: 1000, reader: 600 },
+    ];
+    let words = 0;
+    for (const target of everyStage(graph)) {
+      const stages = sizes.map((viewport): Stage => ({ graph, placement, viewport }));
+      const [first] = stages;
+      if (first === undefined) continue;
+      const locked = lockedOn(first, target);
+      const selections: ViewEvent[] = [...onStage(deriveScene({ ...first, state: locked })).map((node): ViewEvent => ({ kind: "picked", id: node })), ...graph.index.routes.map((route): ViewEvent => ({ kind: "traced", route: route.id }))];
+      for (const event of selections) {
+        const placed: string[] = [];
+        for (const stage of stages) {
+          const open = step(lockedOn(stage, target), event, stage);
+          for (const state of [open, step(open, { kind: "readerClosed" }, stage)]) {
+            const scene = deriveScene({ ...stage, state });
+            const visible = visibleRectOf(scene, stage.viewport, state.reading.kind === "open");
+            const boxes = wordBoxesOf(scene);
+            for (const word of boxes) {
+              assert.isTrue(isInside(word.rect, visible), `${nameOfStage(target)}, ${JSON.stringify(event)}, ${stage.viewport.width} wide, reader ${state.reading.kind}: the word "${word.text}" of ${word.keys.join(" and ")} is not in the view`);
+            }
+            placed.push(JSON.stringify(boxes.map((word) => [word.keys, word.rect])));
+            words += boxes.length;
+          }
+        }
+        assert.strictEqual(new Set(placed).size, 1, `${nameOfStage(target)}, ${JSON.stringify(event)}: a word has a different place at a different size of the window`);
+      }
+    }
+    assert.isAbove(words, 20000, "the snapshot has many words to check");
+  });
+
   it.effect("lights nothing for a pick of a node that is not on the stage, opens it in the reader, and says so in the strip", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const locked = lockedOn(stage, { kind: "node", id: id("skill:architect") });
       const bro = id("skill:bro");
-      assert.isFalse(onStage(deriveScene({ ...stage, state: locked })).includes(bro), "the live index now has `bro` in the arrangement of `architect`");
+      assert.isFalse(onStage(deriveScene({ ...stage, state: locked })).includes(bro), "the snapshot now has `bro` in the arrangement of `architect`");
 
       const picked = step(locked, { kind: "picked", id: bro }, stage);
       const scene = deriveScene({ ...stage, state: picked });
@@ -477,12 +736,12 @@ describe("what a locked stage lights", () => {
 
   it.effect("says what it cannot draw only in a strip that describes the selection", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const how = id("skill:how");
       const arena = id("skill:arena");
       const picked = run(stage, [{ kind: "picked", id: id("skill:architect") }, { kind: "lockToggled" }, { kind: "picked", id: how }]);
       const hidden = hiddenOf(deriveScene({ ...stage, state: picked }));
-      assert.deepStrictEqual<unknown>(hidden, { kind: "relations", count: 3 }, "the live index now has a different count for `how` in the arrangement of `architect`");
+      assert.deepStrictEqual<unknown>(hidden, { kind: "relations", count: 3 }, "the snapshot now has a different count for `how` in the arrangement of `architect`");
 
       const onArena = deriveScene({ ...stage, state: step(picked, { kind: "pointed", hover: { kind: "node", id: arena } }, stage) });
       assert.deepStrictEqual<unknown>([onArena.strip.kind, "name" in onArena.strip ? onArena.strip.name : ""], ["purpose", "arena"], "the strip describes the node under the pointer");
@@ -504,7 +763,7 @@ describe("what a locked stage lights", () => {
 
   it.effect("numbers the steps of a trace in place where their nodes are on the stage, and counts the steps that are not", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const perf = routeId("diagnose-and-fix-measured-slowness");
       const trace = traceOf(stage.graph, perf);
       assert.isNotNull(trace);
@@ -524,7 +783,7 @@ describe("what a locked stage lights", () => {
       const scene = deriveScene({ ...stage, state: inArchitect });
       const present = new Set(onStage(scene));
       const absent = trace.steps.filter((item) => !present.has(item.node));
-      assert.isAbove(absent.length, 0, "the live index now has each step of the perf route in the arrangement of `architect`");
+      assert.isAbove(absent.length, 0, "the snapshot now has each step of the perf route in the arrangement of `architect`");
       assert.deepStrictEqual<unknown>(hiddenOf(scene), { kind: "steps", count: absent.length });
       assert.deepStrictEqual(
         scene.nodes.flatMap((node) => (node.tone.kind === "step" && node.tone.n > 0 ? [node.id] : [])).sort(),
@@ -534,52 +793,115 @@ describe("what a locked stage lights", () => {
     }),
   );
 
+  /** Each route traced on each locked stage. It asserts each rule of the cables in place, and it returns the counts. */
+  const tracesInPlace = (stage: Stage) => {
+    let traces = 0;
+    const faults: WordFaults = { ...NO_FAULTS };
+    const leftOff = nothingLeftOff();
+    for (const target of everyStage(stage.graph)) {
+      const locked = lockedOn(stage, target);
+      for (const route of stage.graph.index.routes) {
+        const trace = traceOf(stage.graph, route.id);
+        const steps = new Set(trace?.steps.map((item) => item.via));
+        const scene = deriveScene({ ...stage, state: step(locked, { kind: "traced", route: route.id }, stage) });
+        checkMarks(
+          `${nameOfStage(target)}, route ${route.id} traced`,
+          lit(scene).map((cable) => ({ cable, far: "end", precedence: (steps.has(cable.key) ? 0 : 1000) + cable.order, conditional: stage.graph.relations.get(cable.key)?.conditional ?? false })),
+          faults,
+          scene,
+        );
+        checkWords(`${nameOfStage(target)}, route ${route.id} traced`, scene, stage, target, null, leftOff);
+        traces += 1;
+      }
+    }
+    return { traces, faults, leftOff };
+  };
+
   it.effect("gives the cables of each trace in place one word and one gate for each port, clear of each other word and of each upright, on each stage", () =>
     Effect.gen(function* () {
       const stage = yield* liveStage;
-      let traces = 0;
-      const faults: WordFaults = { ...NO_FAULTS };
-      for (const target of everyStage(stage.graph)) {
-        const locked = lockedOn(stage, target);
-        for (const route of stage.graph.index.routes) {
-          const trace = traceOf(stage.graph, route.id);
-          const steps = new Set(trace?.steps.map((item) => item.via));
-          const scene = deriveScene({ ...stage, state: step(locked, { kind: "traced", route: route.id }, stage) });
-          checkMarks(
-            `${nameOfStage(target)}, route ${route.id} traced`,
-            lit(scene).map((cable) => ({ cable, far: "end", precedence: (steps.has(cable.key) ? 0 : 1000) + cable.order, conditional: stage.graph.relations.get(cable.key)?.conditional ?? false })),
-            faults,
-          );
-          traces += 1;
-        }
-      }
+      const { traces, faults } = tracesInPlace(stage);
       assert.strictEqual(traces, everyStage(stage.graph).length * stage.graph.index.routes.length);
-      assert.deepStrictEqual({ boxesThatMeet: faults.boxesThatMeet, boxesUnderAnUpright: faults.boxesUnderAnUpright }, { boxesThatMeet: 0, boxesUnderAnUpright: 0 }, `over ${traces} traces`);
+      assert.deepStrictEqual(boxFaultsOf(faults), NO_BOX_FAULTS, `over ${traces} traces`);
+    }),
+  );
+
+  it.effect("leaves the listed relations of the traces of the snapshot without a word, and no other", () =>
+    Effect.gen(function* () {
+      const { traces, faults, leftOff } = tracesInPlace(yield* snapshotStage);
+      assert.deepStrictEqual(boxFaultsOf(faults), NO_BOX_FAULTS, `over ${traces} traces`);
       assert.isAbove(faults.words, 500, "a trace on a stage that has few of its steps has few words");
+      assert.deepStrictEqual(leftOff.byStage, WORDS_LEFT_OFF.traces, "the number of relations that show no word, for each locked stage");
+      assert.strictEqual(conditionsLeftOff + leftOff.withAConditionAndNoRing.length, WORDS_LEFT_OFF.withAConditionAndNoRing, "of the relations of the picks and of the traces that show no word, the ones that show no condition");
     }),
   );
 
   it.effect("gives the two cables from `architect` to `codebase-design` and to its file one word, on the locked rest map", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const architect = id("skill:architect");
       const scene = deriveScene({ ...stage, state: run(stage, [{ kind: "lockToggled" }, { kind: "picked", id: architect }]) });
       const toTheRow = lit(scene).filter((cable) => cable.key === `${architect}>skill:codebase-design` || cable.key === `${architect}>hosted:skills/codebase-design/DESIGN-IT-TWICE.md`);
       const back = lit(scene).filter((cable) => cable.key === `skill:codebase-design>${architect}`);
 
-      assert.strictEqual(toTheRow.length, 2, "the live index lost one of the two relations");
+      assert.strictEqual(toTheRow.length, 2, "the snapshot lost one of the two relations");
       assert.strictEqual(new Set(toTheRow.map((cable) => `${cable.end.x},${cable.end.y}`)).size, 1, "the file is on the row of its host, so the two cables end at one port");
       assert.deepStrictEqual(toTheRow.map((cable) => cable.words?.text ?? null), ["requires", null], "the cable to the skill is first in the order of the stage, so it has the word");
-      assert.strictEqual(back.length, 1, "the live index lost the relation back");
+      assert.strictEqual(back.length, 1, "the snapshot lost the relation back");
       assert.isTrue(stage.graph.relations.get(back[0]?.key ?? relationKey({ from: architect, to: architect }))?.conditional, "the relation back has a condition");
       assert.deepStrictEqual<unknown>([back[0]?.words, back[0]?.gate], [null, null], "the relation back is on the path of the first cable, so it has no word and no gate there");
       assert.isTrue(toTheRow.every((cable) => cable.gate === null), "`architect` requires `codebase-design` without a condition");
     }),
   );
 
+  /** Gives one relation of each arrangement a long word, next to the trunk of the frame. It returns the number of arrangements that have such a relation. */
+  const longWordsBesideATrunk = (index: ExplorerIndex): number => {
+    const graph = toGraph(index);
+    let checked = 0;
+    for (const middle of index.nodes) {
+      const arrangement = arrangementOf(graph, { kind: "node", id: middle.id });
+      const centre = arrangement?.nodes.get(middle.id);
+      if (arrangement === null || centre?.kind !== "row") continue;
+      const onItsRow = (graph.out.get(middle.id) ?? []).find((relation) => {
+        const at = arrangement.nodes.get(relation.to);
+        return at?.kind === "row" && at.centre.y === centre.centre.y && !graph.relations.has(relationKey({ from: relation.to, to: middle.id }));
+      });
+      if (onItsRow === undefined || (graph.out.get(middle.id) ?? []).length < 2) continue;
+
+      // The neighbour keeps this one relation. A second lit line into its port would use the same run, and a run of two lines has no word.
+      const isOfTheNeighbourOnly = (relation: Relation): boolean => relation !== onItsRow && (relation.from === onItsRow.to || relation.to === onItsRow.to);
+      const withALongWord = toGraph({
+        ...index,
+        relations: index.relations.filter((relation) => !isOfTheNeighbourOnly(relation)).map((relation) => (relation === onItsRow ? { ...relation, kinds: ["artifact-path"] as const, conditional: false } : relation)),
+      });
+      const stage: Stage = { graph: withALongWord, placement: layout(withALongWord), viewport: { width: 1440, height: 826, reader: 460 } };
+      const scene = deriveScene({ ...stage, state: run(stage, [{ kind: "picked", id: middle.id }, { kind: "lockToggled" }, { kind: "picked", id: onItsRow.to }]) });
+      const cable = lit(scene).find((item) => item.key === relationKey(onItsRow));
+      const isWorded = cable !== undefined && cable.words !== null;
+      if (cable === undefined || cable.words === null) continue;
+      assert.deepStrictEqual<unknown>([isWorded, cable.words.text, cable.points.length], [true, "artifact path", 2], `${middle.id}: the cable to ${onItsRow.to} is a straight line`);
+      const box = boxOf(cable.words);
+      const uprights = scene.cables.filter((item) => item.tone === "frame").flatMap(uprightsOf).filter((upright) => upright.y <= box.y + box.height && upright.y + upright.height >= box.y);
+      assert.isAbove(uprights.length, 0, `${middle.id}: the trunk of the frame starts on the row of ${onItsRow.to}`);
+      for (const upright of uprights) {
+        const gap = Math.max(box.x - upright.x, upright.x - box.x - box.width);
+        assert.isAtLeast(gap, WORD_CLEAR.corner, `${middle.id}: the word of the cable to ${onItsRow.to} is ${gap.toFixed(1)} from an upright of the frame, on its rounded corner`);
+      }
+      checked += 1;
+    }
+    return checked;
+  };
+
+  it.effect("keeps a word on a cable clear of each upright of the frame, also a long word that has little room", () =>
+    Effect.gen(function* () {
+      longWordsBesideATrunk((yield* liveStage).graph.index);
+      assert.isAbove(longWordsBesideATrunk(snapshotIndex), 10, "the snapshot has many arrangements with a neighbour on the row of the middle node");
+    }),
+  );
+
   it.effect("keeps the combs of a locked arrangement as a quiet frame while a different node of it is picked, and at full strength for its own node", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const architect = id("skill:architect");
       const locked = lockedOn(stage, { kind: "node", id: architect });
       const own = deriveScene({ ...stage, state: locked });

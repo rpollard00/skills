@@ -63,6 +63,18 @@ export interface Rect extends Point {
 
 export type Segment = readonly [Point, Point];
 
+/** A part of a row, from the smaller x to the larger x. */
+export interface Span {
+  readonly from: number;
+  readonly to: number;
+}
+
+/** From the leftmost to the rightmost thing of a row: its two ports and its label. */
+export const rowExtent = (row: { readonly left: Point; readonly right: Point; readonly label: Rect }): Span => ({
+  from: Math.min(row.left.x, row.label.x),
+  to: Math.max(row.right.x, row.label.x + row.label.width),
+});
+
 export type MarkKind = keyof typeof FRAME.markWidth;
 
 export interface Seat {

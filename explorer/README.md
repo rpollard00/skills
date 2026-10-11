@@ -10,21 +10,23 @@ Run all commands in `explorer/`. Node.js 24 or later is necessary.
 2. Run `npm start`.
 3. Open `http://127.0.0.1:4747`.
 
-For work on the client, run `npm run dev` and open `http://127.0.0.1:4748`. The page then changes when you save a file. `npm run dev` works alone:
+`npm start` is the one command for use of the explorer. It builds the client and serves the API and the client.
 
-- If an explorer API answers on port 4747, the dev server uses it and does not stop it. The dev server prints that it uses an API that is already there.
-- If none answers, the dev server starts one and prints that it started it. That API stays while the dev server loads its configuration again, for example after you save `vite.config.ts`.
-- An API that the dev server started stops when the dev server process ends. This is true for each way that the process can end: `q`, Ctrl+C, a closed terminal, and a signal that kills it at once.
-- If two dev servers start at the same time on one API port, one of them starts the API and the other one uses it. Each prints which of the two it does. When the first one stops, start the second one again.
+For work on the client, use two terminals:
+
+1. In the first terminal, run `npm run serve`. It serves the API on port 4747.
+2. In the second terminal, run `npm run dev`, and open `http://127.0.0.1:4748`. The page then changes when you save a file.
+
+`npm run dev` serves the client only. It sends each API request to port 4747, and it starts no other process. When it starts, it makes one request and prints one line: either that it uses the explorer API on that port, or that no explorer API answers there, with the command that starts one. If no API answers, the page says so and gives the two commands. Start the API, then select **Retry**.
 
 Two variables change the ports:
 
 | Variable | Default | Port of |
 | --- | --- | --- |
-| `EXPLORER_PORT` | 4747 | The server of `npm start` and `npm run serve`: the API and the built client. `npm run dev` looks for the API on this port. |
+| `EXPLORER_PORT` | 4747 | The server of `npm start` and `npm run serve`: the API and the built client. `npm run dev` sends each API request to this port. |
 | `EXPLORER_DEV_PORT` | 4748 | The dev server of `npm run dev`. |
 
-For example, `EXPLORER_PORT=4800 npm start` serves the explorer at `http://127.0.0.1:4800`.
+For example, `EXPLORER_PORT=4800 npm start` serves the explorer at `http://127.0.0.1:4800`. Two explorers can thus run on one machine. For work on the client of the second one, give the same `EXPLORER_PORT` to `npm run serve` and to `npm run dev`.
 
 ## Commands
 
@@ -34,7 +36,7 @@ The tool finds the repository from its own location, not from the working direct
 | --- | --- |
 | `npm ci` | Installs the pinned dependencies. |
 | `npm start` | Builds the client, then serves the API and the client at `http://127.0.0.1:4747`. |
-| `npm run dev` | Serves the client from the source files at `http://127.0.0.1:4748`. Starts an API on port 4747 when none answers there. |
+| `npm run dev` | Serves the client from the source files at `http://127.0.0.1:4748`. It needs the API of `npm run serve` on port 4747, and it does not start it. |
 | `npm run serve` | Serves the API and the last build of the client at `http://127.0.0.1:4747`. It builds nothing. |
 | `npm run build` | Builds the client into `dist/`. |
 | `npm run index` | Scans `../skills`, writes `index/scan.json`, and prints the open tickets. |
@@ -43,7 +45,7 @@ The tool finds the repository from its own location, not from the working direct
 | `npm run judge -- <ticket> <answer> [--conditional]` | Records one answer in `index/judgments.json`, or replaces an answer. |
 | `npm run check` | Exits 0 only when the index is complete and current. |
 | `npm run typecheck` | Runs `tsc --noEmit`. |
-| `npm test` | Runs the tests. |
+| `npm test` | Runs the tests. See [Tests](#tests). |
 
 ## The client
 
@@ -88,8 +90,9 @@ Each line is solid. No line has a dash pattern.
 | Small hollow ring on a line | The relation has a condition. |
 | Arrow at the end of a line | The target. The lines that come to one side of a node share one arrow. |
 | Bar at the end of a line | A `boundary` relation: the source limits or forbids the use of the target. |
-| Orange arrow at the start of a green line | The target also needs the selection. |
+| Orange arrow at the start of a green line | The target also needs the selection. The arrow is closed, as a triangle with no fill, when that relation back has a condition. |
 | Word on a line | The kind of the relation, in a focus arrangement: `runs`, `requires`, `handoff`, `route`, `trigger`, `applies`, `reads`, `see also`, `boundary`, `mentions`. The word `if` follows for a relation with a condition. `mentions` is a pair with an open ticket. |
+| Word beside a name or under a name | The same word, for a lit line of a locked view that has no room for it. It has the color of its line. |
 
 ### A selection
 
@@ -99,7 +102,7 @@ Click a node, or press Enter on it, to select it. The nodes then move into a foc
 - Each node that needs it goes to a zone on its left. An orange line goes from each of these nodes to one trunk, and the trunk goes into the selected node.
 - Each node that it needs goes to a zone on its right. A green line leaves the selected node on one trunk and branches to each of these nodes.
 - Thus each line goes from left to right, and each row reads as a sentence: the source, the word on the line, the target.
-- A node that needs the selected node and that the selected node needs is on the right. An orange arrow at the start of its line shows the relation back.
+- A node that needs the selected node and that the selected node needs is on the right. An orange arrow at the start of its line shows the relation back. The arrow is a closed triangle with no fill when the relation back has a condition.
 - A zone has one group for each kind of node, in the order of the rest map: router, playbooks, skills, principles, files. A group is in the order of the rest map. A relation between two neighbours changes no position.
 - A hosted file that the selected node reads has a row of its own, with the name of its host. The hosted files of the selected node stay on its row as dots.
 - A zone with more than 30 rows splits into columns by group. The arrangement of the router is thus near to the rest map.
@@ -118,9 +121,26 @@ Move the pointer to a lit line or to a lit node, or move the keyboard focus to a
 - On the rest map, the lock gives a way to look at relations in place. Click a node: green lines go to each node that it needs, and orange lines come from each node that needs it. The lines of each side share one trunk where the columns permit it.
 - In a focus arrangement, the lock holds that arrangement. Click a node in it: the node opens in the reader, and its relations to the other nodes of the arrangement light where the nodes are. The node does not go to the middle. The lines of the arrangement stay as quiet gray lines, so you can see how the view is arranged.
 - A line in place can go from right to left, because the lock keeps the positions and not the direction.
-- The word and the ring of a line in place are next to the other node, on the level part that ends at that node. Two lines that end at one side of one row share that part: a relation and the relation back, or the lines to a skill and to one of its files. That part has one word and one ring. They are those of the first line out of the selection, or of the first line into it if no line goes out. For a trace, they are those of the first step.
-- A word has a box in the color of the background, so it does not go where a line goes up or down, and not where a second word is. A line has no word if no free part has sufficient room.
-- A locked view cannot show a relation with a node that is not in it, in the one direction or in the other. The strip gives the number, for example `3 relations are with nodes that are not in this view.` For a trace, the strip gives the number of steps that are not in the view. The number is in the strip only while the strip describes the selection, and not while it describes the node under the pointer.
+- A lit line says what it is where a word has a place. The word of a line in place is on the line, next to the other node, on the level part that ends at that node. If that part has no room, the word is beside the name of the other node, in the color of the line. For a relation with a condition, the word ends with `if` in the one place and in the other. A relation has its word in one place only.
+- A word is only where it cannot be the word of a different relation:
+  - It stands on its own line, on a part that no other lit line uses, or beside its own name, where no line is.
+  - It is inside what the camera fits, so it is not under the reader.
+  - It touches no name, no glyph, no dot, no tool mark, no count, no caption, no arrowhead, no ring of a different relation, and no other word. It is not on a line that goes up or down.
+  - A word that has no such place is not shown. A wrong word is worse than no word. Move the pointer to the line or to the node: the strip gives the kind and the condition.
+- Two lit lines between the same two ports are one line on the stage: a relation and the relation back in a locked arrangement, or the lines to a skill and to one of its files. That line has one word and one ring: those of the first line out of the selection, or of the first line into it if no line goes out. The word of the line to a file is then beside the name. The relation back of a pair has no word: the row shows the word of the line from the selection, and the dot in the glyph shows that the relation goes both ways.
+- Two lit lines that come to one port from two different nodes share the last part of their way. That part has no word, because the word would read as the word of each of the two. For a trace, a step and a relation that the route states can share a port in this way.
+- The word beside a name comes after the name, and after the dots and the tool marks of the row. In the left zone of a locked arrangement, where a row is a mirror image, it comes before the name. A word of a hosted file has a dot before it, as the file has a dot on the row.
+- A word takes no character from a name. A name on a locked view is the same as with no selection.
+- A word that has no room on its line next to the other node takes the first of these places that is free:
+  1. After the name, in the empty room there. If its own line leaves the node there, the word stands on the first part of that line, and the ring of that line is then not there. A line that ends at the node there has its arrowhead in that place, so the word is not there.
+  2. On its line next to the other node, with less air than a word has there at first.
+  3. Under the name, directly below the label. The word is then nearer to its own name than to the row below. If the row below is lit and is under the word, the word is not there, because it would read as the word of that row.
+  4. On the other side of the node.
+  5. On its line next to the selected node, or for a trace next to the source, if no other lit line uses that part.
+- If no place is free, the relation shows no word. A relation with a condition then keeps its ring if the ring has a place of its own.
+- A word has a box in the color of the background, so it does not go where a line goes up or down, and not where a second word is. This is true for a lit line and for a gray line of a locked arrangement. A gray line can be under a word only where the lit line of the word is on it.
+- With the Tools lens on, a chip is drawn over each line. Thus a row keeps its tool marks folded while a lit line, its arrowhead, or its ring is where the chips of the row are.
+- A locked view cannot show a relation with a node that is not in it, in the one direction or in the other. The strip gives the number, for example `3 relations are not in this view.` Two of them can be with one node, so the strip does not give the number of nodes. For a trace, the strip gives the number of steps that are not in the view. The number is in the strip only while the strip describes the selection, and not while it describes the node under the pointer.
 - If you select a node that is not in the locked view, for example from the finder, the reader opens it and the map lights nothing. The strip says that the node is not in this view.
 - Escape closes the reader and then ends the selection. A click on the empty area of the map ends the selection. The lock stays on.
 - A click does not put the camera back to the fit. If you did not move the camera, it keeps the fit of the locked view in the area beside the reader. If you moved it, it then moves only as far as is necessary to keep the selected node clear of the reader. `0` fits the locked view.
@@ -132,7 +152,7 @@ Turn the lock off to arrange the map for the selection: the focus arrangement of
 
 Type in the finder to search names, titles, descriptions, the route tasks of the router, and its trigger conditions. Nodes that do not match go dim. No node moves.
 
-Press Enter on a route to trace it. The trace is a focus arrangement in step order: the router on the left, then the playbook of the route on the same row, then the steps in one column from top to bottom. Each step is a relation of the playbook, in the order of the lines of the playbook. The trace does not show a `boundary` relation. A step has a number. A step with a condition has a hollow number. For a route without a playbook, the steps are the skills that the route names, next to the router. If a route names a skill that is also a step of its playbook, the skill has one row, as the step, and the words `the route names it` follow its name. No line goes from the router to that row.
+Press Enter on a route to trace it. The trace is a focus arrangement in step order: the router on the left, then the playbook of the route on the same row, then the steps in one column from top to bottom. Each step is a relation of the playbook, in the order of the lines of the playbook. The trace does not show a `boundary` relation. A step has a number. A step with a condition has a hollow number. For a route without a playbook, the steps are the skills that the route names, next to the router. If a route names a skill that is also a step of its playbook, the skill has one row, as the step, and the words `the route names it` follow its name. No line goes from the router to that row. At the start of a trace the strip gives the task of the route and the line of the route in the router. Two routes can go to one playbook, and each shows its own line.
 
 ### The reader
 
@@ -152,7 +172,7 @@ When a line is marked, the mark covers the block that holds the line. For a list
 | Enter or Space on a node | Selects the node, and moves the keyboard focus into the reader. |
 | `E` | Opens the file of the sentence in the strip, at its line. |
 | Left, Right during a trace | Moves to the previous or the next step. The reader goes to the line of the step. |
-| `L` | Turns the lock on or off. A key that stays down counts one time. The key types the letter while the cursor is in the finder. |
+| `L` | Turns the lock on or off. A key that stays down counts one time. A press before the map is there waits, and the lock turns when the map shows. The key types the letter while the cursor is in the finder. |
 | Escape | Closes the reader, and the keyboard focus returns to the node. A second press ends the selection, and each node goes back to its seat. A third press removes the query. With the lock on, no node moves and the lock stays on. |
 | Click on the empty area of the map | Ends the selection and closes the reader. With the lock on, no node moves and the lock stays on. |
 | Escape in the key | Closes the key, and the keyboard focus returns to the **Key** control. |
@@ -308,8 +328,6 @@ A pair with an open `kind` ticket shows in the client as `mentions`. A pair with
 
 The server listens on `127.0.0.1:4747` only. `EXPLORER_PORT` changes the port. The `Host` rule and each message then use that port. It keeps no state between requests. When it starts, it prints `Skill explorer: http://127.0.0.1:4747`. After that it prints warnings and errors only.
 
-With the argument `--stop-when-input-ends`, the server stops when its standard input ends. `npm run dev` starts its API with this argument and keeps the input open, so the API cannot stay after the dev server. Without the argument, the server does not read its input.
-
 The server answers a request only when the `Host` header is `127.0.0.1:4747` or `localhost:4747`. Each other request gets status 403 and one line of text. This rule stops a page on a different site that points its own host name at this computer.
 
 If port 4747 is in use, the server prints one line and exits with code 1. The explorer is then possibly already in operation at that address.
@@ -342,7 +360,7 @@ npm can print a warning that `esbuild` has an install script. Do not approve the
 | --- | --- |
 | `src/shared/model.ts` | Every schema and branded type. |
 | `src/shared/api.ts` | The HTTP API definition. It also exports `HOST` and `PORT`. |
-| `src/shared/address.ts` | `HOST`, the default ports, `portFrom`, which reads a port from the text of a variable, and the name of the argument `--stop-when-input-ends`. The file is also in the browser bundle, so it reads no variable: `src/server/main.ts` and `vite.config.ts` read the variables and give the text to `portFrom`. |
+| `src/shared/address.ts` | `HOST`, the default ports, and `portFrom`, which reads a port from the text of a variable. The file is also in the browser bundle, so it reads no variable: `src/server/main.ts` and `vite.config.ts` read the variables and give the text to `portFrom`. |
 | `src/shared/order.ts` | `byCodeUnit`: the one comparator for names and paths. |
 | `src/shared/markdown.ts` | Frontmatter split, blocks, code spans, links, heading slugs, link resolution. |
 | `src/index/corpus.ts` | `readCorpus` and `readCorpusFile`: the only reads of `../skills`. This file owns the skip rules. |
@@ -354,18 +372,20 @@ npm can print a warning that `esbuild` has an install script. Do not approve the
 | `src/cli.ts` | Runs the commands on this repository. |
 | `src/server/server.ts` | The HTTP handlers, the `Host` rule, and `serverLayer`. |
 | `src/server/main.ts` | Starts the server on this repository, on the port of `EXPLORER_PORT`. |
-| `vite.config.ts` | The dev server, on the port of `EXPLORER_DEV_PORT`. It starts an API when none answers. The process holds that API, because Vite loads this file again each time the configuration changes. |
+| `src/server/dev-notice.ts` | The one line that `npm run dev` prints about the API, and the check for Vitest. Pure. |
+| `vite.config.ts` | The dev server, on the port of `EXPLORER_DEV_PORT`, and the build. The dev server prints one line that says whether an explorer API answers. It starts no process, and it makes no request when Vitest loads this file. |
 | `src/reported-failure.ts` | The failure that ends a command with exit code 1 after one printed line. |
 | `src/shared/graph.ts` | `toGraph(index)`: the index with lookups, and each column in rank order. |
 | `src/shared/layout.ts` | `layout(graph)`: pure. The rest map: seats, pips, cables, and the size of the world. Also `cablesOnOneTrunk` for the preview of one node. |
 | `src/shared/focus-layout.ts` | `focusLayout(graph, focus)`: pure. The focus arrangement of a selected node or of a route: rows, captions, and cables. |
-| `src/shared/polyline.ts` | The part of a cable that has grown, and the places that the gate and the word can have on a cable. |
+| `src/shared/polyline.ts` | The part of a cable that has grown, the parts of a cable that go up or down and left or right, and the places that the gate and the word can have on a cable. |
 | `src/shared/stage-lattice.ts` | `latticeOf(arrangement)` and `routeInPlace`: the gutters of a focus arrangement, and a cable between two nodes that stay where they are. Pure. |
 | `src/shared/view/state.ts` | The view state, the events, and the place that the address holds. `Pin` is what is arranged, apart from `Focus`, which is what is selected. |
 | `src/shared/view/step.ts` | `step(state, event, stage)`: the reducer. Pure. |
 | `src/shared/view/scene.ts` | `deriveScene`: what the map draws for one state. Pure. `ports.ts` gives one mark for each port. `arranged.ts` keeps the arrangement of each view. |
-| `src/shared/view/lit.ts` | `litOf`: what a state lights. The lines of its own arrangement, or its relations in place on a locked view, with the count of what the view cannot show. It also decides which line in place has the word and the ring of a port. |
-| `src/shared/view/keys.ts` | `togglesLock`: whether one key event turns the lock. Pure. |
+| `src/shared/view/lit.ts` | `litOf`: what a state lights. The lines of its own arrangement, or its relations in place on a locked view, with the count of what the view cannot show. It also decides which line in place has the word and the ring of a port, and it puts the word on the line where the line has room that no other line uses. |
+| `src/shared/view/keys.ts` | `keyPressOf`: what a key event of the browser is for the map. `togglesLock` and `lockPressOf`: whether one key event turns the lock, and whether it waits for the index. `lockKey`: the lock key of one page, which counts the presses that wait and applies them when the index arrives. |
+| `src/shared/view/beside.ts` | `wordsBeside`: the place of each relation word that has no room on its line next to the other node, or no place. Pure. |
 | `src/shared/view/trace.ts`, `finder.ts`, `strip.ts`, `sentence.ts` | The trace of a route, the hits of a query, the line below the map, and the sentence that it quotes. |
 | `src/shared/view/camera.ts` | The fit, the zoom, and the rule that keeps the focused node clear of the reader. |
 | `src/shared/view/hash.ts`, `history.ts` | The address of a place, and the decision to add, replace, or keep a history entry. |
@@ -386,6 +406,53 @@ npm can print a warning that `esbuild` has an install script. Do not approve the
 
 The client adds `react`, `react-dom`, `motion`, `react-markdown`, the two `@fontsource-variable` font packages, `vite`, and the React types. It has no graph library, no layout library, no CSS framework, and no state library.
 
+## Tests
+
+`npm test` runs each test. An edit of the text in `../skills` must not fail a test. Thus the tests read the skills in two ways.
+
+- **A rule reads the live skills.** A rule holds for each content of `../skills`. Example: each lit relation shows its word in one place, or no place that the rules permit has room for the word. A test of a rule names no skill, no playbook, no route, and no file. It states no count and no list. Its only lower bound says that its loop was not empty, and that bound comes from the index. Example: at least one pick for each node on the stage.
+- **A fact reads the snapshot.** A test that names a skill, a playbook, a route, or a file, or that states a count or a list, reads `snapshotIndex` from `test/support.ts`. The snapshot is `test/fixtures/live-index.json`. It is the response of `GET /api/index` at the last refresh, encoded with the shared schema. `test/fixtures/docs/` holds the two files of the skills that the reader tests quote. `test/fixtures/snapshot-docs.ts` lists them.
+
+Many tests do both: one function holds the rule, and the test runs it on the live skills and on the snapshot. Only the run on the snapshot states a count.
+
+Refresh the snapshot only when you want the facts to follow the skills:
+
+```sh
+npx tsx test/fixtures/refresh-snapshot.ts
+```
+
+A refresh is a deliberate change, not a step of a build. After a refresh:
+
+1. Run `npx tsx test/recount-words.ts --pin`. It writes `test/words-left-off.ts`: the number of relations without a word for each locked stage. It also prints the numbers of the two known limits about a locked view below. Update them.
+2. Run `npm test`, and update each list and each count that a test states about the snapshot. They are in each assertion that reads `snapshotIndex` or `snapshotStage`.
+
+Do not refresh the snapshot to make a failed rule pass.
+
+`test/word-rules.ts` holds the rules of a relation word on a locked stage. It reads a scene as the map draws it: the box of each word, each line, and each part of each row. It does not call the code that places a word. The rules are:
+
+- A lit relation shows its word in one place, with its own text and the color of its own line. The relation back of a pair shows none.
+- A word is inside what the camera fits. It is on no line of a different relation, over no part of a row, no caption, no arrowhead, no ring, and no other word. A word under a name has no lit row directly below it.
+- A relation shows no word only when no permitted place has room for it. The test tries each permitted place itself, with more room than the client needs: each position on the two end parts of the line, after the name, under the name, and on the other side of the node.
+
+`lock.test.ts` applies them to each pick and each trace on each locked stage, for the live skills and for the snapshot. `beside.test.ts` gives the placement one row with one obstacle at a time.
+
+`test/on-changed-content.mjs` shows that the tests do not depend on the content. It copies the repository to a temporary directory, changes the `skills/` of the copy, prints the size of the index of the copy, runs the tests there, and removes the copy. It does not write to `../skills`.
+
+```sh
+node test/on-changed-content.mjs A
+```
+
+| Set | Change in the copy |
+| --- | --- |
+| `A` | Ordinary edits: two new sentences that name a skill, one new skill, one removed step of a playbook, and one new route. |
+| `B` | One skill removed, and one playbook renamed together with its link in the router. |
+| `C` | Hard content: a skill with a name of 40 characters, four more files of the router that a different skill links to, six more principles, and one skill that names twelve skills in one paragraph. |
+| `D` | No router: the directory of the router is removed, so the copy has no playbook and no route. |
+| `E` | A small repository: only the three skills `how`, `teach`, and `why`. |
+| `F` | A large repository: forty more skills, each of which names four skills. |
+
+Each set must give 0 failures with no edit of a test file between the runs. If a rule fails on a set, the client has a defect: correct the client and do not weaken the rule. If the skills no longer hold a text that a set changes, the script stops and names the text. Change the set then.
+
 ## Known limits
 
 - The trace stops at the last step of a playbook. It does not continue into a playbook that the last step names.
@@ -393,8 +460,9 @@ The client adds `react`, `react-dom`, `motion`, `react-markdown`, the two `@font
 - A neighbour that needs the selection and that the selection needs has one line. The relation back shows as an orange arrow, and its sentence shows when you select the neighbour.
 - The Key hides a class of lines. A neighbour that has only a hidden line keeps its row in the arrangement.
 - With the lock on and a node selected, the pointer on a second node makes the line between the two brighter. It does not show the other relations of the second node. Click the second node to see them.
-- With the lock on, a line can have no room for its word or for its small ring. The level part next to the other node is then too short, and the bend after it is on a trunk that other lines use. A ring on a trunk reads as a condition of each line of the trunk, so the map shows no ring there. Move the pointer to the line or to the node: the strip gives the kind of the relation and the condition. This occurs most on the rest map.
-- With the lock on, a line that shares its last part with a second line has no word and no ring of its own. The strip gives its kind and its condition.
+- With the lock on, a line with a condition can have no small ring. The level part next to the other node is then too short for it, or a word is in its place, or the ring would be on a trunk that other lines use. The word of the line ends with `if`. In the snapshot of the tests, 16 of the 369 lines without a word have a condition and no ring.
+- With the lock on, a relation can show no word. A word stands only on its own line or beside its own name, clear of each other thing, and a name gives no character to a word. Where no such place is free, the relation has no word. In the snapshot of the tests this occurs for 369 of the 6,266 lit lines of all picks and traces on all locked stages. 100 of them are in the locked arrangement of the router, where the rows stand close together and the gray lines go between them. 12 are on the locked rest map. The others are in 64 smaller arrangements, most often where lit rows are one below the other, or where two lit lines come to one port. `npx tsx test/recount-words.ts` prints these numbers, and `test/words-left-off.ts` has the number for each locked stage. Move the pointer to the line or to the node: the strip gives the kind and the condition.
+- With the lock on, the relation back of a pair that goes both ways has no word of its own, and no sign of its condition if it has one. Select the other node to see it. Without the lock, the orange arrow of the relation back is a closed triangle when the relation has a condition.
 - The Back button of the browser can go to an address from before the lock. The map then has the arrangement of that address.
 - A node that is new after a refresh of the index shows at once in its row. It has no animation of its own.
 - The reader shows CommonMark only. A pipe table, strikethrough, a task list, and a bare address show as written.

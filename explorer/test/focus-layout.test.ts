@@ -9,7 +9,7 @@ import { deriveScene } from "../src/shared/view/scene";
 import { INITIAL, type Stage, type ViewEvent } from "../src/shared/view/state";
 import { step } from "../src/shared/view/step";
 import { traceOf } from "../src/shared/view/trace";
-import { indexAt, LIVE_REPO } from "./support";
+import { indexAt, LIVE_REPO, snapshotIndex } from "./support";
 
 const liveIndex = Effect.gen(function* () {
   return yield* (yield* indexAt(LIVE_REPO)).live;
@@ -114,7 +114,7 @@ describe("the focus arrangement of each selection of the live index", () => {
         }
         assert.deepStrictEqual([...arrangement.order].sort(), [...arrangement.nodes.keys()].sort(), `${label}: the keyboard order has each node on stage one time`);
       }
-      assert.isAbove(cables, 600, "the live index has many relations to check");
+      assert.isAtLeast(cables, index.relations.length, "each relation is a cable in the arrangement of its source at least");
     }),
   );
 
@@ -143,7 +143,7 @@ describe("the focus arrangement of each selection of the live index", () => {
           lines += 1;
         }
       }
-      assert.isAbove(lines, 600, "the live index has many relations to check");
+      assert.isAtLeast(lines, graph.index.relations.length, "each relation is lit in the arrangement of its source at least");
     }),
   );
 
@@ -191,7 +191,7 @@ describe("the focus arrangement of each selection of the live index", () => {
 
   it.effect("orders each zone by the rest map only: a new relation between two neighbours moves nothing", () =>
     Effect.gen(function* () {
-      const index = yield* liveIndex;
+      const index = snapshotIndex;
       const architect = id("skill:architect");
       const before = focusLayout(toGraph(index), { kind: "node", id: architect });
       const sample = index.relations[0];
@@ -224,7 +224,7 @@ describe("the focus arrangement of each selection of the live index", () => {
 
   it.effect("splits a zone that is too tall into columns by group, and keeps one column for a zone that fits", () =>
     Effect.gen(function* () {
-      const graph = toGraph(yield* liveIndex);
+      const graph = toGraph(snapshotIndex);
       const columnsOf = (arrangement: Arrangement | null, selected: NodeId, side: "left" | "right"): number[] =>
         [...new Set(rowsOf(arrangement).filter(([node, row]) => node !== selected && row.mirrored === (side === "left")).map(([, row]) => row.centre.x))].sort((a, b) => a - b);
 
@@ -244,7 +244,7 @@ describe("the focus arrangement of each selection of the live index", () => {
 
       const file = id("hosted:skills/mako/references/execution.md");
       const readers = focusLayout(graph, { kind: "node", id: file });
-      assert.isAbove((graph.into.get(file) ?? []).length, FOCUS.maxRows, "the live index lost the file that many nodes read");
+      assert.isAbove((graph.into.get(file) ?? []).length, FOCUS.maxRows, "the snapshot lost the file that many nodes read");
       assert.strictEqual(columnsOf(readers, file, "left").length, 2);
       const tallest = Math.max(...columnsOf(readers, file, "left").map((x) => rowsOf(readers).filter(([, row]) => row.centre.x === x).length));
       assert.isAtMost(tallest, FOCUS.maxRows);
@@ -254,72 +254,85 @@ describe("the focus arrangement of each selection of the live index", () => {
     }),
   );
 
+  /** Asserts the order of each trace. It returns the number of routes that have a playbook. */
+  const tracesInStepOrder = (index: ExplorerIndex): number => {
+    const graph = toGraph(index);
+    let withPlaybook = 0;
+    for (const route of graph.index.routes) {
+      const trace = traceOf(graph, route.id);
+      const arrangement = focusLayout(graph, { kind: "route", route: route.id });
+      assert.isNotNull(arrangement, route.task);
+      if (trace === null || arrangement === null || trace.origin === null) continue;
+      const at = (node: NodeId): Point => arrangement.nodes.get(node)?.centre ?? { x: Number.NaN, y: Number.NaN };
+
+      const withARow = trace.steps.filter((item) => item.node !== trace.origin && item.node !== trace.head);
+      const steps = withARow.map((item) => at(item.node));
+      if (steps.length === 0) continue;
+      assert.strictEqual(new Set(steps.map((point) => point.x)).size, 1, `${route.task}: the steps are in one column`);
+      assert.deepStrictEqual(steps.map((point) => point.y), [...steps.map((point) => point.y)].sort((a, b) => a - b), `${route.task}: a later step is lower`);
+      assert.strictEqual(new Set(steps.map((point) => point.y)).size, steps.length);
+      assert.deepStrictEqual(at(trace.origin).y, FOCUS.y);
+
+      const before = trace.head ?? trace.origin;
+      assert.isBelow(at(before).x, steps[0]?.x ?? 0, `${route.task}: the steps are on the right`);
+      if (trace.head !== null) {
+        withPlaybook += 1;
+        assert.strictEqual(at(trace.head).y, FOCUS.y, `${route.task}: the playbook is on the row of the router`);
+        assert.isBelow(at(trace.origin).x, at(trace.head).x);
+      }
+      for (const item of withARow) {
+        const cable = arrangement.cables.get(item.via);
+        assert.isDefined(cable, `${route.task}: step ${item.n} has no cable`);
+        assert.deepStrictEqual(cable?.end, leftPortOf(arrangement, item.node));
+      }
+      const sources = new Map<string, Branch[]>();
+      for (const cable of arrangement.cables.values()) {
+        const source = cable.key.split(">")[0] ?? "";
+        sources.set(source, [...(sources.get(source) ?? []), cable]);
+      }
+      for (const [source, cables] of sources) {
+        assert.isAtMost(trunksOf(cables, "source").length, 1, `${route.task}: the cables out of ${source} use more than one trunk`);
+        assert.isTrue(cables.every((cable) => isStraightOrPassesTheTrunk(cable, trunksOf(cables, "source"))), `${route.task}: ${source}`);
+      }
+    }
+    return withPlaybook;
+  };
+
   it.effect("puts a trace in the order of its steps: the router, the playbook on the same row, then the steps from top to bottom", () =>
     Effect.gen(function* () {
-      const graph = toGraph(yield* liveIndex);
-      let withPlaybook = 0;
-      for (const route of graph.index.routes) {
-        const trace = traceOf(graph, route.id);
-        const arrangement = focusLayout(graph, { kind: "route", route: route.id });
-        assert.isNotNull(arrangement, route.task);
-        if (trace === null || arrangement === null || trace.origin === null) continue;
-        const at = (node: NodeId): Point => arrangement.nodes.get(node)?.centre ?? { x: Number.NaN, y: Number.NaN };
-
-        const steps = trace.steps.map((item) => at(item.node));
-        assert.isAbove(steps.length, 0, route.task);
-        assert.strictEqual(new Set(steps.map((point) => point.x)).size, 1, `${route.task}: the steps are in one column`);
-        assert.deepStrictEqual(steps.map((point) => point.y), [...steps.map((point) => point.y)].sort((a, b) => a - b), `${route.task}: a later step is lower`);
-        assert.strictEqual(new Set(steps.map((point) => point.y)).size, steps.length);
-        assert.deepStrictEqual(at(trace.origin).y, FOCUS.y);
-
-        const before = trace.head ?? trace.origin;
-        assert.isBelow(at(before).x, steps[0]?.x ?? 0, `${route.task}: the steps are on the right`);
-        if (trace.head !== null) {
-          withPlaybook += 1;
-          assert.strictEqual(at(trace.head).y, FOCUS.y, `${route.task}: the playbook is on the row of the router`);
-          assert.isBelow(at(trace.origin).x, at(trace.head).x);
-        }
-        for (const item of trace.steps) {
-          const cable = arrangement.cables.get(item.via);
-          assert.isDefined(cable, `${route.task}: step ${item.n} has no cable`);
-          assert.deepStrictEqual(cable?.end, leftPortOf(arrangement, item.node));
-        }
-        const sources = new Map<string, Branch[]>();
-        for (const cable of arrangement.cables.values()) {
-          const source = cable.key.split(">")[0] ?? "";
-          sources.set(source, [...(sources.get(source) ?? []), cable]);
-        }
-        for (const [source, cables] of sources) {
-          assert.isAtMost(trunksOf(cables, "source").length, 1, `${route.task}: the cables out of ${source} use more than one trunk`);
-          assert.isTrue(cables.every((cable) => isStraightOrPassesTheTrunk(cable, trunksOf(cables, "source"))), `${route.task}: ${source}`);
-        }
-      }
-      assert.isAbove(withPlaybook, 10);
+      tracesInStepOrder(yield* liveIndex);
+      assert.isAbove(tracesInStepOrder(snapshotIndex), 10, "the snapshot has many routes with a playbook");
     }),
   );
 });
 
 describe("a skill that a route names and that is also a step of its playbook", () => {
+  /** Asserts the rule for each route. It returns each pair of a router and a step that its route names. */
+  const stepsThatTheirRouteNames = (index: ExplorerIndex): string[] => {
+    const graph = toGraph(index);
+    const said: string[] = [];
+    for (const route of graph.index.routes) {
+      const trace = traceOf(graph, route.id);
+      const arrangement = focusLayout(graph, { kind: "route", route: route.id });
+      assert.isNotNull(trace, route.task);
+      if (trace === null || arrangement === null) continue;
+      const namedWithoutACable = trace.heads.filter((key) => !arrangement.cables.has(key)).map((key) => key.split(">")[1] ?? "");
+      const withTheNote = rowsOf(arrangement).filter(([, row]) => row.note === NAMED_BY_ROUTE).map(([node]) => `${node}`);
+
+      assert.deepStrictEqual(withTheNote.sort(), [...namedWithoutACable].sort(), `${route.task}: the words are on each node that the route names and that has no cable from the router, and on no other node`);
+      assert.isTrue(rowsOf(arrangement).every(([node, row]) => row.note === null || withTheNote.includes(node) || node.startsWith("hosted:")), `${route.task}: only a hosted file has other words after its name`);
+      for (const node of withTheNote) {
+        assert.isTrue(trace.steps.some((item) => item.node === node), `${route.task}: ${node} is a step`);
+        said.push(`${trace.origin?.split(":")[1]} > ${node.split(":")[1]}`);
+      }
+    }
+    return said.sort();
+  };
+
   it.effect("has one row, as the step, and the row says that the route names it", () =>
     Effect.gen(function* () {
-      const graph = toGraph(yield* liveIndex);
-      const said: string[] = [];
-      for (const route of graph.index.routes) {
-        const trace = traceOf(graph, route.id);
-        const arrangement = focusLayout(graph, { kind: "route", route: route.id });
-        assert.isNotNull(trace, route.task);
-        if (trace === null || arrangement === null) continue;
-        const namedWithoutACable = trace.heads.filter((key) => !arrangement.cables.has(key)).map((key) => key.split(">")[1] ?? "");
-        const withTheNote = rowsOf(arrangement).filter(([, row]) => row.note === NAMED_BY_ROUTE).map(([node]) => `${node}`);
-
-        assert.deepStrictEqual(withTheNote.sort(), [...namedWithoutACable].sort(), `${route.task}: the words are on each node that the route names and that has no cable from the router, and on no other node`);
-        assert.isTrue(rowsOf(arrangement).every(([node, row]) => row.note === null || withTheNote.includes(node) || node.startsWith("hosted:")), `${route.task}: only a hosted file has other words after its name`);
-        for (const node of withTheNote) {
-          assert.isTrue(trace.steps.some((item) => item.node === node), `${route.task}: ${node} is a step`);
-          said.push(`${trace.origin?.split(":")[1]} > ${node.split(":")[1]}`);
-        }
-      }
-      assert.deepStrictEqual(said.sort(), ["mako > how", "mako > ui-design", "mako > why"], "the live index now has different routes of this kind");
+      stepsThatTheirRouteNames(yield* liveIndex);
+      assert.deepStrictEqual(stepsThatTheirRouteNames(snapshotIndex), ["mako > how", "mako > ui-design", "mako > why"]);
     }),
   );
 });

@@ -14,6 +14,15 @@ export type Remote<Value> =
   | { readonly kind: "notFound" }
   | { readonly kind: "failed"; readonly message: string };
 
+/** The page comes from the explorer itself or from the dev server, and the page cannot know which. Thus the sentence gives the command for each. */
+export const NO_API_ANSWERS = "No explorer API answers: start the explorer with `npm start`, or with `npm run serve` when this page comes from `npm run dev`.";
+
+const STATUS_OF_A_PROXY_WITHOUT_ITS_TARGET: readonly number[] = [502, 504];
+
+/** `undefined`: the request got no response. The dev server answers for an API that is not there with the status of a proxy. */
+export const messageOfStatus = (status: number | undefined): string =>
+  status === undefined || STATUS_OF_A_PROXY_WITHOUT_ITS_TARGET.includes(status) ? NO_API_ANSWERS : `The server answered with status ${status}.`;
+
 type RemoteError = Effect.Error<ReturnType<Effect.Success<typeof explorer>["doc"]>>;
 
 const failure = (error: RemoteError): Remote<never> => {
@@ -24,13 +33,8 @@ const failure = (error: RemoteError): Remote<never> => {
       return { kind: "failed", message: `The server cannot read the skills: ${error.detail}` };
     case "SchemaError":
       return { kind: "failed", message: "The server sent data in a format that this client does not know." };
-    case "HttpClientError": {
-      const status = error.response?.status;
-      return {
-        kind: "failed",
-        message: status === undefined ? `The server at ${window.location.host} did not answer.` : `The server answered with status ${status}.`,
-      };
-    }
+    case "HttpClientError":
+      return { kind: "failed", message: messageOfStatus(error.response?.status) };
     default: {
       const _exhaustive: never = error;
       return _exhaustive;

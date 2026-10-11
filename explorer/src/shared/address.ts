@@ -3,9 +3,6 @@ export const HOST = "127.0.0.1";
 export const PORT = 4747;
 export const DEV_PORT = 4748;
 
-/** With this argument the server stops when its input ends. The dev server holds that input, so its API cannot stay after it. */
-export const STOP_WHEN_INPUT_ENDS = "--stop-when-input-ends";
-
 export type PortChoice = { readonly kind: "ok"; readonly port: number } | { readonly kind: "invalid"; readonly message: string };
 
 /** The port that a variable gives, or the default when the variable is absent or empty. */

@@ -1,4 +1,4 @@
-import { distance, FRAME, pathOf, toward, type Point, type Segment } from "./layout";
+import { distance, FRAME, pathOf, toward, type Point, type Rect, type Segment, type Span } from "./layout";
 
 export const pointsOf = (segments: readonly Segment[]): Point[] => {
   const first = segments[0];
@@ -13,6 +13,49 @@ export const lengthOf = (points: readonly Point[]): number => {
     if (from !== undefined && to !== undefined) total += distance(from, to);
   }
   return total;
+};
+
+/** A part of a line that goes up or down. */
+export interface Upright {
+  readonly x: number;
+  readonly top: number;
+  readonly bottom: number;
+}
+
+export const uprightsOf = (points: readonly Point[]): Upright[] =>
+  points.flatMap((point, index) => {
+    const before = points[index - 1];
+    return before !== undefined && before.x === point.x && before.y !== point.y ? [{ x: point.x, top: Math.min(before.y, point.y), bottom: Math.max(before.y, point.y) }] : [];
+  });
+
+/** A part of a line that goes left or right. `from` is the smaller x. */
+export interface LevelRun extends Span {
+  readonly y: number;
+}
+
+export const levelRunsOf = (points: readonly Point[]): LevelRun[] =>
+  points.flatMap((point, index) => {
+    const before = points[index - 1];
+    return before !== undefined && before.y === point.y && before.x !== point.x ? [{ y: point.y, from: Math.min(before.x, point.x), to: Math.max(before.x, point.x) }] : [];
+  });
+
+/** A line goes through a rect or touches it. */
+export const crosses = (points: readonly Point[], rect: Rect): boolean =>
+  points.some((point, index) => {
+    const before = points[index - 1];
+    return (
+      before !== undefined &&
+      Math.max(before.x, point.x) >= rect.x &&
+      Math.min(before.x, point.x) <= rect.x + rect.width &&
+      Math.max(before.y, point.y) >= rect.y &&
+      Math.min(before.y, point.y) <= rect.y + rect.height
+    );
+  });
+
+/** The two lines join the same two points. On the stage they are one line. */
+export const isOneLine = (a: readonly Point[], b: readonly Point[]): boolean => {
+  const same = (p: Point | undefined, q: Point | undefined): boolean => p !== undefined && q !== undefined && p.x === q.x && p.y === q.y;
+  return (same(a[0], b[0]) && same(a.at(-1), b.at(-1))) || (same(a[0], b.at(-1)) && same(a.at(-1), b[0]));
 };
 
 /** The start of an axis-aligned line, as far as a distance along it. The last point is where that distance ends. */
@@ -70,31 +113,30 @@ export const gateOn = (points: readonly Point[], near: "start" | "end", isFree: 
   return places.find(isFree) ?? null;
 };
 
-export const WORD_CLEAR = { arrow: 12, gate: GATE.setBack + GATE.radius + 4, corner: 10, word: 2 } as const;
-
-/** A part of a row, from the smaller x to the larger x. */
-export interface Span {
-  readonly from: number;
-  readonly to: number;
-}
+/**
+ * `tight`: the least air between a word and the arrowhead or the corner of its cable, for a word that has no other place.
+ * `line`: between a word and the part of a row that a different line uses.
+ */
+export const WORD_CLEAR = { arrow: 12, gate: GATE.setBack + GATE.radius + 4, corner: 10, word: 2, tight: FRAME.corner, line: 3 } as const;
 
 /**
  * Where a word of a given width sits on a cable that is drawn in place. The word is on the run next to one end of the cable,
  * in the middle of the free part of that run that is nearest to that end. `taken` are the parts that are not free.
+ * `air` is what the word keeps clear at that end of the run and at its corner.
  * Null when that run goes up or down, or when no free part has room.
  */
-export const wordOn = (points: readonly Point[], near: "start" | "end", width: number, hasGate: boolean, taken: readonly Span[]): Point | null => {
+export const wordOn = (points: readonly Point[], near: "start" | "end", width: number, air: { readonly atEnd: number; readonly atCorner: number }, taken: readonly Span[]): Point | null => {
   const fromEnd = near === "end" ? points.toReversed() : points;
   const [end, corner] = fromEnd;
   if (end === undefined || corner === undefined || end.y !== corner.y) return null;
   const direction = Math.sign(corner.x - end.x);
   const awayFromEnd = (x: number): number => (x - end.x) * direction;
-  const last = awayFromEnd(corner.x) - WORD_CLEAR.corner;
+  const last = awayFromEnd(corner.x) - air.atCorner;
   const blocks = taken
     .map((span) => ({ from: Math.min(awayFromEnd(span.from), awayFromEnd(span.to)), to: Math.max(awayFromEnd(span.from), awayFromEnd(span.to)) }))
     .sort((a, b) => a.from - b.from);
 
-  let first = hasGate ? WORD_CLEAR.gate : WORD_CLEAR.arrow;
+  let first = air.atEnd;
   for (const block of [...blocks, { from: last, to: last }]) {
     const free = Math.min(block.from, last) - first;
     if (free >= width) return { x: end.x + direction * (first + free / 2), y: end.y };

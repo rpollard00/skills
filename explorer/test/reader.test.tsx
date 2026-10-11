@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import nodePath from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import { Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -8,7 +6,7 @@ import { Markdown, type MarkdownProps } from "../src/client/Markdown";
 import { OriginFact } from "../src/client/OriginFact";
 import { splitFrontmatter } from "../src/shared/markdown";
 import { NodeId } from "../src/shared/model";
-import { LIVE_REPO } from "./support";
+import { snapshotDoc } from "./support";
 
 const id = Schema.decodeUnknownSync(NodeId);
 
@@ -30,9 +28,9 @@ const render = (text: string, props: Partial<MarkdownProps> = {}): string =>
 
 describe("the reader's markdown", () => {
   it("shows the placeholder tokens of the reflect references as text", () => {
-    const source = readFileSync(nodePath.join(LIVE_REPO, "skills", "reflect", "references", "synthesizer.md"), "utf8");
+    const { path, text: source } = snapshotDoc("synthesizer.md");
     const { body, bodyLine } = splitFrontmatter(source);
-    const html = render(body, { path: "skills/reflect/references/synthesizer.md", firstLine: bodyLine });
+    const html = render(body, { path, firstLine: bodyLine });
 
     assert.isTrue(source.includes("<JUDGMENT_OUTPUT>"), "the reference no longer holds the placeholder");
     for (const token of ["JUDGMENT_OUTPUT", "TOOLING_OUTPUT", "DIVERGENT_OUTPUT"]) {
@@ -136,9 +134,9 @@ describe("CommonMark only in the reader", () => {
   });
 
   it("shows the example table of the visual-mockups reference as code: the file has it in a `markdown` fence", () => {
-    const source = readFileSync(nodePath.join(LIVE_REPO, "skills", "ui-design", "references", "VISUAL-MOCKUPS.md"), "utf8");
+    const { path, text: source } = snapshotDoc("VISUAL-MOCKUPS.md");
     const { body, bodyLine } = splitFrontmatter(source);
-    const html = render(body, { path: "skills/ui-design/references/VISUAL-MOCKUPS.md", firstLine: bodyLine });
+    const html = render(body, { path, firstLine: bodyLine });
     const fence = /<pre data-line="\d+"><code class="language-markdown">([\s\S]*?)<\/code><\/pre>/.exec(html)?.[1] ?? "";
 
     assert.isTrue(fence.includes("| Alternative | State | Viewport |"), "the reference no longer holds the example in a fence");

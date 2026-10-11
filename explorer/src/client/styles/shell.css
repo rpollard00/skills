@@ -97,6 +97,10 @@
   margin: 0;
 }
 
+.notice code {
+  font-weight: 700;
+}
+
 .stopped {
   display: grid;
   gap: 12px;

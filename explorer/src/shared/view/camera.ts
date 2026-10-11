@@ -1,5 +1,5 @@
-import type { Rect } from "../layout";
-import { arrangementOf, standOnStage, type Stand } from "./arranged";
+import { rowExtent, type Rect } from "../layout";
+import { arrangementOf, stageBoundsOf, standOnStage, type Stand } from "./arranged";
 import { stageTargetOf, type Reading, type Stage, type Transform, type ViewState, type Viewport } from "./state";
 import { focusedNode } from "./trace";
 
@@ -41,9 +41,8 @@ const keepClear = (transform: Transform, rect: Rect, area: Area): Transform => (
 const rowRect = (placed: Stand, hostOf: (pip: Extract<Stand, { kind: "pip" }>) => Stand | undefined): Rect => {
   const host = placed.kind === "pip" ? hostOf(placed) : placed;
   if (host === undefined || host.kind === "pip") return { x: placed.centre.x - 8, y: placed.centre.y - 12, width: 16, height: 24 };
-  const start = Math.min(host.centre.x - 12, host.label.x);
-  const end = Math.max(host.centre.x + 12, host.label.x + host.label.width);
-  return { x: start, y: host.centre.y - 12, width: end - start, height: 24 };
+  const { from, to } = rowExtent(host);
+  return { x: from, y: host.centre.y - 12, width: to - from, height: 24 };
 };
 
 type Framed = Pick<ViewState, "reading" | "focus" | "pin">;
@@ -62,7 +61,7 @@ const startIn = (extent: number, length: number): number => (length <= extent ? 
 const fitTransform = (state: Framed, stage: Stage): Transform => {
   const area = clearArea(state.reading, stage.viewport);
   const arrangement = arrangementOf(stage.graph, stageTargetOf(state));
-  const frame: Rect = arrangement?.bounds ?? { x: 0, y: 0, ...stage.placement.world };
+  const frame = stageBoundsOf(arrangement, stage.placement);
   const scale = clamp(Math.min(area.width / frame.width, area.height / frame.height), arrangement === null ? ZOOM.fitMin : ZOOM.focusFitMin, ZOOM.fitMax);
   return {
     scale,

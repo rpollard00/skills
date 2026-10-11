@@ -5,6 +5,7 @@ import { FRAME, type Placement, type Point } from "../shared/layout";
 import type { NodeId, RelationKey } from "../shared/model";
 import { GATE, grownPath, tipOf } from "../shared/polyline";
 import type { Stand } from "../shared/view/arranged";
+import { BESIDE, FILE_DOT, type WordBeside } from "../shared/view/beside";
 import { cableSide, portMarksOf, type PortMark } from "../shared/view/ports";
 import { CHIP, type CableView, type Chip, type Glyph, type NodeTone, type NodeView, type Scene } from "../shared/view/scene";
 import type { Hover, Transform } from "../shared/view/state";
@@ -175,9 +176,9 @@ const ChipMark = ({ chip, first, centre, instant }: { readonly chip: Chip; reado
     <g>
       <motion.rect
         className="chip-box"
-        x={x - 3}
-        y={-8}
-        height={16}
+        x={x - CHIP.lead}
+        y={-CHIP.half}
+        height={CHIP.half * 2}
         rx={3}
         initial={instant ? false : { width: 8, opacity: 0 }}
         animate={{ width: chip.width, opacity: 1 }}
@@ -354,6 +355,7 @@ const OnWire = ({ view, instant, travels }: { readonly view: CableView; readonly
   return (
     <motion.g
       className="on-wire"
+      data-cable={view.key}
       data-tone={view.tone}
       data-bright={view.bright}
       initial={still ? false : { opacity: 0 }}
@@ -369,7 +371,33 @@ const OnWire = ({ view, instant, travels }: { readonly view: CableView; readonly
         </>
       )}
       {gate === null ? null : <circle className="gate" cx={gate.x} cy={gate.y} r={GATE.radius} />}
-      {back === null ? null : <path className="back" d={`M${back.x + ARROW.length},${back.y - ARROW.half}L${back.x},${back.y}L${back.x + ARROW.length},${back.y + ARROW.half}`} />}
+      {back === null ? null : (
+        <path className="back" data-conditional={back.conditional} d={`M${back.x + ARROW.length},${back.y - ARROW.half}L${back.x},${back.y}L${back.x + ARROW.length},${back.y + ARROW.half}${back.conditional ? "Z" : ""}`} />
+      )}
+    </motion.g>
+  );
+};
+
+const WordBesideName = ({ word, delaySeconds, instant }: { readonly word: WordBeside; readonly delaySeconds: number; readonly instant: boolean }): ReactNode => {
+  const { box } = word;
+  const dot = word.ofFile ? BESIDE.dot : 0;
+  const middle = box.y + box.height / 2;
+  return (
+    <motion.g
+      className="on-wire"
+      data-beside={word.node}
+      data-cables={word.keys.join(" ")}
+      data-tone={word.tone}
+      data-bright={word.bright}
+      initial={instant ? false : { opacity: 0 }}
+      animate={{ opacity: 1, transition: instant ? AT_ONCE : { delay: delaySeconds, duration: TIMING.fadeInSeconds } }}
+      exit={{ opacity: 0, transition: instant ? AT_ONCE : { duration: TIMING.cableFadeSeconds } }}
+    >
+      <rect className="word-ground" x={box.x} y={box.y} width={box.width} height={box.height} />
+      {word.ofFile ? <circle className="word-dot" cx={box.x + WORD_BOX.pad + FILE_DOT.radius} cy={middle} r={FILE_DOT.radius} /> : null}
+      <text className="word" x={box.x + dot + (box.width - dot) / 2} y={middle + 0.5}>
+        {word.text}
+      </text>
     </motion.g>
   );
 };
@@ -692,6 +720,10 @@ export const SkillMap = ({ placement, camera, area, scene, onHover, onPick, onIn
                 {lit.filter(hasMarksOnWire).map((cable) => (
                   <OnWire key={`${cable.key}:${cable.tone}:${cable.d}`} view={cable} instant={instant} travels={travels} />
                 ))}
+                {scene.beside.map((word) => {
+                  const cable = lit.find((item) => item.key === word.keys[0]);
+                  return <WordBesideName key={`${word.tone}:${word.keys.join(" ")}`} word={word} delaySeconds={cable === undefined ? 0 : arrivalSeconds(cableTiming(cable))} instant={instant} />;
+                })}
               </AnimatePresence>
             </g>
             <g className="nodes">

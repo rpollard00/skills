@@ -30,7 +30,7 @@ const ReadOnlyFileSystem = Layer.effect(
   }),
 );
 
-/** Read-only checks of the real repository. They hold however many skills it has. */
+/** Read-only checks of the real repository. They hold for each content of `skills/`: no skill, no router, and no playbook is necessary. */
 describe("the live repository", () => {
   it.effect("refuses every change, so this file cannot write to the repository", () =>
     Effect.gen(function* () {
@@ -55,24 +55,28 @@ describe("the live repository", () => {
       const withEntry = yield* Effect.filter(directories, (name) =>
         fs.exists(nodePath.join(LIVE_REPO, "skills", name, "SKILL.md")).pipe(Effect.orElseSucceed(() => false)),
       );
-      assert.isAbove(withEntry.length, 0);
       assert.deepStrictEqual(
         index.nodes.flatMap((node) => (node.kind === "skill" ? [node.name as string] : [])).sort(),
         [...withEntry].sort(),
       );
 
-      const playbooks = (yield* fs.readDirectory(nodePath.join(LIVE_REPO, "skills", "mako", "playbooks"))).filter((name) => name.endsWith(".md"));
-      assert.isAbove(playbooks.length, 0);
+      // A skill with a `playbooks` directory is a router. The repository can have no such skill, and then it has no playbook.
+      const playbooksOf = (skill: string) =>
+        fs.readDirectory(nodePath.join(LIVE_REPO, "skills", skill, "playbooks")).pipe(
+          Effect.orElseSucceed((): string[] => []),
+          Effect.map((names) => names.filter((name) => name.endsWith(".md")).map((name) => `skills/${skill}/playbooks/${name}`)),
+        );
+      const playbooks = (yield* Effect.forEach(withEntry, playbooksOf)).flat();
+      assert.deepStrictEqual(index.nodes.flatMap((node) => (node.kind === "playbook" ? [node.entry as string] : [])).sort(), playbooks.sort());
       assert.deepStrictEqual(
-        index.nodes.flatMap((node) => (node.kind === "playbook" ? [node.entry as string] : [])).sort(),
-        playbooks.map((name) => `skills/mako/playbooks/${name}`).sort(),
+        index.nodes.flatMap((node) => (node.kind === "skill" && node.family === "router" ? [node.name as string] : [])).sort(),
+        [...new Set(playbooks.map((path) => path.split("/")[1] ?? ""))].sort(),
+        "the routers are the skills that have a playbook",
       );
 
       assert.strictEqual(known.size, ids.length, "a node id appears twice");
       assert.deepStrictEqual(index.relations.filter((relation) => !known.has(relation.from) || !known.has(relation.to)), []);
-      assert.deepStrictEqual(index.relations.filter((relation) => relation.kinds.includes("reads") && relation.to === "skill:mako"), []);
-      assert.isTrue(index.relations.some((relation) => relation.kinds.includes("reads")));
-      assert.deepStrictEqual(index.relations.filter((relation) => relation.kinds.includes("reads") && !relation.to.startsWith("hosted:")), []);
+      assert.deepStrictEqual(index.relations.filter((relation) => relation.kinds.includes("reads") && !relation.to.startsWith("hosted:")), [], "a `reads` relation goes to a hosted file only, and thus never to a router");
       assert.deepStrictEqual(index.files.filter((file) => file.path.split("/").some((part) => part.startsWith("."))), []);
       assert.deepStrictEqual(index.files.filter((file) => !known.has(file.owner)), []);
     }).pipe(Effect.provide(NodeServices.layer)),

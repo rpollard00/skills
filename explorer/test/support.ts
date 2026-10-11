@@ -1,11 +1,26 @@
+import { readFileSync } from "node:fs";
 import nodePath from "node:path";
-import { Effect, FileSystem, type Console } from "effect";
+import { Effect, FileSystem, Schema, type Console } from "effect";
 import { corpusFile, type Corpus } from "../src/index/corpus";
 import { SkillIndex } from "../src/index/skill-index";
-import type { Reference, Scan } from "../src/shared/model";
+import { ExplorerIndex, type Reference, type Scan } from "../src/shared/model";
+import { SNAPSHOT_DOCS } from "./fixtures/snapshot-docs";
 
 export const FIXTURE_REPO = nodePath.resolve(import.meta.dirname, "fixtures", "repo");
 export const LIVE_REPO = nodePath.resolve(import.meta.dirname, "..", "..");
+
+/**
+ * The index of `LIVE_REPO` as it was at the last refresh: `fixtures/refresh-snapshot.ts` writes the file.
+ * A test that names a skill, a route, a file, or a count reads this and not the live index, so an edit of the skills cannot fail it.
+ * A test on the live index states only a rule that holds for each content of the skills.
+ */
+export const snapshotIndex: ExplorerIndex = Schema.decodeUnknownSync(ExplorerIndex)(JSON.parse(readFileSync(nodePath.join(import.meta.dirname, "fixtures", "live-index.json"), "utf8")));
+
+/** A file of the skills that the reader tests render, as it was at the last refresh. */
+export const snapshotDoc = (name: keyof typeof SNAPSHOT_DOCS): { readonly path: string; readonly text: string } => ({
+  path: SNAPSHOT_DOCS[name],
+  text: readFileSync(nodePath.join(import.meta.dirname, "fixtures", "docs", name), "utf8"),
+});
 
 export const skill = (name: string, body = ""): string => `---\nname: ${name}\ndescription: The ${name} fixture.\n---\n\n# ${name}\n\n${body}\n`;
 

@@ -265,6 +265,14 @@ export const hasCount = (group: GroupId): boolean => group !== "router";
 export const captionWidth = (group: GroupId, count: number): number =>
   (GROUP_TITLES[group].length + (hasCount(group) ? 1 + String(count).length : 0)) * FOCUS.captionCharWidth;
 
+const endOf = (rect: Rect): number => rect.x + rect.width;
+
+/** What a caption covers. It has the height of a label, because it is on a row of its column. */
+export const captionRect = (caption: Pick<Caption, "group" | "count" | "at" | "anchor">): Rect => {
+  const width = captionWidth(caption.group, caption.count);
+  return { x: caption.anchor === "end" ? caption.at.x - width : caption.at.x, y: caption.at.y - FRAME.labelHeight / 2, width, height: FRAME.labelHeight };
+};
+
 const rightward = (source: Point, side: Side, plans: readonly ColumnPlan[], make: RowMaker, columnEnd: number = source.x): Comb => {
   const comb: Comb = { rows: new Map(), captions: [], wires: new Map(), order: [] };
   const trunk = Math.max(source.x, columnEnd) + FOCUS.portToTrunk;
@@ -285,8 +293,9 @@ const rightward = (source: Point, side: Side, plans: readonly ColumnPlan[], make
     }
     for (const heading of plan.headings) {
       const at = { x: cx + FOCUS.textReach, y: source.y + FRAME.pitch * heading.rowsBelowAnchor };
-      comb.captions.push({ key: `${side}:${heading.group}`, group: heading.group, count: heading.count, at, anchor: "start", column: cx });
-      end = Math.max(end, at.x + captionWidth(heading.group, heading.count));
+      const caption: Caption = { key: `${side}:${heading.group}`, group: heading.group, count: heading.count, at, anchor: "start", column: cx };
+      comb.captions.push(caption);
+      end = Math.max(end, endOf(captionRect(caption)));
     }
     lane = end + FOCUS.columnToLane;
   });
@@ -315,8 +324,9 @@ const leftward = (target: Point, plans: readonly ColumnPlan[], make: RowMaker): 
     }
     for (const heading of plan.headings) {
       const at = { x: cx - FOCUS.textReach, y: target.y + FRAME.pitch * heading.rowsBelowAnchor };
-      comb.captions.push({ key: `left:${heading.group}`, group: heading.group, count: heading.count, at, anchor: "end", column: cx });
-      start = Math.min(start, at.x - captionWidth(heading.group, heading.count));
+      const caption: Caption = { key: `left:${heading.group}`, group: heading.group, count: heading.count, at, anchor: "end", column: cx };
+      comb.captions.push(caption);
+      start = Math.min(start, captionRect(caption).x);
     }
     columns.unshift(ids);
     lane = start - FOCUS.columnToLane;
@@ -359,7 +369,7 @@ const moved = (point: Point, dx: number): Point => ({ x: round(point.x + dx), y:
 const settled = (draft: Draft): Arrangement => {
   const leftEdge = Math.min(
     ...draft.rows.map(([, row]) => row.left.x),
-    ...draft.captions.map((caption) => (caption.anchor === "end" ? caption.at.x - captionWidth(caption.group, caption.count) : caption.at.x)),
+    ...draft.captions.map((caption) => captionRect(caption).x),
   );
   const dx = FOCUS.left - leftEdge;
   const nodes = new Map<NodeId, Row | Pip>();
@@ -399,8 +409,8 @@ const settled = (draft: Draft): Arrangement => {
     ys.push(placed.centre.y);
   }
   for (const caption of captions) {
-    const width = captionWidth(caption.group, caption.count);
-    xs.push(caption.anchor === "end" ? caption.at.x - width : caption.at.x + width);
+    const rect = captionRect(caption);
+    xs.push(caption.anchor === "end" ? rect.x : endOf(rect));
     ys.push(caption.at.y);
   }
   for (const cable of cables.values()) for (const point of cable.points) ys.push(point.y);

@@ -1,6 +1,6 @@
 import { focusLayout, type Arrangement, type Row } from "../focus-layout";
 import type { Graph } from "../graph";
-import type { Placed, Placement } from "../layout";
+import type { Placed, Placement, Rect } from "../layout";
 import type { NodeId } from "../model";
 import { stageName, type StageTarget } from "./state";
 
@@ -24,3 +24,6 @@ export const standOnStage = (id: NodeId, arrangement: Arrangement | null, placem
 
 /** Where a node is drawn. A node that is off the stage keeps its seat of the rest map, where it is not in view. */
 export const standOf = (id: NodeId, arrangement: Arrangement | null, placement: Placement): Stand | undefined => arrangement?.nodes.get(id) ?? placement.nodes.get(id);
+
+/** What the camera fits: the bounds of the focus arrangement on the stage, or the world of the rest map. */
+export const stageBoundsOf = (arrangement: Arrangement | null, placement: Placement): Rect => arrangement?.bounds ?? { x: 0, y: 0, width: placement.world.width, height: placement.world.height };

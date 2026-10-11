@@ -7,6 +7,9 @@ import { cutAtWord, sentenceOf } from "./sentence";
 import type { ViewState } from "./state";
 import { cursorNodeOf, type Trace } from "./trace";
 
+/** Where the text of a strip is from: what the strip needs of an evidence line. A route gives the same for its own line. */
+export type Source = Pick<Evidence, "file" | "line" | "headings">;
+
 export type Strip =
   | { readonly kind: "idle"; readonly skills: number; readonly playbooks: number; readonly hosted: number; readonly relations: number }
   | { readonly kind: "purpose"; readonly name: string; readonly text: string; readonly hidden: Hidden }
@@ -17,7 +20,7 @@ export type Strip =
       readonly at: number;
       readonly total: number;
       readonly name: string;
-      readonly shown: Evidence | null;
+      readonly shown: Source | null;
       readonly sentence: string;
       readonly conditional: boolean;
       readonly hidden: Hidden;
@@ -26,7 +29,7 @@ export type Strip =
   | { readonly kind: "noMatch"; readonly query: string }
   | { readonly kind: "notInView"; readonly name: string };
 
-export const evidenceOfStrip = (strip: Strip): Evidence | null => (strip.kind === "evidence" || strip.kind === "trace" ? strip.shown : null);
+export const evidenceOfStrip = (strip: Strip): Source | null => (strip.kind === "evidence" || strip.kind === "trace" ? strip.shown : null);
 
 const evidenceStrip = (relation: Relation, graph: Graph): Strip => {
   const from = graph.nodes.get(relation.from);
@@ -55,15 +58,21 @@ const traceStrip = (trace: Trace, cursor: number, graph: Graph, hidden: Hidden):
   const current = trace.steps[cursor - 1];
   const at = cursorNodeOf(trace, cursor);
   const node = at === null ? undefined : graph.nodes.get(at);
-  const headRelation = trace.heads[0] === undefined ? undefined : graph.relations.get(trace.heads[0]);
-  const evidence = current?.evidence ?? headRelation?.evidence.find((item) => item.line === trace.route.line) ?? headRelation?.evidence[0] ?? null;
+  const { route } = trace;
+  const isOfTheRoute = (item: Evidence): boolean => item.file === route.file && item.line === route.line;
+  /** The line of the route as the index holds it. A second route can state the leg to the same playbook, and then that leg has the line of the first one only. Each relation that the route states has the line. */
+  const lineOfTheRoute = trace.heads.flatMap((key) => graph.relations.get(key)?.evidence ?? []).find(isOfTheRoute);
+  /** The route states the leg to its playbook, and each leg to a skill when it has no playbook. The index can hold a different line for such a pair: that of a second route. */
+  const isALegThatTheRouteStates = current === undefined || trace.head === null;
+  const quoted = current === undefined ? lineOfTheRoute : current.evidence;
+  const evidence = quoted !== undefined && (!isALegThatTheRouteStates || isOfTheRoute(quoted)) ? quoted : null;
   return {
     kind: "trace",
-    task: trace.route.task,
+    task: route.task,
     at: cursor,
     total: trace.steps.length,
     name: node === undefined ? "" : nameOf(node),
-    shown: evidence,
+    shown: evidence ?? (isALegThatTheRouteStates ? { file: route.file, line: route.line, headings: [] } : null),
     sentence: evidence === null ? "" : node === undefined ? cutAtWord(evidence.text) : sentenceOf(evidence, node),
     conditional: current?.conditional ?? false,
     hidden,

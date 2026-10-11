@@ -207,3 +207,8 @@
   stroke: var(--needed-by);
   stroke-width: 1.5;
 }
+
+.legend-line.needed-by.closed {
+  fill: var(--ground);
+  stroke-width: 1.3;
+}

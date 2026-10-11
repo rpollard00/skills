@@ -7,7 +7,7 @@ import type { CableClass } from "../shared/view/cable-class";
 import { resolveCamera } from "../shared/view/camera";
 import { decodeHash } from "../shared/view/hash";
 import { showInAddress, type AddressBar } from "../shared/view/history";
-import { togglesLock } from "../shared/view/keys";
+import { isTextField, lockKey } from "../shared/view/keys";
 import { deriveScene } from "../shared/view/scene";
 import { INITIAL, placeOf, type Hover, type Lens, type Stage, type ViewEvent, type ViewState } from "../shared/view/state";
 import { step } from "../shared/view/step";
@@ -15,6 +15,7 @@ import { evidenceOfStrip } from "../shared/view/strip";
 import { focusedNode } from "../shared/view/trace";
 import { TopBar } from "./TopBar";
 import { Legend } from "./Legend";
+import { InlineText } from "./LiveName";
 import { Reader } from "./Reader";
 import { SkillMap } from "./SkillMap";
 import { StageCue } from "./StageCue";
@@ -59,9 +60,6 @@ const useSize = (target: RefObject<HTMLElement | null>): { readonly width: numbe
   }, [target]);
   return size;
 };
-
-const isTyping = (target: EventTarget | null): boolean =>
-  target instanceof HTMLElement && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
 
 const focusIsNowhere = (): boolean => document.activeElement === null || document.activeElement === document.body;
 
@@ -111,11 +109,12 @@ export const App = (): ReactNode => {
   );
   const [state, dispatch] = useReducer((current: ViewState, event: ViewEvent) => step(current, event, stage), INITIAL);
 
+  const [lock] = useState(lockKey);
   useEffect(() => {
     if (!ready) return;
-    dispatch({ kind: "restored", place: decodeHash(window.location.hash) });
+    for (const event of lock.onArrival(decodeHash(window.location.hash))) dispatch(event);
     setRestored(true);
-  }, [ready, graph]);
+  }, [ready, graph, lock]);
 
   useEffect(() => {
     const onAddress = (): void => dispatch({ kind: "restored", place: decodeHash(window.location.hash) });
@@ -134,17 +133,18 @@ export const App = (): ReactNode => {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
-      if (togglesLock({ key: event.key, ctrlKey: event.ctrlKey, metaKey: event.metaKey, altKey: event.altKey, repeat: event.repeat, isTyping: isTyping(event.target) })) {
-        dispatch({ kind: "lockToggled" });
+      const lockEvents = lock.onKey(event, ready);
+      if (lockEvents !== null) {
+        for (const lockEvent of lockEvents) dispatch(lockEvent);
         return;
       }
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (event.key === "Escape") {
-        if (isTyping(event.target) && state.reading.kind === "closed" && state.focus.kind === "none" && state.query === "") finderInput.current?.blur();
+        if (isTextField(event.target) && state.reading.kind === "closed" && state.focus.kind === "none" && state.query === "") finderInput.current?.blur();
         dispatch({ kind: "cleared" });
         return;
       }
-      if (isTyping(event.target)) return;
+      if (isTextField(event.target)) return;
       if (event.key === "/") {
         event.preventDefault();
         finderInput.current?.focus();
@@ -160,7 +160,7 @@ export const App = (): ReactNode => {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [state.reading.kind, state.focus.kind, state.query, quoted]);
+  }, [ready, lock, state.reading.kind, state.focus.kind, state.query, quoted]);
 
   const isReading = state.reading.kind === "open";
   useFocusIntoReaderOnEachVisit(state.visit, isReading, readerRegion);
@@ -230,7 +230,9 @@ export const App = (): ReactNode => {
         />
         {load.kind === "failed" ? (
           <div className="notice" role="alert">
-            <p>{load.message}</p>
+            <p>
+              <InlineText text={load.message} />
+            </p>
             <button type="button" className="text-button" onClick={retry}>
               Retry
             </button>

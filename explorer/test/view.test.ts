@@ -18,12 +18,16 @@ import { INITIAL, placeOf, stageTargetOf, type Place, type Stage, type ViewEvent
 import { step } from "../src/shared/view/step";
 import { evidenceOfStrip } from "../src/shared/view/strip";
 import { traceOf, type TraceStep } from "../src/shared/view/trace";
-import { indexAt, LIVE_REPO } from "./support";
+import { indexAt, LIVE_REPO, snapshotIndex } from "./support";
 
+/** The skills as they are now, for a rule that holds for each content of `skills/`. */
 const liveStage = Effect.gen(function* () {
   const index = yield* (yield* indexAt(LIVE_REPO)).live;
   return stageOf(toGraph(index));
 }).pipe(Effect.provide(NodeServices.layer));
+
+/** The skills as they were at the last refresh of the snapshot, for a test that names a skill, a route, a file, or a count. */
+const snapshotStage = Effect.sync(() => stageOf(toGraph(snapshotIndex)));
 
 const stageOf = (graph: Graph, viewport = { width: 1440, height: 826, reader: 460 }): Stage => ({ graph, placement: layout(graph), viewport });
 
@@ -117,7 +121,7 @@ const positions = (scene: Scene): { [node: string]: string } => Object.fromEntri
 describe("selection", () => {
   it.effect("lights what `architect` needs and what needs it, and dims the rest", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const architect = id("skill:architect");
       const state = run(stage, [{ kind: "picked", id: architect }]);
       const scene = deriveScene({ ...stage, state });
@@ -127,7 +131,7 @@ describe("selection", () => {
       const neededBy = new Set((stage.graph.into.get(architect) ?? []).map((item) => item.from));
       assert.isAbove(needs.size, 5);
       assert.isAbove(neededBy.size, 3);
-      assert.isTrue(needs.has(id("skill:how")) && neededBy.has(id("skill:bug-fix")), "the live index lost a relation that the map must show");
+      assert.isTrue(needs.has(id("skill:how")) && neededBy.has(id("skill:bug-fix")), "the snapshot lost a relation that the map must show");
 
       for (const node of scene.nodes) {
         const expected =
@@ -140,7 +144,7 @@ describe("selection", () => {
         assert.isTrue(cable.key.startsWith(`${architect}>`) || cable.key.endsWith(`>${architect}`), `${cable.key} is not a relation of the selection`);
       }
       const bothWays = [...needs].filter((node) => neededBy.has(node));
-      assert.isAbove(bothWays.length, 0, "the live index lost the pair that goes both ways");
+      assert.isAbove(bothWays.length, 0, "the snapshot lost the pair that goes both ways");
       assert.strictEqual(lit.filter((cable) => cable.tone === "out").length, needs.size);
       assert.strictEqual(lit.filter((cable) => cable.tone === "in").length, neededBy.size - bothWays.length, "a neighbour that goes both ways is on the right, and its relation back has no cable of its own");
       assert.deepStrictEqual<unknown>(lit.filter((cable) => cable.back !== null).map((cable) => cable.key.split(">")[1]).sort(), [...bothWays].sort());
@@ -223,7 +227,7 @@ describe("selection", () => {
 
   it.effect("gives `architect` fewer port marks than cables, because cables into one port share one mark", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const scene = deriveScene({ ...stage, state: run(stage, [{ kind: "picked", id: id("skill:architect") }]) });
       const into = scene.cables.filter((cable) => cable.tone === "in");
       const marks = portMarksOf(scene.cables).filter((mark) => mark.tone === "in");
@@ -244,7 +248,7 @@ describe("selection", () => {
 
   it.effect("gives a selected hosted file a row of its own, with the name of its host", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const file = stage.graph.index.nodes.find((node) => node.kind === "hosted");
       assert.isDefined(file);
       if (file === undefined || file.kind !== "hosted") return;
@@ -259,9 +263,9 @@ describe("selection", () => {
     }),
   );
 
-  it.effect("says that only the router loads `bro` in the live index", () =>
+  it.effect("says that only the router loads `bro` in the snapshot", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const strip = deriveScene({ ...stage, state: run(stage, [{ kind: "picked", id: id("skill:bro") }]) }).strip;
       assert.deepStrictEqual<unknown>(strip, { kind: "onlyRouter", name: "bro", router: "mako", sentences: ["User invokes bro"], hidden: { kind: "none" } });
     }),
@@ -339,9 +343,9 @@ describe("trace", () => {
     assert.isNull(deriveScene({ ...small, state: INITIAL }).cursor);
   });
 
-  it.effect("orders the live perf-issue route by line and leaves out each boundary", () =>
+  it.effect("orders the perf-issue route of the snapshot by line and leaves out each boundary", () =>
     Effect.gen(function* () {
-      const { graph } = yield* liveStage;
+      const { graph } = yield* snapshotStage;
       const route = graph.index.routes.find((item) => item.task === "Diagnose and fix measured slowness");
       assert.isDefined(route);
       if (route === undefined || route.playbook === null) return;
@@ -397,9 +401,9 @@ describe("finder", () => {
     assert.isTrue(scene.nodes.every((node) => node.tone.kind === "dim"));
   });
 
-  it.effect("finds the perf route from the word `slow` in the live index", () =>
+  it.effect("finds the perf route from the word `slow` in the snapshot", () =>
     Effect.gen(function* () {
-      const { graph } = yield* liveStage;
+      const { graph } = yield* snapshotStage;
       const hits = findHits(graph, "slow");
       const routes = hits.flatMap((hit) => (hit.kind === "route" ? [graph.routes.get(hit.route)?.task] : []));
       assert.isTrue(routes.includes("Diagnose and fix measured slowness"));
@@ -416,9 +420,9 @@ describe("lens and legend", () => {
     assert.isTrue(deriveScene({ ...small, state: INITIAL }).nodes.every((node) => node.chips.length === 0));
   });
 
-  it.effect("lights exactly the live skills that have a script or a command", () =>
+  it.effect("lights exactly the skills of the snapshot that have a script or a command", () =>
     Effect.gen(function* () {
-      const stage = yield* liveStage;
+      const stage = yield* snapshotStage;
       const scene = deriveScene({ ...stage, state: run(stage, [{ kind: "lensed", lens: "tools" }]) });
       const tooled = stage.graph.index.nodes.flatMap((node) => (node.kind === "skill" && node.tooling.scripts.length + node.tooling.commands.length > 0 ? [node.id] : []));
 
@@ -824,4 +828,46 @@ describe("evidence sentence", () => {
     assert.isAtMost(cut.length, 221);
     assert.isTrue(cut.endsWith("…") && !cut.endsWith(" …"));
   });
+});
+
+describe("the strip of the first leg of a trace", () => {
+  /** Asserts the rule for each route. It returns the routes whose first leg has no evidence line of its own in the index. */
+  const routesWithALineOfTheirOwnOnly = (stage: Stage): string[] => {
+    const fromOtherLines: string[] = [];
+    for (const route of stage.graph.index.routes) {
+      const scene = deriveScene({ ...stage, state: run(stage, [{ kind: "traced", route: route.id }]) });
+      const strip = scene.strip;
+      assert.strictEqual(strip.kind, "trace", route.task);
+      if (strip.kind !== "trace") continue;
+      assert.deepStrictEqual<unknown>([strip.task, strip.at], [route.task, 0]);
+      assert.deepStrictEqual<unknown>([strip.shown?.file, strip.shown?.line], [route.file, route.line], `${route.task}: the strip quotes a line that is not the line of this route`);
+      const trace = traceOf(stage.graph, route.id);
+      const first = trace?.heads[0] === undefined ? undefined : stage.graph.relations.get(trace.heads[0]);
+      if (first !== undefined && !first.evidence.some((item) => item.file === route.file && item.line === route.line)) fromOtherLines.push(route.task);
+      const lineInTheIndex = (trace?.heads ?? []).flatMap((key) => stage.graph.relations.get(key)?.evidence ?? []).find((item) => item.file === route.file && item.line === route.line);
+      assert.deepStrictEqual(strip.shown?.headings, lineInTheIndex?.headings ?? [], `${route.task}: the strip gives the heading path of the line when the index has the line`);
+      assert.strictEqual(strip.sentence !== "", lineInTheIndex !== undefined, `${route.task}: the strip quotes the line when the index has it`);
+
+      if (trace !== null && trace.head === null) {
+        for (const item of trace.steps) {
+          const onStep = deriveScene({ ...stage, state: run(stage, [{ kind: "traced", route: route.id }, ...Array.from({ length: item.n }, (): ViewEvent => ({ kind: "stepped", by: 1 }))]) }).strip;
+          assert.deepStrictEqual<unknown>(onStep.kind === "trace" ? [onStep.at, onStep.shown?.file, onStep.shown?.line] : null, [item.n, route.file, route.line], `${route.task}, step ${item.n}: a route without a playbook names its skills on its own line`);
+        }
+      }
+    }
+    return fromOtherLines;
+  };
+
+  it.effect("quotes the line of the route itself, for each route", () =>
+    Effect.gen(function* () {
+      routesWithALineOfTheirOwnOnly(yield* liveStage);
+      const stage = yield* snapshotStage;
+      assert.include(routesWithALineOfTheirOwnOnly(stage), "Investigate historical rationale", "the snapshot has a route whose playbook has an evidence line of a different route only");
+      const rationale = stage.graph.index.routes.find((route) => route.task === "Investigate historical rationale");
+      assert.isDefined(rationale);
+      if (rationale === undefined) return;
+      const strip = deriveScene({ ...stage, state: run(stage, [{ kind: "traced", route: rationale.id }]) }).strip;
+      assert.deepStrictEqual<unknown>(strip.kind === "trace" ? [strip.name, strip.shown?.headings, strip.sentence] : null, ["investigation", ["Mako", "Playbooks"], "Investigate historical rationale: Investigation with why"], "the line names the playbook without a link, so only the relation to `why` holds it");
+    }),
+  );
 });

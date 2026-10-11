@@ -112,6 +112,14 @@ export const Legend = ({ muted, onMute, onClose }: LegendProps): ReactNode => {
           </Sample>
           it also needs the selection
         </li>
+        <li>
+          <Sample>
+            <path className="legend-line" data-weight="strong" d="M-14,0H12" />
+            <path className="legend-line head needed-by closed" d="M-7,-3.2L-12,0L-7,3.2Z" />
+            <path className="legend-line head" d={ARROW_HEAD} />
+          </Sample>
+          it also needs the selection, with a condition
+        </li>
       </ul>
       <ul aria-label="Selection">
         <li>

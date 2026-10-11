@@ -4,7 +4,7 @@ import { Effect, Schema } from "effect";
 import { toGraph } from "../src/shared/graph";
 import { cablesOnOneTrunk, FRAME, layout, monoAdvance, type Placement, type Rect, type Seat, type Segment } from "../src/shared/layout";
 import { ExplorerIndex, type NodeId, type Relation, type SkillNode } from "../src/shared/model";
-import { indexAt, LIVE_REPO } from "./support";
+import { indexAt, LIVE_REPO, snapshotIndex } from "./support";
 
 const liveIndex = Effect.gen(function* () {
   return yield* (yield* indexAt(LIVE_REPO)).live;
@@ -61,7 +61,7 @@ describe("layout on the live index", () => {
 
   it.effect("moves no node when a relation is added or removed", () =>
     Effect.gen(function* () {
-      const index = yield* liveIndex;
+      const index = snapshotIndex;
       const before = layout(toGraph(index));
       const sample = index.relations[0];
       assert.isDefined(sample);
@@ -81,15 +81,17 @@ describe("layout on the live index", () => {
       const index = yield* liveIndex;
       const graph = toGraph(index);
       const before = layout(graph);
-      const like = graph.columns.skills[0];
-      assert.isTrue(like?.kind === "skill");
+      const skills = graph.columns.skills;
+      const like = skills[Math.floor((skills.length - 1) / 2)];
       if (like?.kind !== "skill") return;
 
-      const name = "jz-inserted";
+      // The name starts with the name of the middle skill, so the new skill is in the middle of the column for each content of the skills.
+      const name = `${like.name}-inserted`;
       const after = layout(toGraph(withSkill(index, like, name)));
       const moved = seats(before).filter(([id, placed]) => after.nodes.get(id)?.centre.y !== placed.centre.y);
+      const later = skills.filter((node) => node.name > name);
 
-      assert.isAbove(moved.length, 0);
+      assert.strictEqual(moved.length, later.length, "each skill that is ranked after the new one moves, and no other node");
       for (const [id, placed] of moved) {
         const node = graph.nodes.get(id);
         assert.strictEqual(placed.column, "skills", `${id} moved`);
@@ -97,8 +99,6 @@ describe("layout on the live index", () => {
         assert.strictEqual(after.nodes.get(id)?.centre.y, placed.centre.y + FRAME.pitch);
         assert.strictEqual(after.nodes.get(id)?.centre.x, placed.centre.x);
       }
-      const later = graph.columns.skills.filter((node) => node.name > name);
-      assert.strictEqual(moved.length, later.length);
     }),
   );
 
@@ -107,7 +107,7 @@ describe("layout on the live index", () => {
       const index = yield* liveIndex;
       const placement = layout(toGraph(index));
       const placed = seats(placement);
-      assert.isAbove(placement.cables.size, 100);
+      assert.isAtMost(placement.cables.size, index.relations.length, "a relation has one cable at most");
 
       const labelHits: string[] = [];
       placed.forEach(([id, a], at) => {
@@ -131,25 +131,32 @@ describe("layout on the live index", () => {
     }),
   );
 
+  /** Asserts one trunk for each side of each node. It returns the number of sides with more than one cable, and the number of cables of the router. */
+  const combsOnOneTrunk = (index: ExplorerIndex): { readonly combs: number; readonly ofRouter: number } => {
+    const graph = toGraph(index);
+    const placement = layout(graph);
+    let combs = 0;
+    for (const node of graph.index.nodes) {
+      const cables = [...cablesOnOneTrunk(graph, placement, node.id).values()];
+      for (const direction of [1, -1]) {
+        const trunks = cables.flatMap((cable) => {
+          const [leaving, upright] = cable.segments;
+          return leaving !== undefined && upright !== undefined && Math.sign(leaving[1].x - leaving[0].x) === direction ? [leaving[1].x] : [];
+        });
+        assert.isAtMost(new Set(trunks).size, 1, `${node.id}: the cables that leave to the ${direction === 1 ? "right" : "left"} go up and down at x ${[...new Set(trunks)].join(" and ")}`);
+        if (trunks.length > 1) combs += 1;
+      }
+    }
+    const router = [...graph.routers][0];
+    return { combs, ofRouter: router === undefined ? 0 : cablesOnOneTrunk(graph, placement, router).size };
+  };
+
   it.effect("gives the cables out of one node one trunk on each side, the router included", () =>
     Effect.gen(function* () {
-      const graph = toGraph(yield* liveIndex);
-      const placement = layout(graph);
-      let combs = 0;
-      for (const node of graph.index.nodes) {
-        const cables = [...cablesOnOneTrunk(graph, placement, node.id).values()];
-        for (const direction of [1, -1]) {
-          const trunks = cables.flatMap((cable) => {
-            const [leaving, upright] = cable.segments;
-            return leaving !== undefined && upright !== undefined && Math.sign(leaving[1].x - leaving[0].x) === direction ? [leaving[1].x] : [];
-          });
-          assert.isAtMost(new Set(trunks).size, 1, `${node.id}: the cables that leave to the ${direction === 1 ? "right" : "left"} go up and down at x ${[...new Set(trunks)].join(" and ")}`);
-          if (trunks.length > 1) combs += 1;
-        }
-      }
-      assert.isAbove(combs, 40, "the live index has many nodes with more than one cable on a side");
-      const router = [...graph.routers][0];
-      assert.isAbove(router === undefined ? 0 : cablesOnOneTrunk(graph, placement, router).size, 20, "the router has cables to playbooks and to skills");
+      combsOnOneTrunk(yield* liveIndex);
+      const ofSnapshot = combsOnOneTrunk(snapshotIndex);
+      assert.isAbove(ofSnapshot.combs, 40, "the snapshot has many nodes with more than one cable on a side");
+      assert.isAbove(ofSnapshot.ofRouter, 20, "the router of the snapshot has cables to playbooks and to skills");
     }),
   );
 
@@ -268,7 +275,7 @@ describe("hosted files on one row", () => {
     assert.strictEqual(placement.cables.size, 2, "the cable to a folded pip uses the port of the host");
   });
 
-  it("shows each pip while the pips fit, as on the live router", () => {
+  it("shows each pip while the pips fit", () => {
     const placement = layout(toGraph(routerWithHostedFiles(3)));
     const router = seats(placement).find(([id]) => id === "skill:mako")?.[1];
     assert.isNull(router?.foldedPips);
