@@ -1,18 +1,20 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
+import { FOCUS } from "../src/shared/focus-layout";
 import { toGraph, type Graph } from "../src/shared/graph";
 import { layout } from "../src/shared/layout";
 import { ExplorerIndex, NodeId, relationKey, RouteId } from "../src/shared/model";
 import { CABLE_CLASSES, classOf, LEGEND } from "../src/shared/view/cable-class";
+import { arrangementOf } from "../src/shared/view/arranged";
 import { resolveCamera } from "../src/shared/view/camera";
 import { findHits } from "../src/shared/view/finder";
 import { decodeHash, encodeHash } from "../src/shared/view/hash";
-import { historyAction, opensNewEntry } from "../src/shared/view/history";
+import { opensNewEntry, showInAddress, type AddressBar } from "../src/shared/view/history";
 import { portMarksOf } from "../src/shared/view/ports";
 import { deriveScene, GLYPHS, type Scene } from "../src/shared/view/scene";
 import { sentenceOf } from "../src/shared/view/sentence";
-import { INITIAL, placeOf, type Place, type Stage, type ViewEvent, type ViewState } from "../src/shared/view/state";
+import { INITIAL, placeOf, stageTargetOf, type Place, type Stage, type ViewEvent, type ViewState } from "../src/shared/view/state";
 import { step } from "../src/shared/view/step";
 import { evidenceOfStrip } from "../src/shared/view/strip";
 import { traceOf, type TraceStep } from "../src/shared/view/trace";
@@ -132,28 +134,43 @@ describe("selection", () => {
           node.id === architect ? "selected" : needs.has(node.id) && neededBy.has(node.id) ? "mutual" : needs.has(node.id) ? "needs" : neededBy.has(node.id) ? "neededBy" : "dim";
         assert.strictEqual(tone[node.id], expected, node.id);
       }
-      for (const cable of scene.cables) {
-        const expected = cable.key.startsWith(`${architect}>`) ? "out" : cable.key.endsWith(`>${architect}`) ? "in" : "weave";
-        assert.strictEqual(cable.tone, expected, cable.key);
+      const lit = scene.cables.filter((cable) => cable.tone !== "weave");
+      for (const cable of lit) {
+        assert.strictEqual(cable.tone, cable.key.startsWith(`${architect}>`) ? "out" : "in", cable.key);
+        assert.isTrue(cable.key.startsWith(`${architect}>`) || cable.key.endsWith(`>${architect}`), `${cable.key} is not a relation of the selection`);
       }
-      assert.strictEqual(scene.cables.filter((cable) => cable.tone === "out").length, needs.size);
-      assert.strictEqual(scene.weave, "low");
+      const bothWays = [...needs].filter((node) => neededBy.has(node));
+      assert.isAbove(bothWays.length, 0, "the live index lost the pair that goes both ways");
+      assert.strictEqual(lit.filter((cable) => cable.tone === "out").length, needs.size);
+      assert.strictEqual(lit.filter((cable) => cable.tone === "in").length, neededBy.size - bothWays.length, "a neighbour that goes both ways is on the right, and its relation back has no cable of its own");
+      assert.deepStrictEqual<unknown>(lit.filter((cable) => cable.back !== null).map((cable) => cable.key.split(">")[1]).sort(), [...bothWays].sort());
+      assert.deepStrictEqual<unknown>([scene.weave, scene.arranged], ["off", true]);
       assert.deepStrictEqual<unknown>(state.reading, { kind: "open", path: "skills/architect/SKILL.md", anchor: null, line: null, back: [] });
 
       for (const node of scene.nodes) {
+        assert.strictEqual(node.offStage, tone[node.id] === "dim", `${node.id}: each node that is not a neighbour leaves the stage`);
         if (node.tone.kind !== "needs") continue;
-        const cable = stage.placement.cables.get(relationKey({ from: architect, to: node.id }));
+        const cable = lit.find((item) => item.key === relationKey({ from: architect, to: node.id }));
         assert.strictEqual(node.tone.length, cable?.length, `${node.id} carries the length of the cable that lights it`);
       }
     }),
   );
 
-  it("moves no node, and reports the relation under the pointer", () => {
+  it("moves the selection and its neighbours into an arrangement, and reports the relation under the pointer", () => {
     const rest = deriveScene({ ...small, state: INITIAL });
     const state = run(small, [{ kind: "picked", id: id("skill:alpha") }, { kind: "pointed", hover: { kind: "node", id: id("skill:beta") } }]);
     const scene = deriveScene({ ...small, state });
 
-    assert.deepStrictEqual<unknown>(positions(scene), positions(rest));
+    assert.deepStrictEqual<unknown>(scene.nodes.filter((node) => !node.offStage).map((node) => node.id), ["playbook:build", "skill:alpha", "skill:beta"], "the keyboard order: what needs it, the selection, what it needs");
+    for (const node of scene.nodes) {
+      const moved = positions(scene)[node.id] !== positions(rest)[node.id];
+      assert.strictEqual(moved, !node.offStage, `${node.id}: a node on the stage moves, and a node that is off the stage stays at its seat`);
+    }
+    const home = deriveScene({ ...small, state: step(state, { kind: "deselected" }, small) });
+    assert.deepStrictEqual<unknown>(positions(home), positions(rest), "a click on the empty stage sends each node to its seat");
+    assert.isTrue(home.nodes.every((node) => node.at === small.placement.nodes.get(node.id) && !node.offStage));
+    assert.deepStrictEqual<unknown>([home.arranged, home.weave], [false, "rest"]);
+
     assert.strictEqual(tones(scene)["skill:beta"], "mutual");
     assert.strictEqual(tones(scene)["playbook:build"], "neededBy");
     assert.strictEqual(scene.strip.kind, "evidence");
@@ -161,7 +178,7 @@ describe("selection", () => {
     assert.deepStrictEqual<unknown>([scene.strip.from, scene.strip.to, scene.strip.sentence], ["alpha", "beta", "Line 20 names beta."]);
     assert.strictEqual(scene.strip.relation.ticket, "0a1b2c3d");
     assert.deepStrictEqual<unknown>(evidenceOfStrip(scene.strip), { file: "skills/alpha/SKILL.md", line: 20, headings: ["Fixture", "Use"], rules: ["backtick"], text: "Line 20 names `beta`. A second sentence follows." });
-    assert.isTrue(scene.cables.find((cable) => cable.key === "skill:alpha>skill:beta")?.bright);
+    assert.isTrue(scene.cables.find((cable) => cable.key === "skill:alpha>skill:beta" && cable.tone === "out")?.bright);
     assert.isNull(evidenceOfStrip(deriveScene({ ...small, state: INITIAL }).strip));
 
     const opened = step(state, { kind: "evidenceOpened", file: "skills/alpha/SKILL.md", line: 20 }, small);
@@ -190,12 +207,11 @@ describe("selection", () => {
     const into = alpha.cables.filter((cable) => cable.tone === "in");
     const marks = portMarksOf(alpha.cables);
 
-    assert.strictEqual(into.length, 2);
+    assert.strictEqual(into.length, 1, "`beta` goes both ways, so its relation back has no cable of its own");
     assert.deepStrictEqual<unknown>(
       marks.map((mark) => [mark.tone, mark.cables.map((cable) => cable.key).sort(), mark.hasArrow, mark.hasBar]).sort(),
       [
         ["in", ["playbook:build>skill:alpha"], true, false],
-        ["in", ["skill:beta>skill:alpha"], true, false],
         ["out", ["skill:alpha>skill:beta"], true, false],
       ],
     );
@@ -220,24 +236,26 @@ describe("selection", () => {
 
   it("names the router when it is the only node that loads the selection", () => {
     const scene = deriveScene({ ...small, state: run(small, [{ kind: "picked", id: id("playbook:build") }]) });
-    assert.deepStrictEqual<unknown>(scene.strip, { kind: "onlyRouter", name: "build", router: "router", sentences: ["Build new behavior"] });
+    assert.deepStrictEqual<unknown>(scene.strip, { kind: "onlyRouter", name: "build", router: "router", sentences: ["Build new behavior"], hidden: { kind: "none" } });
 
     const plain = deriveScene({ ...small, state: run(small, [{ kind: "picked", id: id("skill:gamma") }]) });
-    assert.deepStrictEqual<unknown>(plain.strip, { kind: "purpose", name: "gamma", text: "The gamma fixture." });
+    assert.deepStrictEqual<unknown>(plain.strip, { kind: "purpose", name: "gamma", text: "The gamma fixture.", hidden: { kind: "none" } });
   });
 
-  it.effect("keeps the host of a selected hosted file readable", () =>
+  it.effect("gives a selected hosted file a row of its own, with the name of its host", () =>
     Effect.gen(function* () {
       const stage = yield* liveStage;
       const file = stage.graph.index.nodes.find((node) => node.kind === "hosted");
       assert.isDefined(file);
       if (file === undefined || file.kind !== "hosted") return;
       const scene = deriveScene({ ...stage, state: run(stage, [{ kind: "picked", id: file.id }]) });
-      const readers = new Set((stage.graph.into.get(file.id) ?? []).map((item) => item.from));
+      const at = scene.nodes.find((node) => node.id === file.id)?.at;
+      const host = stage.graph.nodes.get(file.host);
 
       assert.strictEqual(tones(scene)[file.id], "selected");
-      assert.strictEqual(tones(scene)[file.host], readers.has(file.host) ? "neededBy" : "match");
+      assert.deepStrictEqual<unknown>(at?.kind === "row" ? [at.mirrored, at.centre.y, at.note] : null, [false, FOCUS.y, host?.kind === "skill" ? host.name : null], "the row of the selection, with its glyph on the left");
       assert.isAbove(scene.cables.filter((cable) => cable.tone === "in").length, 0);
+      assert.strictEqual(scene.cables.filter((cable) => cable.tone === "out").length, 0, "a hosted file is a target only");
     }),
   );
 
@@ -245,7 +263,7 @@ describe("selection", () => {
     Effect.gen(function* () {
       const stage = yield* liveStage;
       const strip = deriveScene({ ...stage, state: run(stage, [{ kind: "picked", id: id("skill:bro") }]) }).strip;
-      assert.deepStrictEqual<unknown>(strip, { kind: "onlyRouter", name: "bro", router: "mako", sentences: ["User invokes bro"] });
+      assert.deepStrictEqual<unknown>(strip, { kind: "onlyRouter", name: "bro", router: "mako", sentences: ["User invokes bro"], hidden: { kind: "none" } });
     }),
   );
 });
@@ -440,7 +458,7 @@ describe("a skill with a defect", () => {
     const scene = deriveScene({ ...broken, state: run(broken, [{ kind: "pointed", hover: { kind: "node", id: id("skill:gamma") } }]) });
 
     assert.deepStrictEqual<unknown>(scene.nodes.filter((node) => node.defective).map((node) => node.id), ["skill:gamma"]);
-    assert.deepStrictEqual<unknown>(scene.strip, { kind: "purpose", name: "gamma", text: "The file has no frontmatter." });
+    assert.deepStrictEqual<unknown>(scene.strip, { kind: "purpose", name: "gamma", text: "The file has no frontmatter.", hidden: { kind: "none" } });
   });
 });
 
@@ -469,7 +487,7 @@ describe("the resting map", () => {
     assert.deepStrictEqual<unknown>(state.focus, { kind: "none" });
     assert.deepStrictEqual<unknown>(scene.cables.filter((cable) => cable.tone === "previewOut").map((cable) => cable.key), ["skill:router>playbook:build", "skill:router>skill:beta"]);
     assert.isTrue(scene.nodes.every((node) => node.tone.kind === "rest"));
-    assert.deepStrictEqual<unknown>(scene.strip, { kind: "purpose", name: "router", text: "The router fixture." });
+    assert.deepStrictEqual<unknown>(scene.strip, { kind: "purpose", name: "router", text: "The router fixture.", hidden: { kind: "none" } });
   });
 
   it("rings the node of a name in the reader and brightens its cable from the selection, with no preview", () => {
@@ -478,7 +496,7 @@ describe("the resting map", () => {
     const beta = scene.nodes.find((node) => node.id === "skill:beta");
 
     assert.deepStrictEqual<unknown>([beta?.ringing, beta?.hovered], [true, true]);
-    assert.isTrue(scene.cables.find((cable) => cable.key === "skill:alpha>skill:beta")?.bright);
+    assert.isTrue(scene.cables.find((cable) => cable.key === "skill:alpha>skill:beta" && cable.tone === "out")?.bright);
     assert.deepStrictEqual<unknown>(scene.cables.filter((cable) => cable.tone.startsWith("preview")), []);
   });
 });
@@ -558,17 +576,34 @@ describe("reader history", () => {
 });
 
 describe("camera", () => {
-  it("fits the world, and shows all of it beside the reader when the window permits", () => {
+  it("fits the rest map, and fits the arrangement of a selection beside the reader", () => {
     const closed = resolveCamera(INITIAL, small);
     const reading = run(small, [{ kind: "picked", id: id("skill:alpha") }]);
     const beside = resolveCamera(reading, small);
     const world = small.placement.world;
+    const bounds = arrangementOf(small.graph, stageTargetOf(reading))?.bounds;
+    assert.isDefined(bounds);
+    if (bounds === undefined) return;
 
     assert.closeTo(closed.tx + (world.width * closed.scale) / 2, 720, 0.001);
-    assert.isAtMost(beside.tx + world.width * beside.scale, 1440 - 460 + 0.001);
-    assert.isAtLeast(beside.tx, -0.001);
-    assert.isBelow(beside.scale, closed.scale);
+    assert.isAtLeast(beside.tx + bounds.x * beside.scale, -0.001);
+    assert.isAtMost(beside.tx + (bounds.x + bounds.width) * beside.scale, 1440 - 460 + 0.001);
+    assert.isAtLeast(beside.ty + bounds.y * beside.scale, -0.001);
+    assert.isAtMost(beside.ty + (bounds.y + bounds.height) * beside.scale, 826 + 0.001);
+    assert.closeTo(beside.tx + (bounds.x + bounds.width / 2) * beside.scale, (1440 - 460) / 2, 0.001, "the arrangement is in the middle of the area that the reader leaves");
     assert.deepStrictEqual<unknown>(reading.camera, { kind: "fit" });
+  });
+
+  it("returns to the fit when the selection changes, because the nodes are then in a different arrangement", () => {
+    const zoomed = step(INITIAL, { kind: "zoomed", factor: 2, at: { x: 400, y: 300 } }, small);
+    const picked = step(zoomed, { kind: "picked", id: id("skill:alpha") }, small);
+    const panned = step(picked, { kind: "panned", dx: 40, dy: 0 }, small);
+
+    assert.strictEqual(zoomed.camera.kind, "free");
+    assert.deepStrictEqual<unknown>(picked.camera, { kind: "fit" });
+    assert.strictEqual(step(panned, { kind: "readerClosed" }, small).camera.kind, "free", "the same selection keeps the camera of the user");
+    assert.deepStrictEqual<unknown>(step(panned, { kind: "picked", id: id("skill:beta") }, small).camera, { kind: "fit" });
+    assert.deepStrictEqual<unknown>(run(small, [{ kind: "cleared" }, { kind: "cleared" }], panned).camera, { kind: "fit" }, "the way back to the rest map");
   });
 
   it("zooms about the pointer, pans, and returns to the fit", () => {
@@ -588,19 +623,22 @@ describe("camera", () => {
     assert.isAtMost(resolveCamera(step(INITIAL, { kind: "zoomed", factor: 1e9, at }, small), small).scale, 4);
   });
 
-  it("makes the least move that keeps the focused node clear of the reader", () => {
-    const far = step(INITIAL, { kind: "panned", dx: -900, dy: 0 }, small);
-    const picked = step(far, { kind: "picked", id: id("skill:router") }, small);
-    const camera = resolveCamera(picked, small);
-    const seat = small.placement.nodes.get(id("skill:router"));
-    assert.isDefined(seat);
-    if (seat === undefined) return;
-    const x = camera.tx + seat.centre.x * camera.scale;
+  it("makes the least move that keeps the selected node clear of the reader, when the user has moved the camera", () => {
+    const router = id("skill:router");
+    const key = relationKey({ from: router, to: id("playbook:build") });
+    const far = run(small, [{ kind: "picked", id: router }, { kind: "panned", dx: -900, dy: 0 }]);
+    const followed = step(far, { kind: "inspected", key }, small);
+    const camera = resolveCamera(followed, small);
+    const row = arrangementOf(small.graph, stageTargetOf(followed))?.nodes.get(router);
+    assert.isDefined(row);
+    if (row === undefined) return;
+    const x = camera.tx + row.centre.x * camera.scale;
 
+    assert.isBelow(resolveCamera(far, small).tx + row.centre.x * camera.scale, 0, "the pan put the selected node off the screen");
     assert.isAtLeast(x, 20);
     assert.isAtMost(x, 1440 - 460 - 20);
     assert.strictEqual(camera.scale, resolveCamera(far, small).scale);
-    assert.deepStrictEqual<unknown>(step(picked, { kind: "picked", id: id("skill:router") }, small).camera, picked.camera, "a node in view needs no move");
+    assert.deepStrictEqual<unknown>(step(followed, { kind: "inspected", key }, small).camera, followed.camera, "a node in view needs no move");
   });
 });
 
@@ -627,18 +665,20 @@ describe("camera in a small window", () => {
 describe("browser history", () => {
   const stale = "#/skill/no-such-skill?doc=skills/no-such-skill/SKILL.md";
 
-  /** A browser with a history list. `sync` is what the app does after each change of the address or of the state. */
   const browser = (entries: string[]) => {
     let at = entries.length - 1;
     let state = INITIAL;
-    const sync = (): void => {
-      const action = historyAction({ shown: decodeHash(entries[at] ?? ""), place: placeOf(state), graph: fixture });
-      if (action === "replace") entries[at] = encodeHash(placeOf(state));
-      if (action === "push") {
-        entries.splice(at + 1, entries.length, encodeHash(placeOf(state)));
+    const bar: AddressBar = {
+      hash: () => entries[at] ?? "",
+      replace: (hash) => {
+        entries[at] = hash;
+      },
+      push: (hash) => {
+        entries.splice(at + 1, entries.length, hash);
         at += 1;
-      }
+      },
     };
+    const sync = (): void => showInAddress(bar, placeOf(state), fixture);
     const arrive = (): void => {
       state = step(state, { kind: "restored", place: decodeHash(entries[at] ?? "") }, small);
       sync();
@@ -731,6 +771,7 @@ describe("URL hash", () => {
     placeOf(run(small, [{ kind: "traced", route: routeId("build-new-behavior") }, { kind: "stepped", by: 1 }, { kind: "readerClosed" }])),
     {
       focus: { kind: "node", id: id("hosted:skills/mako/references/execution.md") },
+      pin: { kind: "unlocked" },
       reading: { kind: "open", path: "skills/mako/references/execution.md", anchor: "skill lookup & more", line: 12, back: [] },
       query: "a+b c/d?e#f&g=h",
       lens: "tools",

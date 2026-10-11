@@ -1,8 +1,3 @@
-/*
- * A node takes each color from a variable, and a tone sets the variables. A dimmed node is dim through these
- * variables and not through the opacity of the group, so the focus ring and the label of a node under the pointer
- * or under keyboard focus keep their full strength.
- */
 .node {
   cursor: pointer;
   --glyph: rgb(var(--paper) / 0.9);
@@ -37,6 +32,10 @@
   font-size: var(--label-size);
   font-weight: 400;
   transition: fill 120ms linear;
+}
+
+.node .label .note {
+  fill: var(--count);
 }
 
 .node .label .hit-text {
@@ -106,8 +105,8 @@
 .node .changed {
   fill: none;
   stroke: var(--badge);
-  stroke-width: 1;
-  stroke-dasharray: 2 2.5;
+  stroke-width: 1.1;
+  stroke-linejoin: round;
 }
 
 .node .defect {
@@ -126,7 +125,6 @@
   stroke: none;
 }
 
-/* A folded pip shows through the count of its host until it is lit. */
 .node[data-folded="true"] .hit {
   pointer-events: none;
 }
@@ -175,7 +173,6 @@
   --glyph: rgb(var(--paper));
 }
 
-/* After `dim`, so a dimmed node under the pointer or under keyboard focus reads at full strength. */
 .node[data-hovered="true"],
 .node:focus-visible {
   --label: rgb(var(--paper));
@@ -223,12 +220,11 @@
   --glyph: var(--needs);
 }
 
-/* `--arrival-delay` is the time at which the cable that lights the node arrives. */
 .node[data-tone="needs"] .shape,
 .node[data-tone="needs"] .label,
 .node[data-tone="step"] .shape,
 .node[data-tone="step"] .label {
-  transition-delay: var(--arrival-delay, 0ms);
+  transition-delay: var(--cable-arrival-delay, 0ms);
 }
 
 .node[data-tone="neededBy"] {
@@ -255,7 +251,6 @@
 
 .node .step-disc.conditional {
   fill: var(--ground);
-  stroke-dasharray: 2.4 1.8;
 }
 
 .node .step-number {
@@ -267,6 +262,16 @@
 
 .node .step-number.conditional {
   fill: var(--needs-bright);
+}
+
+.node {
+  transition: opacity 160ms linear calc(var(--node-travel) / 2);
+}
+
+.node[data-off-stage="true"] {
+  opacity: 0;
+  pointer-events: none;
+  transition-delay: 0ms;
 }
 
 .ring-once {

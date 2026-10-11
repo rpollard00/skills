@@ -5,17 +5,19 @@ import { layout, type Point } from "../shared/layout";
 import { ExplorerIndex, type NodeId, type RelationKey, type RouteId } from "../shared/model";
 import type { CableClass } from "../shared/view/cable-class";
 import { resolveCamera } from "../shared/view/camera";
-import { decodeHash, encodeHash } from "../shared/view/hash";
-import { historyAction } from "../shared/view/history";
+import { decodeHash } from "../shared/view/hash";
+import { showInAddress, type AddressBar } from "../shared/view/history";
+import { togglesLock } from "../shared/view/keys";
 import { deriveScene } from "../shared/view/scene";
 import { INITIAL, placeOf, type Hover, type Lens, type Stage, type ViewEvent, type ViewState } from "../shared/view/state";
 import { step } from "../shared/view/step";
 import { evidenceOfStrip } from "../shared/view/strip";
 import { focusedNode } from "../shared/view/trace";
-import { Finder } from "./Finder";
+import { TopBar } from "./TopBar";
 import { Legend } from "./Legend";
 import { Reader } from "./Reader";
 import { SkillMap } from "./SkillMap";
+import { StageCue } from "./StageCue";
 import { OPEN_EVIDENCE_KEY, Strip } from "./Strip";
 import { useIndex } from "./useIndex";
 
@@ -41,10 +43,6 @@ const EMPTY_GRAPH = toGraph(
 );
 const EMPTY_PLACEMENT = layout(EMPTY_GRAPH);
 
-/**
- * The one rule for the width of the reader. The camera leaves this much room for it, and the stylesheet gets
- * the same number through `--reader`.
- */
 const readerWidth = (stageWidth: number): number => Math.round(Math.min(600, Math.max(420, stageWidth * 0.32)));
 
 const useSize = (target: RefObject<HTMLElement | null>): { readonly width: number; readonly height: number } => {
@@ -65,14 +63,40 @@ const useSize = (target: RefObject<HTMLElement | null>): { readonly width: numbe
 const isTyping = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
 
-/** No element holds the focus: the element that held it left the page, as the reader does when it closes. */
 const focusIsNowhere = (): boolean => document.activeElement === null || document.activeElement === document.body;
+
+const urlOf = (hash: string): string => `${window.location.pathname}${window.location.search}${hash}`;
+
+const ADDRESS_BAR: AddressBar = {
+  hash: () => window.location.hash,
+  push: (hash) => window.history.pushState(null, "", urlOf(hash)),
+  replace: (hash) => window.history.replaceState(null, "", urlOf(hash)),
+};
+
+const useFocusIntoReaderOnEachVisit = (visit: number, isReading: boolean, reader: RefObject<HTMLDivElement | null>): void => {
+  const visitWithFocus = useRef(visit);
+  useEffect(() => {
+    if (visitWithFocus.current === visit) return;
+    visitWithFocus.current = visit;
+    if (isReading) reader.current?.focus({ preventScroll: true });
+  }, [visit, isReading, reader]);
+};
+
+const useFocusBackOnNodeWhenReaderCloses = (isReading: boolean, selected: NodeId | null, stage: RefObject<HTMLDivElement | null>): void => {
+  const wasReading = useRef(isReading);
+  useEffect(() => {
+    const closed = wasReading.current && !isReading;
+    wasReading.current = isReading;
+    if (!closed || selected === null || !focusIsNowhere()) return;
+    stage.current?.querySelector<SVGGElement>(`[data-node="${CSS.escape(selected)}"][data-off-stage="false"]`)?.focus({ preventScroll: true });
+  }, [isReading, selected, stage]);
+};
 
 export const App = (): ReactNode => {
   const { load, retry } = useIndex();
   const stageElement = useRef<HTMLDivElement | null>(null);
   const finderInput = useRef<HTMLInputElement | null>(null);
-  const keyControl = useRef<HTMLButtonElement | null>(null);
+  const legendControl = useRef<HTMLButtonElement | null>(null);
   const readerRegion = useRef<HTMLDivElement | null>(null);
   const size = useSize(stageElement);
   const [legendOpen, setLegendOpen] = useState(false);
@@ -93,21 +117,15 @@ export const App = (): ReactNode => {
     setRestored(true);
   }, [ready, graph]);
 
-  // Back, Forward, and a hand-edited address change only the hash, and each change of the hash gives this event.
   useEffect(() => {
     const onAddress = (): void => dispatch({ kind: "restored", place: decodeHash(window.location.hash) });
     window.addEventListener("hashchange", onAddress);
     return () => window.removeEventListener("hashchange", onAddress);
   }, []);
 
-  const place = useMemo(() => placeOf(state), [state.focus, state.reading, state.query, state.lens, state.muted]);
+  const place = useMemo(() => placeOf(state), [state.focus, state.pin, state.reading, state.query, state.lens, state.muted]);
   useEffect(() => {
-    if (!restored) return;
-    const action = historyAction({ shown: decodeHash(window.location.hash), place, graph });
-    if (action === "none") return;
-    const url = `${window.location.pathname}${window.location.search}${encodeHash(place)}`;
-    if (action === "push") window.history.pushState(null, "", url);
-    else window.history.replaceState(null, "", url);
+    if (restored) showInAddress(ADDRESS_BAR, place, graph);
   }, [restored, place, graph]);
 
   const scene = useMemo(() => (ready ? deriveScene({ ...stage, state }) : null), [ready, stage, state]);
@@ -116,6 +134,10 @@ export const App = (): ReactNode => {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
+      if (togglesLock({ key: event.key, ctrlKey: event.ctrlKey, metaKey: event.metaKey, altKey: event.altKey, repeat: event.repeat, isTyping: isTyping(event.target) })) {
+        dispatch({ kind: "lockToggled" });
+        return;
+      }
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (event.key === "Escape") {
         if (isTyping(event.target) && state.reading.kind === "closed" && state.focus.kind === "none" && state.query === "") finderInput.current?.blur();
@@ -140,30 +162,16 @@ export const App = (): ReactNode => {
     return () => window.removeEventListener("keydown", onKey);
   }, [state.reading.kind, state.focus.kind, state.query, quoted]);
 
-  // A node, a hit, a link, or a step sent the reader to a target: the keyboard focus goes with it.
-  // Without this, the reader is some 60 Tab presses after the node that opened it.
-  const visitWithFocus = useRef(state.visit);
   const isReading = state.reading.kind === "open";
-  useEffect(() => {
-    if (visitWithFocus.current === state.visit) return;
-    visitWithFocus.current = state.visit;
-    if (isReading) readerRegion.current?.focus({ preventScroll: true });
-  }, [state.visit, isReading]);
-
-  // The reader closed: the keyboard focus returns to the node that it was about.
-  const wasReading = useRef(isReading);
-  const focusedId = focusedNode(state.focus, graph);
-  useEffect(() => {
-    const closed = wasReading.current && !isReading;
-    wasReading.current = isReading;
-    if (!closed || focusedId === null || !focusIsNowhere()) return;
-    stageElement.current?.querySelector<SVGGElement>(`[data-node="${CSS.escape(focusedId)}"]`)?.focus({ preventScroll: true });
-  }, [isReading, focusedId]);
+  useFocusIntoReaderOnEachVisit(state.visit, isReading, readerRegion);
+  useFocusBackOnNodeWhenReaderCloses(isReading, focusedNode(state.focus, graph), stageElement);
 
   const onHover = useCallback((hover: Hover) => dispatch({ kind: "pointed", hover }), []);
   const onPick = useCallback((id: NodeId) => dispatch({ kind: "picked", id }), []);
   const onTrace = useCallback((route: RouteId) => dispatch({ kind: "traced", route }), []);
   const onInspect = useCallback((key: RelationKey) => dispatch({ kind: "inspected", key }), []);
+  const onDeselect = useCallback(() => dispatch({ kind: "deselected" }), []);
+  const onLock = useCallback(() => dispatch({ kind: "lockToggled" }), []);
   const onZoom = useCallback((factor: number, at: Point) => dispatch({ kind: "zoomed", factor, at }), []);
   const onPan = useCallback((dx: number, dy: number) => dispatch({ kind: "panned", dx, dy }), []);
   const onType = useCallback((query: string) => dispatch({ kind: "typed", query }), []);
@@ -179,14 +187,14 @@ export const App = (): ReactNode => {
   const onStep = useCallback((by: 1 | -1) => dispatch({ kind: "stepped", by }), []);
   const onLegendClose = useCallback(() => {
     setLegendOpen(false);
-    keyControl.current?.focus();
+    legendControl.current?.focus();
   }, []);
 
   return (
     <div className="app" data-reading={state.reading.kind} style={{ "--reader": `${stage.viewport.reader}px` }}>
-      <Finder
+      <TopBar
         input={finderInput}
-        keyControl={keyControl}
+        legendControl={legendControl}
         graph={graph}
         load={load}
         query={state.query}
@@ -194,17 +202,20 @@ export const App = (): ReactNode => {
         lens={state.lens}
         legendOpen={legendOpen}
         fitted={state.camera.kind === "fit"}
+        locked={state.pin.kind === "locked"}
         onType={onType}
         onPick={onPick}
         onTrace={onTrace}
         onHover={onHover}
         onLens={onLens}
         onFit={onFit}
+        onLock={onLock}
         onLegend={setLegendOpen}
         onRetry={retry}
       />
       <div className="stage" ref={stageElement}>
         {legendOpen && ready ? <Legend muted={state.muted} onMute={onMute} onClose={onLegendClose} /> : null}
+        {scene !== null && scene.locked !== null ? <StageCue locked={scene.locked} graph={graph} /> : null}
         <SkillMap
           placement={placement}
           camera={camera}
@@ -213,6 +224,7 @@ export const App = (): ReactNode => {
           onHover={onHover}
           onPick={onPick}
           onInspect={onInspect}
+          onDeselect={onDeselect}
           onZoom={onZoom}
           onPan={onPan}
         />
@@ -231,6 +243,7 @@ export const App = (): ReactNode => {
             visit={state.visit}
             region={readerRegion}
             focus={state.focus}
+            pin={state.pin}
             hover={state.hover}
             onIndexIsOld={retry}
             onPick={onPick}

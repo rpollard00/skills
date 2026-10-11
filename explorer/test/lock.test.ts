@@ -1,0 +1,596 @@
+import { NodeServices } from "@effect/platform-node";
+import { assert, describe, it } from "@effect/vitest";
+import { Effect, Schema } from "effect";
+import { toGraph, type Graph } from "../src/shared/graph";
+import { WORD_BOX, wordWidthOf } from "../src/shared/focus-layout";
+import { distance, FRAME, layout, type Point, type Rect } from "../src/shared/layout";
+import { NodeId, relationKey, RouteId, type Relation } from "../src/shared/model";
+import { GATE } from "../src/shared/polyline";
+import { arrangementOf } from "../src/shared/view/arranged";
+import { resolveCamera } from "../src/shared/view/camera";
+import { decodeHash, encodeHash } from "../src/shared/view/hash";
+import { historyAction, normalizePlace } from "../src/shared/view/history";
+import { togglesLock, type KeyPress } from "../src/shared/view/keys";
+import type { Hidden } from "../src/shared/view/lit";
+import { deriveScene, type CableView, type Scene } from "../src/shared/view/scene";
+import { INITIAL, placeOf, stageTargetOf, type Pin, type Stage, type StageTarget, type ViewEvent, type ViewState } from "../src/shared/view/state";
+import { step } from "../src/shared/view/step";
+import { traceOf } from "../src/shared/view/trace";
+import { indexAt, LIVE_REPO } from "./support";
+
+const liveStage = Effect.gen(function* () {
+  const graph = toGraph(yield* (yield* indexAt(LIVE_REPO)).live);
+  return { graph, placement: layout(graph), viewport: { width: 1440, height: 826, reader: 460 } } satisfies Stage;
+}).pipe(Effect.provide(NodeServices.layer));
+
+const id = Schema.decodeUnknownSync(NodeId);
+const routeId = Schema.decodeUnknownSync(RouteId);
+
+const run = (stage: Stage, events: readonly ViewEvent[], from: ViewState = INITIAL): ViewState => events.reduce((state, event) => step(state, event, stage), from);
+
+const everyStage = (graph: Graph): StageTarget[] => [
+  { kind: "rest" },
+  ...graph.index.nodes.map((node): StageTarget => ({ kind: "node", id: node.id })),
+  ...graph.index.routes.map((route): StageTarget => ({ kind: "route", route: route.id })),
+];
+
+const selects = (target: StageTarget): ViewEvent[] =>
+  target.kind === "rest" ? [] : target.kind === "node" ? [{ kind: "picked", id: target.id }] : [{ kind: "traced", route: target.route }];
+
+const lockedOn = (stage: Stage, target: StageTarget): ViewState => run(stage, [...selects(target), { kind: "lockToggled" }]);
+
+const nameOfStage = (target: StageTarget): string => (target.kind === "rest" ? "the rest map" : target.kind === "node" ? target.id : `route ${target.route}`);
+
+const seatsOf = (scene: Scene): string => scene.nodes.map((node) => `${node.id}@${node.at.centre.x},${node.at.centre.y}${node.offStage ? " off" : ""}`).sort().join("\n");
+
+const onStage = (scene: Scene): NodeId[] => scene.nodes.filter((node) => !node.offStage).map((node) => node.id);
+
+const hiddenOf = (scene: Scene): Hidden => ("hidden" in scene.strip ? scene.strip.hidden : { kind: "none" });
+
+const hiddenRelations = (scene: Scene): number => {
+  const hidden = hiddenOf(scene);
+  return hidden.kind === "relations" ? hidden.count : 0;
+};
+
+const lit = (scene: Scene) => scene.cables.filter((cable) => cable.tone === "out" || cable.tone === "in" || cable.tone === "step");
+
+const relationsOf = (graph: Graph, node: NodeId): Relation[] => [...(graph.out.get(node) ?? []), ...(graph.into.get(node) ?? [])];
+
+describe("a locked stage", () => {
+  it.effect("moves no node for each pick of a node on it, on each stage of the live index", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      let picks = 0;
+      for (const target of everyStage(stage.graph)) {
+        const locked = lockedOn(stage, target);
+        assert.deepStrictEqual<unknown>(locked.pin, { kind: "locked", stage: target }, nameOfStage(target));
+        const before = seatsOf(deriveScene({ ...stage, state: locked }));
+        for (const node of onStage(deriveScene({ ...stage, state: locked }))) {
+          const picked = step(locked, { kind: "picked", id: node }, stage);
+          assert.deepStrictEqual<unknown>(picked.focus, { kind: "node", id: node });
+          assert.deepStrictEqual<unknown>(picked.pin, locked.pin, `${nameOfStage(target)}: a pick of ${node} changed the lock`);
+          assert.strictEqual(seatsOf(deriveScene({ ...stage, state: picked })), before, `${nameOfStage(target)}: a pick of ${node} moved a node`);
+          picks += 1;
+        }
+      }
+      assert.isAbove(picks, 900, "the live index has many stages and many picks to check");
+    }),
+  );
+
+  it.effect("moves no node for each other event: a trace, a query, a link, Escape, a click on the empty stage, a pick of a node that is not on it", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      const route = stage.graph.index.routes.find((item) => item.playbook !== null);
+      assert.isDefined(route);
+      if (route === undefined) return;
+      for (const target of everyStage(stage.graph)) {
+        const locked = lockedOn(stage, target);
+        const scene = deriveScene({ ...stage, state: locked });
+        const before = seatsOf(scene);
+        const absent = scene.nodes.find((node) => node.offStage)?.id ?? id("skill:bro");
+        const events: ViewEvent[] = [
+          { kind: "traced", route: routeId(route.id) },
+          { kind: "stepped", by: 1 },
+          { kind: "typed", query: "verif" },
+          { kind: "linkFollowed", path: "skills/how/SKILL.md", anchor: null, line: null },
+          { kind: "picked", id: absent },
+          { kind: "lensed", lens: "tools" },
+          { kind: "legendToggled", cls: "cite" },
+          { kind: "wentBack" },
+          { kind: "readerClosed" },
+          { kind: "cleared" },
+          { kind: "cleared" },
+          { kind: "cleared" },
+          { kind: "deselected" },
+          { kind: "fitted" },
+        ];
+        let state = locked;
+        for (const event of events) {
+          state = step(state, event, stage);
+          assert.deepStrictEqual<unknown>(state.pin, locked.pin, `${nameOfStage(target)}: ${event.kind} changed the lock`);
+          assert.strictEqual(seatsOf(deriveScene({ ...stage, state })), before, `${nameOfStage(target)}: ${event.kind} moved a node`);
+        }
+      }
+    }),
+  );
+
+  it.effect("starts with no node moved and no camera move, and ends with the arrangement of the selection", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      const how = id("skill:how");
+      const architect = id("skill:architect");
+
+      let locks = 0;
+      for (const target of everyStage(stage.graph)) {
+        const selected = run(stage, selects(target));
+        const afterSteps = target.kind === "route" ? [run(stage, [{ kind: "stepped", by: 1 }], selected), run(stage, [{ kind: "stepped", by: 1 }, { kind: "stepped", by: 1 }, { kind: "stepped", by: -1 }], selected)] : [];
+        for (const open of [selected, ...afterSteps]) {
+          const label = `${nameOfStage(target)}${open.focus.kind === "route" ? `, cursor ${open.focus.cursor}` : ""}`;
+          const locked = step(open, { kind: "lockToggled" }, stage);
+          assert.deepStrictEqual<unknown>(locked.pin, { kind: "locked", stage: target }, `${label}: the lock holds a different stage`);
+          assert.strictEqual(seatsOf(deriveScene({ ...stage, state: locked })), seatsOf(deriveScene({ ...stage, state: open })), `${label}: the lock moved a node`);
+          assert.deepStrictEqual(resolveCamera(locked, stage), resolveCamera(open, stage), `${label}: the lock moved the camera`);
+          assert.deepStrictEqual<unknown>(step(locked, { kind: "lockToggled" }, stage).pin, { kind: "unlocked" });
+          locks += 1;
+        }
+      }
+      assert.isAbove(locks, everyStage(stage.graph).length + stage.graph.index.routes.length, "each stage, and each route also after a step");
+
+      const inArchitect = run(stage, [{ kind: "picked", id: architect }, { kind: "lockToggled" }, { kind: "picked", id: how }]);
+      assert.deepStrictEqual<unknown>(stageTargetOf(inArchitect), { kind: "node", id: architect }, "the stage is still the arrangement of `architect`");
+      const camera = resolveCamera(inArchitect, stage);
+      assert.deepStrictEqual(resolveCamera(run(stage, [{ kind: "picked", id: architect }, { kind: "lockToggled" }]), stage), camera, "the reader stays open, so a pick on a locked stage moves no camera");
+      assert.deepStrictEqual(resolveCamera(step(inArchitect, { kind: "picked", id: id("skill:arena") }, stage), stage), camera);
+
+      const moved = step(inArchitect, { kind: "panned", dx: 30, dy: 10 }, stage);
+      const afterPick = step(moved, { kind: "picked", id: id("skill:arena") }, stage);
+      assert.deepStrictEqual<unknown>(afterPick.camera, moved.camera, "a pick on a locked stage does not put a camera that the user moved back to the fit");
+      assert.deepStrictEqual<unknown>(step(run(stage, [{ kind: "picked", id: architect }, { kind: "panned", dx: 30, dy: 10 }]), { kind: "picked", id: how }, stage).camera, { kind: "fit" }, "on a stage that follows the selection, a pick does");
+      assert.deepStrictEqual<unknown>(step(afterPick, { kind: "fitted" }, stage).camera, { kind: "fit" }, "the Fit control fits a locked stage");
+
+      const bounds = arrangementOf(stage.graph, { kind: "node", id: architect })?.bounds;
+      const withoutReader = step(inArchitect, { kind: "readerClosed" }, stage);
+      assert.isDefined(bounds);
+      if (bounds === undefined) return;
+      for (const [state, width] of [[inArchitect, 1440 - 460], [withoutReader, 1440]] as const) {
+        const fitted = resolveCamera(state, stage);
+        assert.isAtLeast(fitted.tx + bounds.x * fitted.scale, -0.001);
+        assert.isAtMost(fitted.tx + (bounds.x + bounds.width) * fitted.scale, width + 0.001, "a camera that fits keeps the whole locked stage beside the reader");
+      }
+      assert.isAbove(resolveCamera(withoutReader, stage).scale, camera.scale, "the reader closed, so the same stage has more room");
+
+      const unlocked = step(inArchitect, { kind: "lockToggled" }, stage);
+      assert.deepStrictEqual<unknown>([unlocked.pin, unlocked.focus, unlocked.camera], [{ kind: "unlocked" }, { kind: "node", id: how }, { kind: "fit" }]);
+      assert.strictEqual(seatsOf(deriveScene({ ...stage, state: unlocked })), seatsOf(deriveScene({ ...stage, state: run(stage, [{ kind: "picked", id: how }]) })), "the unlocked stage is the arrangement of `how`");
+
+      const cleared = run(stage, [{ kind: "cleared" }, { kind: "cleared" }, { kind: "lockToggled" }], inArchitect);
+      assert.deepStrictEqual<unknown>([cleared.pin, cleared.focus], [{ kind: "unlocked" }, { kind: "none" }]);
+      const rest = deriveScene({ ...stage, state: cleared });
+      assert.isTrue(rest.nodes.every((node) => node.at === stage.placement.nodes.get(node.id) && !node.offStage), "with no selection, the unlocked stage is the rest map");
+    }),
+  );
+
+  it.effect("keeps the lock and the seats when Escape or a click on the empty stage ends the selection", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      const locked = run(stage, [{ kind: "picked", id: id("skill:architect") }, { kind: "lockToggled" }, { kind: "picked", id: id("skill:how") }]);
+      const before = seatsOf(deriveScene({ ...stage, state: locked }));
+
+      const closed = step(locked, { kind: "cleared" }, stage);
+      assert.deepStrictEqual<unknown>([closed.reading.kind, closed.focus, closed.pin], ["closed", locked.focus, locked.pin], "the first Escape closes the reader");
+      const ended = step(closed, { kind: "cleared" }, stage);
+      assert.deepStrictEqual<unknown>([ended.focus, ended.pin], [{ kind: "none" }, locked.pin], "the second Escape ends the selection and keeps the lock");
+      assert.deepStrictEqual<unknown>(step(ended, { kind: "cleared" }, stage).pin, locked.pin, "one more Escape does not unlock");
+
+      const clicked = step(locked, { kind: "deselected" }, stage);
+      assert.deepStrictEqual<unknown>([clicked.focus, clicked.reading.kind, clicked.pin], [{ kind: "none" }, "closed", locked.pin]);
+      for (const state of [closed, ended, clicked]) assert.strictEqual(seatsOf(deriveScene({ ...stage, state })), before);
+    }),
+  );
+});
+
+describe("the key of the lock", () => {
+  const press = (change: Partial<KeyPress>): KeyPress => ({ key: "l", ctrlKey: false, metaKey: false, altKey: false, repeat: false, isTyping: false, ...change });
+
+  it("toggles on one press of L, with or without Shift", () => {
+    assert.isTrue(togglesLock(press({})));
+    assert.isTrue(togglesLock(press({ key: "L" })));
+    assert.isFalse(togglesLock(press({ key: "k" })));
+    assert.isFalse(togglesLock(press({ key: "Escape" })));
+  });
+
+  it("toggles one time while the key stays down", () => {
+    const held = [press({}), ...Array.from({ length: 5 }, () => press({ repeat: true }))];
+    assert.strictEqual(held.filter(togglesLock).length, 1);
+  });
+
+  it("does not toggle while the user types in a text field", () => {
+    assert.isFalse(togglesLock(press({ isTyping: true })));
+  });
+
+  it("leaves each shortcut of the browser alone", () => {
+    assert.isFalse(togglesLock(press({ ctrlKey: true })), "Ctrl+L goes to the address bar");
+    assert.isFalse(togglesLock(press({ metaKey: true })));
+    assert.isFalse(togglesLock(press({ altKey: true })));
+  });
+});
+
+describe("the address of a locked stage", () => {
+  const pins: Pin[] = [
+    { kind: "unlocked" },
+    { kind: "locked", stage: { kind: "rest" } },
+    { kind: "locked", stage: { kind: "node", id: id("skill:architect") } },
+    { kind: "locked", stage: { kind: "node", id: id("playbook:perf-issue") } },
+    { kind: "locked", stage: { kind: "node", id: id("hosted:skills/mako/references/execution.md") } },
+    { kind: "locked", stage: { kind: "route", route: routeId("diagnose-and-fix-measured-slowness") } },
+  ];
+
+  it("round-trips each lock with each selection", () => {
+    const focuses: ViewState["focus"][] = [{ kind: "none" }, { kind: "node", id: id("skill:how") }, { kind: "route", route: routeId("design-a-module-or-interface"), cursor: 1 }];
+    for (const pin of pins) {
+      for (const focus of focuses) {
+        const place = { ...placeOf(INITIAL), focus, pin, query: "a b", reading: { kind: "open", path: "skills/how/SKILL.md", anchor: null, line: 3, back: [] } } satisfies ReturnType<typeof placeOf>;
+        assert.deepStrictEqual<unknown>(decodeHash(encodeHash(place)), place, encodeHash(place));
+      }
+    }
+    assert.strictEqual(encodeHash({ ...placeOf(INITIAL), pin: { kind: "unlocked" } }), "#/", "an unlocked place has the address that it had before the lock");
+    assert.isTrue(encodeHash({ ...placeOf(INITIAL), pin: { kind: "locked", stage: { kind: "rest" } } }).includes("lock="));
+  });
+
+  it("reads each id of a lock as it was written, when the id has a percent sign or a slash", () => {
+    const awkward: Pin[] = [
+      { kind: "locked", stage: { kind: "route", route: routeId("a%41b") } },
+      { kind: "locked", stage: { kind: "route", route: routeId("fix/slow%2Fpath") } },
+      { kind: "locked", stage: { kind: "route", route: routeId("50% of a+b") } },
+      { kind: "locked", stage: { kind: "node", id: id("skill:a%41b") } },
+      { kind: "locked", stage: { kind: "node", id: id("hosted:skills/x/100%25.md") } },
+    ];
+    for (const pin of awkward) {
+      const place = { ...placeOf(INITIAL), focus: { kind: "node", id: id("skill:how") }, pin } satisfies ReturnType<typeof placeOf>;
+      assert.deepStrictEqual<unknown>(decodeHash(encodeHash(place)).pin, pin, encodeHash(place));
+    }
+  });
+
+  it.effect("reads a lock value that is not a stage of the index as unlocked, and does not throw", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      const hostile = ["", "1", "true", "rest/", "/rest", "REST", "skill", "skill/", "skill//", "route", "route/", "route/%", "%E0%A4%A", "../..", "__proto__", "constructor/prototype", "skill/a b", "node:x", "x".repeat(5000), "\u0000", "💥"];
+      for (const value of hostile) {
+        for (const hash of [`#/?lock=${value}`, `#/skill/how?lock=${value}&doc=x`, `#/?lock=${encodeURIComponent(value)}`]) {
+          const shown = normalizePlace(decodeHash(hash), stage.graph);
+          assert.deepStrictEqual<unknown>(shown.pin, { kind: "unlocked" }, hash);
+          assert.deepStrictEqual<unknown>(step(INITIAL, { kind: "restored", place: decodeHash(hash) }, stage).pin, { kind: "unlocked" }, hash);
+        }
+      }
+      assert.deepStrictEqual<unknown>(decodeHash("#/?lock=").pin, { kind: "unlocked" }, "a value that is not the form of a stage gives no lock, before the index is there");
+      assert.deepStrictEqual<unknown>(decodeHash("#/?lock=skill").pin, { kind: "unlocked" });
+      assert.deepStrictEqual<unknown>(decodeHash("#/?lock=rest").pin, { kind: "locked", stage: { kind: "rest" } });
+      assert.deepStrictEqual<unknown>(decodeHash("#/?lock=rest&lock=skill/how").pin, { kind: "locked", stage: { kind: "rest" } }, "the first value counts");
+    }),
+  );
+
+  it.effect("drops a lock on a stage that the index does not hold, and restores a lock that it holds", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      const gone = normalizePlace(decodeHash("#/skill/how?lock=skill/no-such-skill"), stage.graph);
+      assert.deepStrictEqual<unknown>([gone.pin, gone.focus], [{ kind: "unlocked" }, { kind: "node", id: "skill:how" }]);
+      assert.deepStrictEqual<unknown>(normalizePlace(decodeHash("#/?lock=route/no-such-route"), stage.graph).pin, { kind: "unlocked" });
+      assert.strictEqual(historyAction({ shown: decodeHash("#/skill/how?lock=skill/no-such-skill"), place: gone, graph: stage.graph }), "replace");
+
+      const locked = run(stage, [{ kind: "picked", id: id("skill:architect") }, { kind: "lockToggled" }, { kind: "picked", id: id("skill:how") }]);
+      const restored = step(INITIAL, { kind: "restored", place: decodeHash(encodeHash(placeOf(locked))) }, stage);
+      assert.deepStrictEqual<unknown>([restored.pin, restored.focus], [locked.pin, locked.focus]);
+      assert.strictEqual(seatsOf(deriveScene({ ...stage, state: restored })), seatsOf(deriveScene({ ...stage, state: locked })), "a reload of a locked address gives the same seats");
+      assert.deepStrictEqual(lit(deriveScene({ ...stage, state: restored })).map((cable) => cable.key).sort(), lit(deriveScene({ ...stage, state: locked })).map((cable) => cable.key).sort(), "and the same lit cables");
+      assert.strictEqual(historyAction({ shown: placeOf(locked), place: placeOf(step(locked, { kind: "lockToggled" }, stage)), graph: stage.graph }), "replace", "the lock is not a new entry of the history");
+    }),
+  );
+});
+
+const rectsMeet = (a: Rect, b: Rect): boolean => a.x <= b.x + b.width && b.x <= a.x + a.width && a.y <= b.y + b.height && b.y <= a.y + a.height;
+
+const segmentsOf = (points: readonly Point[]): [Point, Point][] => points.slice(1).map((to, index) => [points[index] ?? to, to]);
+
+const boxOf = (words: NonNullable<CableView["words"]>): Rect => {
+  const width = wordWidthOf(words.text);
+  return { x: words.at.x - width / 2, y: words.at.y - WORD_BOX.height / 2, width, height: WORD_BOX.height };
+};
+
+const uprightsOf = (cable: CableView): Rect[] =>
+  segmentsOf(cable.points).flatMap(([first, second]) => (first.x === second.x && first.y !== second.y ? [{ x: first.x, y: Math.min(first.y, second.y), width: 0, height: Math.abs(first.y - second.y) }] : []));
+
+/** The run of a cable next to the node at its other end: from the port of that node to the first corner. */
+const farRunOf = (cable: CableView, far: "start" | "end"): { readonly port: Point; readonly corner: Point } => {
+  const [port, corner] = far === "end" ? cable.points.toReversed() : cable.points;
+  return { port: port ?? { x: 0, y: 0 }, corner: corner ?? { x: 0, y: 0 } };
+};
+
+interface Marked {
+  readonly cable: CableView;
+  /** The end of the cable at which the other node is. */
+  readonly far: "start" | "end";
+  /** A cable that leaves the selection comes before a cable that enters it, and each side is in the order of the motion. */
+  readonly precedence: number;
+  readonly conditional: boolean;
+}
+
+interface WordFaults {
+  boxesThatMeet: number;
+  boxesUnderAnUpright: number;
+  words: number;
+  gates: number;
+  /** A cable with a condition whose run next to the other node is too short for a ring, and whose bend is on a trunk. */
+  conditionsWithoutRoomForAGate: number;
+}
+
+const NO_FAULTS: WordFaults = { boxesThatMeet: 0, boxesUnderAnUpright: 0, words: 0, gates: 0, conditionsWithoutRoomForAGate: 0 };
+
+const isUnderARingAt = (centre: Point, [first, second]: [Point, Point]): boolean =>
+  rectsMeet({ x: centre.x - GATE.radius, y: centre.y - GATE.radius, width: GATE.radius * 2, height: GATE.radius * 2 }, { x: Math.min(first.x, second.x), y: Math.min(first.y, second.y), width: Math.abs(first.x - second.x), height: Math.abs(first.y - second.y) });
+
+/**
+ * The rules of the words and the gates on the cables of one selection.
+ * It counts two faults and does not stop at them, because the count over all picks is a number to report. Each other rule is an assertion.
+ */
+const checkMarks = (label: string, marked: readonly Marked[], faults: WordFaults): void => {
+  const boxes = marked.flatMap(({ cable }) => (cable.words === null ? [] : [{ key: cable.key, box: boxOf(cable.words) }]));
+  for (const [index, first] of boxes.entries()) {
+    for (const second of boxes.slice(index + 1)) if (rectsMeet(first.box, second.box)) faults.boxesThatMeet += 1;
+  }
+  for (const { box } of boxes) {
+    if (marked.some(({ cable }) => uprightsOf(cable).some((upright) => rectsMeet(box, upright)))) faults.boxesUnderAnUpright += 1;
+  }
+
+  const portOf = (item: Marked): string => {
+    const { port } = farRunOf(item.cable, item.far);
+    return `${port.x},${port.y}`;
+  };
+  const atPort = new Map<string, Marked[]>();
+  for (const item of marked) {
+    const { port, corner } = farRunOf(item.cable, item.far);
+    atPort.set(portOf(item), [...(atPort.get(portOf(item)) ?? []), item]);
+
+    const { words, gate } = item.cable;
+    if (words !== null) {
+      const box = boxOf(words);
+      assert.strictEqual(words.at.y, port.y, `${label}: the word of ${item.cable.key} is not on the run next to the other node`);
+      assert.isTrue(box.x >= Math.min(port.x, corner.x) && box.x + box.width <= Math.max(port.x, corner.x), `${label}: the word of ${item.cable.key} is longer than the run next to the other node`);
+      faults.words += 1;
+    }
+    if (gate !== null) {
+      const onTheRun = gate.y === port.y && gate.x >= Math.min(port.x, corner.x) && gate.x <= Math.max(port.x, corner.x);
+      const onTheBendOfAShortRun = gate.x === corner.x && Math.abs(gate.y - corner.y) <= FRAME.corner + GATE.radius + 2;
+      assert.isTrue(onTheRun || onTheBendOfAShortRun, `${label}: the gate of ${item.cable.key} is ${distance(gate, port)} from the other node`);
+      const strangers = marked.filter((other) => portOf(other) !== portOf(item) && segmentsOf(other.cable.points).some((segment) => isUnderARingAt(gate, segment)));
+      assert.deepStrictEqual(strangers.map((other) => other.cable.key), [], `${label}: the gate of ${item.cable.key} is on a run that it shares with a cable to a different port, so it reads as the condition of that cable`);
+      faults.gates += 1;
+    }
+  }
+
+  for (const sharers of atPort.values()) {
+    const [speaker, ...silent] = sharers.toSorted((a, b) => a.precedence - b.precedence);
+    if (speaker === undefined) continue;
+    const { port, corner } = farRunOf(speaker.cable, speaker.far);
+    const hasRoomOnItsRun = distance(port, corner) >= GATE.setBack + GATE.radius + FRAME.corner;
+    if (!speaker.conditional) assert.isNull(speaker.cable.gate, `${label}: ${speaker.cable.key} has no condition, so it has no gate`);
+    else if (speaker.cable.gate === null) {
+      const strangersOnItsRun = marked.filter((other) => portOf(other) !== portOf(speaker) && segmentsOf(other.cable.points).some((segment) => isUnderARingAt({ x: port.x + Math.sign(corner.x - port.x) * GATE.setBack, y: port.y }, segment)));
+      assert.isTrue(!hasRoomOnItsRun || strangersOnItsRun.length > 0, `${label}: ${speaker.cable.key} is the first cable at its port, it has a condition, and its run has room, so it has a gate`);
+      faults.conditionsWithoutRoomForAGate += 1;
+    }
+    for (const { cable } of silent) {
+      assert.isNull(cable.words, `${label}: ${cable.key} shares its last run with ${speaker.cable.key}, and one run has one word`);
+      assert.isNull(cable.gate, `${label}: ${cable.key} shares its last run with ${speaker.cable.key}, and one run has one gate`);
+    }
+  }
+};
+
+describe("what a locked stage lights", () => {
+  it.effect("draws each relation of a picked node to a node on the stage in place: clear of each label, upright only in a gutter, and counts the rest", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      let cables = 0;
+      let hiddenSomewhere = 0;
+      let picks = 0;
+      const faults: WordFaults = { ...NO_FAULTS };
+      for (const target of everyStage(stage.graph)) {
+        const locked = lockedOn(stage, target);
+        const frozen = deriveScene({ ...stage, state: locked });
+        const present = new Set(onStage(frozen));
+        const drawn = frozen.nodes.flatMap((node) => {
+          if (node.offStage || node.at.kind === "pip") return [];
+          const start = Math.min(node.at.left.x, node.at.label.x);
+          const end = Math.max(node.at.right.x, node.at.label.x + node.at.label.width);
+          const label: Rect = { x: Math.min(node.at.centre.x - 7, node.at.label.x), y: node.at.label.y, width: Math.max(node.at.centre.x + 7, node.at.label.x + node.at.label.width) - Math.min(node.at.centre.x - 7, node.at.label.x), height: node.at.label.height };
+          return [{ id: node.id, column: node.at.centre.x, start, end, label }];
+        });
+        const columns = [...new Set(drawn.map((item) => item.column))].map((column) => {
+          const members = drawn.filter((item) => item.column === column);
+          return { start: Math.min(...members.map((item) => item.start)), end: Math.max(...members.map((item) => item.end)) };
+        });
+
+        for (const node of present) {
+          const label = `${nameOfStage(target)}, ${node} picked`;
+          const scene = deriveScene({ ...stage, state: step(locked, { kind: "picked", id: node }, stage) });
+          const mine = lit(scene);
+          const relations = relationsOf(stage.graph, node);
+          const elsewhere = relations.filter((relation) => !present.has(relation.from === node ? relation.to : relation.from));
+
+          for (const cable of mine) {
+            const [from, to] = cable.key.split(">");
+            assert.isTrue(from === node || to === node, `${label}: ${cable.key} is not a relation of the picked node`);
+            assert.isTrue(present.has(id(from ?? "")) && present.has(id(to ?? "")), `${label}: ${cable.key} joins a node that is not on the stage`);
+            for (const [first, second] of segmentsOf(cable.points)) {
+              if (first.x === second.x && first.y !== second.y) {
+                assert.isFalse(columns.some((column) => first.x >= column.start && first.x <= column.end), `${label}: ${cable.key} goes up or down inside a column at x ${first.x}`);
+              }
+              for (const item of drawn) {
+                const box: Rect = { x: Math.min(first.x, second.x), y: Math.min(first.y, second.y), width: Math.abs(first.x - second.x), height: Math.abs(first.y - second.y) };
+                assert.isFalse(rectsMeet(item.label, box), `${label}: ${cable.key} crosses the label of ${item.id}`);
+              }
+            }
+            cables += 1;
+          }
+
+          checkMarks(
+            label,
+            mine.map((cable) => {
+              const leaves = cable.key.startsWith(`${node}>`);
+              return { cable, far: leaves ? "end" : "start", precedence: (leaves ? 0 : 1000) + cable.order, conditional: stage.graph.relations.get(cable.key)?.conditional ?? false };
+            }),
+            faults,
+          );
+          picks += 1;
+
+          assert.strictEqual(hiddenRelations(scene), elsewhere.length, `${label}: the count of relations that are not in this view`);
+          assert.strictEqual(hiddenOf(scene).kind === "none", elsewhere.length === 0, `${label}: the count shows only when it is more than zero`);
+          const isOwnStage = target.kind === "node" && target.id === node;
+          if (!isOwnStage) assert.strictEqual(elsewhere.length, relations.length - mine.length, `${label}: hidden is the relations of the node minus the cables that are drawn`);
+          if (elsewhere.length > 0) hiddenSomewhere += 1;
+        }
+      }
+      assert.isAbove(cables, 3000, "the live index has many cables in place to check");
+      assert.isAbove(hiddenSomewhere, 200);
+      assert.isAbove(picks, 900);
+      assert.deepStrictEqual({ boxesThatMeet: faults.boxesThatMeet, boxesUnderAnUpright: faults.boxesUnderAnUpright }, { boxesThatMeet: 0, boxesUnderAnUpright: 0 }, `over ${picks} picks`);
+      assert.isAbove(faults.words, 2000, "most cables have a run with room for their word");
+      assert.isAbove(faults.gates, 100);
+    }),
+  );
+
+  it.effect("lights nothing for a pick of a node that is not on the stage, opens it in the reader, and says so in the strip", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      const locked = lockedOn(stage, { kind: "node", id: id("skill:architect") });
+      const bro = id("skill:bro");
+      assert.isFalse(onStage(deriveScene({ ...stage, state: locked })).includes(bro), "the live index now has `bro` in the arrangement of `architect`");
+
+      const picked = step(locked, { kind: "picked", id: bro }, stage);
+      const scene = deriveScene({ ...stage, state: picked });
+      assert.deepStrictEqual<unknown>(picked.reading, { kind: "open", path: "skills/bro/SKILL.md", anchor: null, line: null, back: ["skills/architect/SKILL.md"] });
+      assert.deepStrictEqual(lit(scene), []);
+      assert.isFalse(scene.nodes.some((node) => !node.offStage && ["selected", "needs", "neededBy", "mutual"].includes(node.tone.kind)), "a node on the stage is lit for a selection that is not on it");
+      assert.deepStrictEqual<unknown>(scene.strip, { kind: "notInView", name: "bro" });
+      assert.deepStrictEqual<unknown>(hiddenOf(scene), { kind: "none" });
+    }),
+  );
+
+  it.effect("says what it cannot draw only in a strip that describes the selection", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      const how = id("skill:how");
+      const arena = id("skill:arena");
+      const picked = run(stage, [{ kind: "picked", id: id("skill:architect") }, { kind: "lockToggled" }, { kind: "picked", id: how }]);
+      const hidden = hiddenOf(deriveScene({ ...stage, state: picked }));
+      assert.deepStrictEqual<unknown>(hidden, { kind: "relations", count: 3 }, "the live index now has a different count for `how` in the arrangement of `architect`");
+
+      const onArena = deriveScene({ ...stage, state: step(picked, { kind: "pointed", hover: { kind: "node", id: arena } }, stage) });
+      assert.deepStrictEqual<unknown>([onArena.strip.kind, "name" in onArena.strip ? onArena.strip.name : ""], ["purpose", "arena"], "the strip describes the node under the pointer");
+      assert.deepStrictEqual<unknown>(hiddenOf(onArena), { kind: "none" }, "the 3 relations are of `how`, and the strip describes `arena`");
+
+      const onItself = deriveScene({ ...stage, state: step(picked, { kind: "pointed", hover: { kind: "node", id: how } }, stage) });
+      assert.deepStrictEqual<unknown>(hiddenOf(onItself), hidden, "the pointer is on the selected node, so the strip describes the selection");
+
+      const onRelated = deriveScene({ ...stage, state: step(picked, { kind: "pointed", hover: { kind: "node", id: id("skill:architect") } }, stage) });
+      assert.deepStrictEqual<unknown>([onRelated.strip.kind, "hidden" in onRelated.strip], ["evidence", false], "a strip that quotes a relation has no count");
+
+      const perf = routeId("diagnose-and-fix-measured-slowness");
+      const traced = run(stage, [{ kind: "picked", id: id("skill:architect") }, { kind: "lockToggled" }, { kind: "traced", route: perf }]);
+      assert.strictEqual(hiddenOf(deriveScene({ ...stage, state: traced })).kind, "steps");
+      const tracedOnArena = deriveScene({ ...stage, state: step(traced, { kind: "pointed", hover: { kind: "node", id: arena } }, stage) });
+      assert.deepStrictEqual<unknown>([tracedOnArena.strip.kind, hiddenOf(tracedOnArena)], ["purpose", { kind: "none" }]);
+    }),
+  );
+
+  it.effect("numbers the steps of a trace in place where their nodes are on the stage, and counts the steps that are not", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      const perf = routeId("diagnose-and-fix-measured-slowness");
+      const trace = traceOf(stage.graph, perf);
+      assert.isNotNull(trace);
+      if (trace === null) return;
+
+      const onRest = run(stage, [{ kind: "lockToggled" }, { kind: "traced", route: perf }]);
+      const rest = deriveScene({ ...stage, state: onRest });
+      assert.isTrue(rest.nodes.every((node) => node.at === stage.placement.nodes.get(node.id)), "the trace moved a node of the locked rest map");
+      assert.deepStrictEqual(
+        rest.nodes.flatMap((node) => (node.tone.kind === "step" && node.tone.n > 0 ? [[node.tone.n, node.id]] : [])).sort(),
+        trace.steps.map((item) => [item.n, item.node]).sort(),
+      );
+      assert.deepStrictEqual<unknown>(hiddenOf(rest), { kind: "none" });
+      assert.strictEqual(lit(rest).length, trace.steps.length + 1, "the cable to the playbook, and one cable for each step");
+
+      const inArchitect = run(stage, [{ kind: "picked", id: id("skill:architect") }, { kind: "lockToggled" }, { kind: "traced", route: perf }]);
+      const scene = deriveScene({ ...stage, state: inArchitect });
+      const present = new Set(onStage(scene));
+      const absent = trace.steps.filter((item) => !present.has(item.node));
+      assert.isAbove(absent.length, 0, "the live index now has each step of the perf route in the arrangement of `architect`");
+      assert.deepStrictEqual<unknown>(hiddenOf(scene), { kind: "steps", count: absent.length });
+      assert.deepStrictEqual(
+        scene.nodes.flatMap((node) => (node.tone.kind === "step" && node.tone.n > 0 ? [node.id] : [])).sort(),
+        trace.steps.filter((item) => present.has(item.node)).map((item) => item.node).sort(),
+      );
+      assert.isTrue(lit(scene).every((cable) => cable.key.split(">").every((end) => present.has(id(end)))));
+    }),
+  );
+
+  it.effect("gives the cables of each trace in place one word and one gate for each port, clear of each other word and of each upright, on each stage", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      let traces = 0;
+      const faults: WordFaults = { ...NO_FAULTS };
+      for (const target of everyStage(stage.graph)) {
+        const locked = lockedOn(stage, target);
+        for (const route of stage.graph.index.routes) {
+          const trace = traceOf(stage.graph, route.id);
+          const steps = new Set(trace?.steps.map((item) => item.via));
+          const scene = deriveScene({ ...stage, state: step(locked, { kind: "traced", route: route.id }, stage) });
+          checkMarks(
+            `${nameOfStage(target)}, route ${route.id} traced`,
+            lit(scene).map((cable) => ({ cable, far: "end", precedence: (steps.has(cable.key) ? 0 : 1000) + cable.order, conditional: stage.graph.relations.get(cable.key)?.conditional ?? false })),
+            faults,
+          );
+          traces += 1;
+        }
+      }
+      assert.strictEqual(traces, everyStage(stage.graph).length * stage.graph.index.routes.length);
+      assert.deepStrictEqual({ boxesThatMeet: faults.boxesThatMeet, boxesUnderAnUpright: faults.boxesUnderAnUpright }, { boxesThatMeet: 0, boxesUnderAnUpright: 0 }, `over ${traces} traces`);
+      assert.isAbove(faults.words, 500, "a trace on a stage that has few of its steps has few words");
+    }),
+  );
+
+  it.effect("gives the two cables from `architect` to `codebase-design` and to its file one word, on the locked rest map", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      const architect = id("skill:architect");
+      const scene = deriveScene({ ...stage, state: run(stage, [{ kind: "lockToggled" }, { kind: "picked", id: architect }]) });
+      const toTheRow = lit(scene).filter((cable) => cable.key === `${architect}>skill:codebase-design` || cable.key === `${architect}>hosted:skills/codebase-design/DESIGN-IT-TWICE.md`);
+      const back = lit(scene).filter((cable) => cable.key === `skill:codebase-design>${architect}`);
+
+      assert.strictEqual(toTheRow.length, 2, "the live index lost one of the two relations");
+      assert.strictEqual(new Set(toTheRow.map((cable) => `${cable.end.x},${cable.end.y}`)).size, 1, "the file is on the row of its host, so the two cables end at one port");
+      assert.deepStrictEqual(toTheRow.map((cable) => cable.words?.text ?? null), ["requires", null], "the cable to the skill is first in the order of the stage, so it has the word");
+      assert.strictEqual(back.length, 1, "the live index lost the relation back");
+      assert.isTrue(stage.graph.relations.get(back[0]?.key ?? relationKey({ from: architect, to: architect }))?.conditional, "the relation back has a condition");
+      assert.deepStrictEqual<unknown>([back[0]?.words, back[0]?.gate], [null, null], "the relation back is on the path of the first cable, so it has no word and no gate there");
+      assert.isTrue(toTheRow.every((cable) => cable.gate === null), "`architect` requires `codebase-design` without a condition");
+    }),
+  );
+
+  it.effect("keeps the combs of a locked arrangement as a quiet frame while a different node of it is picked, and at full strength for its own node", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      const architect = id("skill:architect");
+      const locked = lockedOn(stage, { kind: "node", id: architect });
+      const own = deriveScene({ ...stage, state: locked });
+      const combs = lit(own).map((cable) => cable.key).sort();
+      assert.strictEqual(own.cables.filter((cable) => cable.tone === "frame").length, 0);
+      assert.deepStrictEqual(combs, [...(arrangementOf(stage.graph, { kind: "node", id: architect })?.cables.keys() ?? [])].sort());
+
+      const other = deriveScene({ ...stage, state: step(locked, { kind: "picked", id: id("skill:how") }, stage) });
+      assert.deepStrictEqual(other.cables.filter((cable) => cable.tone === "frame").map((cable) => cable.key).sort(), combs);
+      assert.strictEqual(other.nodes.find((node) => node.id === architect)?.tone.kind, "neededBy", "`architect` runs `how`, so the node in the middle is lit as a node that needs the picked node");
+      assert.strictEqual(other.nodes.find((node) => node.id === "skill:how")?.tone.kind, "selected");
+    }),
+  );
+});

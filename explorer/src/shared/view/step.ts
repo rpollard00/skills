@@ -1,7 +1,7 @@
 import { followFocus, clamp, resolveCamera, zoomedAbout } from "./camera";
 import { wellFormed } from "./hash";
 import { normalizePlace } from "./history";
-import { focusTarget, type Reading, type Stage, type ViewEvent, type ViewState } from "./state";
+import { focusTarget, stageName, stageTargetOf, type Reading, type Stage, type ViewEvent, type ViewState } from "./state";
 import { entryOfTrace, traceOf } from "./trace";
 
 interface Target {
@@ -15,13 +15,11 @@ const open = (reading: Reading, target: Target): Reading => {
   return { kind: "open", ...target, back: reading.path === target.path ? reading.back : [...reading.back, reading.path] };
 };
 
-/** Sends the reader to a target. The visit counter grows also when the target is the one on show, so the reader scrolls to it again. */
 const sentTo = (state: ViewState, target: Target): Pick<ViewState, "reading" | "visit"> => ({
   reading: open(state.reading, target),
   visit: state.visit + 1,
 });
 
-/** The reader history after the address changes: the Back button of the browser pops it, and a new path extends it. */
 const backAfterAddressChange = (from: Reading, to: Reading): readonly string[] => {
   if (from.kind === "closed" || to.kind === "closed") return [];
   if (to.path === from.path) return from.back;
@@ -92,7 +90,6 @@ const reduce = (state: ViewState, event: ViewEvent, stage: Stage): ViewState => 
       const evidence = relation.evidence[0];
       return followFocus({ ...state, ...sentTo(state, { path: evidence.file, anchor: null, line: evidence.line }) }, stage);
     }
-    // The block that states a relation opens beside the selection. The selection stays: the block is evidence about it.
     case "evidenceOpened":
       return followFocus({ ...state, ...sentTo(state, { path: event.file, anchor: null, line: event.line }) }, stage);
     case "wentBack": {
@@ -116,8 +113,12 @@ const reduce = (state: ViewState, event: ViewEvent, stage: Stage): ViewState => 
       if (state.reading.kind === "open") return { ...state, reading: { kind: "closed" } };
       if (state.focus.kind !== "none") return { ...state, focus: { kind: "none" } };
       return state.query === "" ? state : { ...state, query: "" };
+    case "deselected":
+      return state.focus.kind === "none" && state.reading.kind === "closed" ? state : { ...state, focus: { kind: "none" }, reading: { kind: "closed" } };
     case "fitted":
       return { ...state, camera: { kind: "fit" } };
+    case "lockToggled":
+      return { ...state, pin: state.pin.kind === "locked" ? { kind: "unlocked" } : { kind: "locked", stage: stageTargetOf(state) } };
     case "zoomed":
       return { ...state, camera: { kind: "free", ...zoomedAbout(resolveCamera(state, stage), event.factor, event.at) } };
     case "panned": {
@@ -139,12 +140,11 @@ const reduce = (state: ViewState, event: ViewEvent, stage: Stage): ViewState => 
   }
 };
 
-/**
- * Pure. No event changes a world position.
- * A hover on a cable ends when the focus changes, because the cable under the pointer is then possibly no longer lit.
- */
+/** Pure. */
 export const step = (state: ViewState, event: ViewEvent, stage: Stage): ViewState => {
   const next = reduce(state, event, stage);
-  const litSetChanged = focusTarget(next.focus) !== focusTarget(state.focus);
-  return litSetChanged && next.hover.kind === "cable" ? { ...next, hover: { kind: "none" } } : next;
+  const stageChanged = stageName(stageTargetOf(next)) !== stageName(stageTargetOf(state));
+  const litChanged = stageChanged || focusTarget(next.focus) !== focusTarget(state.focus);
+  if (!litChanged) return next;
+  return { ...next, camera: stageChanged ? { kind: "fit" } : next.camera, hover: next.hover.kind === "cable" ? { kind: "none" } : next.hover };
 };

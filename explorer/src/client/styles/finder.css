@@ -192,9 +192,9 @@
   align-self: center;
 }
 
-.status-mark circle {
+.status-mark path {
   fill: none;
   stroke: rgb(var(--paper));
   stroke-width: 1.25;
-  stroke-dasharray: 2 2.5;
+  stroke-linejoin: round;
 }

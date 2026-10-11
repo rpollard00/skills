@@ -1,25 +1,20 @@
 import { COLUMN_IDS, type ColumnId, type Graph, type SeatedNode } from "./graph";
-import { relationKey, type NodeId, type RelationKey } from "./model";
+import { relationKey, type Node, type NodeId, type RelationKey } from "./model";
 
 /** The advance of each character of the bundled monospace font, as a part of the font size. */
 const MONO_ADVANCE_EM = 0.6;
 
-/** Width of one character at a font size. A label has no other measure: the layout never measures text. */
 export const monoAdvance = (fontPx: number): number => Math.round(fontPx * MONO_ADVANCE_EM * 100) / 100;
 
-/** The one source of the font size of a label: the layout takes the width of a character from it, and the map sets the CSS from it. */
 const LABEL_FONT_PX = 12;
+const ROW_PITCH = 24;
 
-/**
- * World units are CSS px at scale 1.
- * `firstRow` shapes the silhouette. It is not a capacity: a column that grows makes the world taller.
- * `smallFontPx` is the one source of the font size of the hosted-file count and of the tool chips.
- */
+/** World units are CSS px at scale 1. */
 export const FRAME = {
   width: 1112,
   top: 64,
   bottom: 40,
-  pitch: 24,
+  pitch: ROW_PITCH,
   minRows: 30,
   labelFontPx: LABEL_FONT_PX,
   charWidth: monoAdvance(LABEL_FONT_PX),
@@ -36,9 +31,7 @@ export const FRAME = {
   markLead: 8,
   markGap: 4,
   markWidth: { script: 6, command: 11 },
-  /** The baseline of a title is one row above the first row. Its capitals are thus between two streets, and no cable that crosses the column goes through them. */
-  titleRise: 24,
-  /** x offsets from the centre of a gutter. */
+  titleRise: ROW_PITCH,
   lanes: [-25, -15, -5, 5, 15, 25],
   columns: {
     router: { x: 40, width: 96, firstRow: 14 },
@@ -53,8 +46,9 @@ export const FRAME = {
 
 const RAIL_LANE = FRAME.lanes[0];
 const LAST_LANE = FRAME.lanes[5];
+const ROUTER_COLUMN = 0;
 const LAST_COLUMN = COLUMN_IDS.length - 1;
-const PRINCIPLE_PREFIX = "principle-";
+export const PRINCIPLE_PREFIX = "principle-";
 const COUNT_CHAR = monoAdvance(FRAME.smallFontPx);
 
 export interface Point {
@@ -79,6 +73,8 @@ export interface Seat {
   readonly centre: Point;
   /** The label as drawn. A name longer than the column is cut in the middle. */
   readonly text: string;
+  /** Where the text starts. */
+  readonly textX: number;
   /** Covers the text, the pips, the count of folded pips, and the tool marks. */
   readonly label: Rect;
   readonly left: Point;
@@ -106,9 +102,9 @@ export type Placed = Seat | Pip;
 
 export interface Cable {
   readonly key: RelationKey;
-  /** Port to port. A lit cable draws this path, so it touches its two nodes. */
+  /** Port to port. */
   readonly d: string;
-  /** Column edge to column edge. The resting weave draws this path, and each row gets one leader in place of many. */
+  /** Column edge to column edge. */
   readonly rest: string;
   /** The seats whose leader joins the resting path to the label. */
   readonly leaders: readonly NodeId[];
@@ -157,7 +153,7 @@ export const cutMiddle = (text: string, capacity: number): string => {
   return `${text.slice(0, head)}…${text.slice(text.length - (capacity - 1 - head))}`;
 };
 
-const marksOf = (node: SeatedNode): MarkKind[] => {
+export const marksOf = (node: Node): MarkKind[] => {
   if (node.kind !== "skill") return [];
   const kinds: MarkKind[] = [];
   if (node.tooling.scripts.length > 0) kinds.push("script");
@@ -165,34 +161,33 @@ const marksOf = (node: SeatedNode): MarkKind[] => {
   return kinds;
 };
 
-const round = (value: number): number => Math.round(value * 100) / 100;
+export const round = (value: number): number => Math.round(value * 100) / 100;
 
-const pipRun = (shown: number): number => (shown === 0 ? 0 : FRAME.pipLead + FRAME.pipPitch * (shown - 1) + FRAME.pipTail);
+export const pipRun = (shown: number): number => (shown === 0 ? 0 : FRAME.pipLead + FRAME.pipPitch * (shown - 1) + FRAME.pipTail);
 
-const countRun = (folded: number): number => (folded === 0 ? 0 : FRAME.countGap + `+${folded}`.length * COUNT_CHAR);
+export const countRun = (folded: number): number => (folded === 0 ? 0 : FRAME.countGap + `+${folded}`.length * COUNT_CHAR);
 
-/** As many pips as the room holds beside the count of the others. */
 const pipsThatFit = (total: number, room: number): number => {
   for (let shown = total; shown > 0; shown -= 1) if (pipRun(shown) + countRun(total - shown) <= room) return shown;
   return 0;
 };
 
-/**
- * The name comes first. Hosted files take the room that the name leaves: one pip each while they fit, and a count
- * for the rest. A host keeps room for that count only. So the room for its name gets smaller by one digit of the count
- * at 10 and at 100 hosted files, and by nothing between them.
- */
+const roomForHostedFileCount = (hosted: number): number => countRun(hosted);
+
+export const markSpanOf = (kinds: readonly MarkKind[]): number =>
+  kinds.reduce((span, kind) => span + FRAME.markWidth[kind] + FRAME.markGap, kinds.length === 0 ? 0 : FRAME.markLead - FRAME.markGap);
+
 const seat = (input: { readonly node: SeatedNode; readonly column: ColumnId; readonly rank: number; readonly hosted: number }): Seat => {
   const frame = FRAME.columns[input.column];
   const row = frame.firstRow + input.rank;
   const y = rowY(row);
   const edge = frame.x + frame.width;
   const kinds = marksOf(input.node);
-  const markSpan = kinds.reduce((span, kind) => span + FRAME.markWidth[kind] + FRAME.markGap, kinds.length === 0 ? 0 : FRAME.markLead - FRAME.markGap);
+  const markSpan = markSpanOf(kinds);
 
-  const capacity = Math.floor((frame.width - FRAME.labelInset - markSpan - countRun(input.hosted)) / FRAME.charWidth);
+  const charsThatFitBesideMarksAndCount = Math.floor((frame.width - FRAME.labelInset - markSpan - roomForHostedFileCount(input.hosted)) / FRAME.charWidth);
   const name = input.column === "principles" && input.node.name.startsWith(PRINCIPLE_PREFIX) ? input.node.name.slice(PRINCIPLE_PREFIX.length) : input.node.name;
-  const text = cutMiddle(name, capacity);
+  const text = cutMiddle(name, charsThatFitBesideMarksAndCount);
   const textStart = frame.x + FRAME.labelInset;
   const textEnd = textStart + text.length * FRAME.charWidth;
 
@@ -216,6 +211,7 @@ const seat = (input: { readonly node: SeatedNode; readonly column: ColumnId; rea
     row,
     centre: { x: frame.x + FRAME.glyphInset, y },
     text,
+    textX: textStart,
     label: { x: textStart, y: y - FRAME.labelHeight / 2, width: labelEnd - textStart, height: FRAME.labelHeight },
     left: { x: frame.x - FRAME.portGap, y },
     right: { x: port, y },
@@ -225,26 +221,25 @@ const seat = (input: { readonly node: SeatedNode; readonly column: ColumnId; rea
   };
 };
 
-/** The shown pips run on from the name. Each folded pip sits on the middle of the count. */
-const pipsOf = (host: NodeId, placed: Seat, hosted: number): Pip[] => {
-  const textEnd = placed.label.x + placed.text.length * FRAME.charWidth;
-  const shown = hosted - (placed.foldedPips?.count ?? 0);
-  const countCentre = placed.foldedPips === null ? 0 : placed.foldedPips.x + (countRun(placed.foldedPips.count) - FRAME.countGap) / 2;
+/** The pips of the hosted files of a row, after the end of what the row has written. */
+export const pipsOf = (host: NodeId, row: Pick<Seat, "centre" | "foldedPips">, writtenEnd: number, hosted: number): Pip[] => {
+  const shown = hosted - (row.foldedPips?.count ?? 0);
+  const countCentre = row.foldedPips === null ? 0 : row.foldedPips.x + (countRun(row.foldedPips.count) - FRAME.countGap) / 2;
   return Array.from({ length: hosted }, (_, slot): Pip => {
     const folded = slot >= shown;
     return {
       kind: "pip",
       host,
       slot,
-      centre: { x: folded ? countCentre : textEnd + FRAME.pipLead + FRAME.pipPitch * slot, y: placed.centre.y },
+      centre: { x: folded ? countCentre : writtenEnd + FRAME.pipLead + FRAME.pipPitch * slot, y: row.centre.y },
       folded,
     };
   });
 };
 
-const distance = (a: Point, b: Point): number => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+export const distance = (a: Point, b: Point): number => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 
-const toward = (from: Point, to: Point, by: number): Point => {
+export const toward = (from: Point, to: Point, by: number): Point => {
   const span = distance(from, to);
   return span === 0 ? from : { x: from.x + ((to.x - from.x) * by) / span, y: from.y + ((to.y - from.y) * by) / span };
 };
@@ -253,8 +248,7 @@ const isBetween = (a: Point, middle: Point, b: Point): boolean =>
   (a.x === middle.x && middle.x === b.x && (a.y - middle.y) * (middle.y - b.y) >= 0) ||
   (a.y === middle.y && middle.y === b.y && (a.x - middle.x) * (middle.x - b.x) >= 0);
 
-/** Drops repeated points and points on a straight run. */
-const corners = (points: readonly Point[]): Point[] => {
+export const corners = (points: readonly Point[]): Point[] => {
   const out: Point[] = [];
   for (const point of points) {
     const last = out.at(-1);
@@ -266,7 +260,8 @@ const corners = (points: readonly Point[]): Point[] => {
   return out;
 };
 
-const pathOf = (points: readonly Point[]): string => {
+/** The path through the corners of an axis-aligned line, with each corner rounded. */
+export const pathOf = (points: readonly Point[]): string => {
   const parts: string[] = [];
   points.forEach((point, index) => {
     const before = points[index - 1];
@@ -289,7 +284,6 @@ interface Anchor {
   readonly row: number;
   readonly left: Point;
   readonly right: Point;
-  /** Where the row leaves its column on the right. */
   readonly edge: Point;
 }
 
@@ -298,29 +292,29 @@ interface Routed {
   readonly heading: Cable["heading"];
 }
 
-/** Every cable into a node uses the lane and the street of that node, so a hub reads as one bright comb. */
-const laneX = (gutter: number, target: Anchor): number => gutterCentre(gutter) + laneOf(target.row);
+const laneX = (gutter: number, laneOwner: Anchor): number => gutterCentre(gutter) + laneOf(laneOwner.row);
 
-/** A street runs between two rows, clear of the text in every column that it crosses. */
+const isRouter = (source: Anchor): boolean => source.column === ROUTER_COLUMN;
+
+const RAIL_X = gutterCentre(ROUTER_COLUMN) + RAIL_LANE;
+
 const streetAbove = (target: Anchor): number => target.left.y - FRAME.pitch / 2;
 
-/** Out on the right, along a lane, and back in on the right. The last column has no gutter on its right, so it uses its left. */
-const routeWithinColumn = (source: Anchor, target: Anchor): Routed => {
+const routeWithinColumn = (source: Anchor, target: Anchor, laneOwner: Anchor): Routed => {
   const usesLeftGutter = source.column === LAST_COLUMN;
-  const x = laneX(usesLeftGutter ? source.column - 1 : source.column, target);
+  const x = laneX(usesLeftGutter ? source.column - 1 : source.column, laneOwner);
   const [from, to] = usesLeftGutter ? [source.left, target.left] : [source.right, target.right];
   return { heading: "within", points: [from, { x, y: from.y }, { x, y: to.y }, to] };
 };
 
-/** One gutter: out on the right, down the lane of the target, in on its left. The router's cables to its playbooks share one rail. */
-const routeToNextColumn = (source: Anchor, target: Anchor): Routed => {
-  const x = source.column === 0 ? gutterCentre(0) + RAIL_LANE : laneX(source.column, target);
+const routeToNextColumn = (source: Anchor, target: Anchor, laneOwner: Anchor): Routed => {
+  const x = isRouter(source) ? RAIL_X : laneX(source.column, laneOwner);
   return { heading: "forward", points: [source.right, { x, y: source.right.y }, { x, y: target.left.y }, target.left] };
 };
 
-/** Out on the right, along the street of the target across the columns between, then in on its left from the last lane. */
-const routeAcrossColumns = (source: Anchor, target: Anchor): Routed => {
-  const first = laneX(source.column, target);
+const routeAcrossColumns = (source: Anchor, target: Anchor, laneOwner: Anchor): Routed => {
+  const isOnTheTrunkOfTheRouter = isRouter(source) && laneOwner === source;
+  const first = isOnTheTrunkOfTheRouter ? RAIL_X : laneX(source.column, laneOwner);
   const last = gutterCentre(target.column - 1) + LAST_LANE;
   const street = streetAbove(target);
   return {
@@ -329,15 +323,13 @@ const routeAcrossColumns = (source: Anchor, target: Anchor): Routed => {
   };
 };
 
-/** The mirror of `routeToNextColumn`: out on the left, in on the right of the target. */
-const routeBackOneColumn = (source: Anchor, target: Anchor): Routed => {
-  const x = laneX(target.column, target);
+const routeBackOneColumn = (source: Anchor, target: Anchor, laneOwner: Anchor): Routed => {
+  const x = laneX(target.column, laneOwner);
   return { heading: "back", points: [source.left, { x, y: source.left.y }, { x, y: target.right.y }, target.right] };
 };
 
-/** The mirror of `routeAcrossColumns`. */
-const routeBackAcrossColumns = (source: Anchor, target: Anchor): Routed => {
-  const first = laneX(source.column - 1, target);
+const routeBackAcrossColumns = (source: Anchor, target: Anchor, laneOwner: Anchor): Routed => {
+  const first = laneX(source.column - 1, laneOwner);
   const last = gutterCentre(target.column) - LAST_LANE;
   const street = streetAbove(target);
   return {
@@ -346,18 +338,17 @@ const routeBackAcrossColumns = (source: Anchor, target: Anchor): Routed => {
   };
 };
 
-/** Every vertical run is on a gutter lane, and every run across a column is on a street. */
-const routeOf = (source: Anchor, target: Anchor): Routed => {
+const routeOf = (source: Anchor, target: Anchor, laneOwner: Anchor): Routed => {
   const columns = target.column - source.column;
-  if (columns === 0) return routeWithinColumn(source, target);
-  if (columns === 1) return routeToNextColumn(source, target);
-  if (columns > 1) return routeAcrossColumns(source, target);
-  if (columns === -1) return routeBackOneColumn(source, target);
-  return routeBackAcrossColumns(source, target);
+  if (columns === 0) return routeWithinColumn(source, target, laneOwner);
+  if (columns === 1) return routeToNextColumn(source, target, laneOwner);
+  if (columns > 1) return routeAcrossColumns(source, target, laneOwner);
+  if (columns === -1) return routeBackOneColumn(source, target, laneOwner);
+  return routeBackAcrossColumns(source, target, laneOwner);
 };
 
-const cable = (key: RelationKey, source: Anchor, target: Anchor): Cable | null => {
-  const routed = routeOf(source, target);
+const cable = (key: RelationKey, source: Anchor, target: Anchor, laneOwner: Anchor = target): Cable | null => {
+  const routed = routeOf(source, target, laneOwner);
   const points = corners(routed.points);
   const start = points[0];
   const end = points.at(-1);
@@ -387,10 +378,19 @@ const cable = (key: RelationKey, source: Anchor, target: Anchor): Cable | null =
   };
 };
 
-/**
- * Pure. A seat is its column constant plus its rank, so relations, selection, and the viewport move no node.
- * No simulation, no randomness, no text measurement.
- */
+const anchorOf = (id: NodeId, placed: Seat, columnIndex: number): Anchor => {
+  const frame = FRAME.columns[placed.column];
+  return {
+    seat: id,
+    column: columnIndex,
+    row: placed.row,
+    left: placed.left,
+    right: placed.right,
+    edge: { x: Math.max(placed.right.x, frame.x + frame.width), y: placed.centre.y },
+  };
+};
+
+/** Pure. */
 export const layout = (graph: Graph): Placement => {
   const nodes = new Map<NodeId, Placed>();
   const anchors = new Map<NodeId, Anchor>();
@@ -402,18 +402,11 @@ export const layout = (graph: Graph): Placement => {
       const files = graph.hosted.get(node.id) ?? [];
       const placed = seat({ node, column: id, rank, hosted: files.length });
       nodes.set(node.id, placed);
-      const anchor: Anchor = {
-        seat: node.id,
-        column: columnIndex,
-        row: placed.row,
-        left: placed.left,
-        right: placed.right,
-        edge: { x: Math.max(placed.right.x, frame.x + frame.width), y: placed.centre.y },
-      };
+      const anchor = anchorOf(node.id, placed, columnIndex);
       anchors.set(node.id, anchor);
       lastRow = Math.max(lastRow, placed.row);
 
-      pipsOf(node.id, placed, files.length).forEach((pip, slot) => {
+      pipsOf(node.id, placed, placed.textX + placed.text.length * FRAME.charWidth, files.length).forEach((pip, slot) => {
         const file = files[slot];
         if (file === undefined) return;
         nodes.set(file.id, pip);
@@ -450,4 +443,25 @@ export const layout = (graph: Graph): Placement => {
     cables,
     rail: rail.join(""),
   };
+};
+
+const anchorIn = (placement: Placement, id: NodeId): Anchor | null => {
+  const placed = placement.nodes.get(id);
+  const seatId = placed?.kind === "pip" ? placed.host : id;
+  const seated = placement.nodes.get(seatId);
+  return seated?.kind === "seat" ? anchorOf(seatId, seated, COLUMN_IDS.indexOf(seated.column)) : null;
+};
+
+export const cablesOnOneTrunk = (graph: Graph, placement: Placement, from: NodeId): ReadonlyMap<RelationKey, Cable> => {
+  const cables = new Map<RelationKey, Cable>();
+  const source = anchorIn(placement, from);
+  if (source === null) return cables;
+  for (const relation of graph.out.get(from) ?? []) {
+    const target = anchorIn(placement, relation.to);
+    if (target === null || (source.column === target.column && source.row === target.row)) continue;
+    const key = relationKey(relation);
+    const placed = cable(key, source, target, source);
+    if (placed !== null) cables.set(key, placed);
+  }
+  return cables;
 };

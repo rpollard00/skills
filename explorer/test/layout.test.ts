@@ -2,7 +2,7 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import { toGraph } from "../src/shared/graph";
-import { FRAME, layout, monoAdvance, type Placement, type Rect, type Seat, type Segment } from "../src/shared/layout";
+import { cablesOnOneTrunk, FRAME, layout, monoAdvance, type Placement, type Rect, type Seat, type Segment } from "../src/shared/layout";
 import { ExplorerIndex, type NodeId, type Relation, type SkillNode } from "../src/shared/model";
 import { indexAt, LIVE_REPO } from "./support";
 
@@ -128,6 +128,28 @@ describe("layout on the live index", () => {
         assert.isAtLeast(label.x, frame.x, `${id} starts left of its column`);
         assert.isAtMost(label.x + label.width, frame.x + frame.width, `${id} (${text}) is wider than its column`);
       }
+    }),
+  );
+
+  it.effect("gives the cables out of one node one trunk on each side, the router included", () =>
+    Effect.gen(function* () {
+      const graph = toGraph(yield* liveIndex);
+      const placement = layout(graph);
+      let combs = 0;
+      for (const node of graph.index.nodes) {
+        const cables = [...cablesOnOneTrunk(graph, placement, node.id).values()];
+        for (const direction of [1, -1]) {
+          const trunks = cables.flatMap((cable) => {
+            const [leaving, upright] = cable.segments;
+            return leaving !== undefined && upright !== undefined && Math.sign(leaving[1].x - leaving[0].x) === direction ? [leaving[1].x] : [];
+          });
+          assert.isAtMost(new Set(trunks).size, 1, `${node.id}: the cables that leave to the ${direction === 1 ? "right" : "left"} go up and down at x ${[...new Set(trunks)].join(" and ")}`);
+          if (trunks.length > 1) combs += 1;
+        }
+      }
+      assert.isAbove(combs, 40, "the live index has many nodes with more than one cable on a side");
+      const router = [...graph.routers][0];
+      assert.isAbove(router === undefined ? 0 : cablesOnOneTrunk(graph, placement, router).size, 20, "the router has cables to playbooks and to skills");
     }),
   );
 

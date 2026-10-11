@@ -3,8 +3,7 @@ import type { CableTone, CableView } from "./scene";
 
 /**
  * Every lit cable into one port of one node shares the last run of its path. The port gets one mark for all of them:
- * an arrow when a cable ends there, and a bar when a `boundary` cable ends there. With both, the bar is at the port
- * and the arrow is behind it, so the bar is not under the arrows.
+ * an arrow when a cable ends there, and a bar when a `boundary` cable ends there.
  */
 export interface PortMark {
   readonly key: string;
@@ -19,7 +18,6 @@ export interface PortMark {
   readonly cables: readonly CableView[];
 }
 
-/** `needs` and `neededBy` cables never share a mark: the two have different colors. */
 export const cableSide = (tone: CableTone): "needs" | "neededBy" => (tone === "in" || tone === "previewIn" ? "neededBy" : "needs");
 
 const isPreview = (tone: CableTone): boolean => tone === "previewOut" || tone === "previewIn";
@@ -27,7 +25,7 @@ const isPreview = (tone: CableTone): boolean => tone === "previewOut" || tone ==
 export const portMarksOf = (cables: readonly CableView[]): PortMark[] => {
   const byPort = new Map<string, CableView[]>();
   for (const cable of cables) {
-    if (cable.tone === "weave") continue;
+    if (cable.tone === "weave" || cable.tone === "frame") continue;
     const key = `${cableSide(cable.tone)} ${cable.end.x},${cable.end.y} ${cable.arrives}`;
     const group = byPort.get(key);
     if (group === undefined) byPort.set(key, [cable]);

@@ -25,7 +25,7 @@ describe("the motion shows the cause", () => {
         const scene = deriveScene({ ...stage, state: step(INITIAL, { kind: "picked", id: node.id }, stage) });
         for (const neighbour of scene.nodes) {
           if (neighbour.tone.kind !== "needs") continue;
-          const cable = scene.cables.find((item) => item.key === relationKey({ from: node.id, to: neighbour.id }));
+          const cable = scene.cables.find((item) => item.tone === "out" && item.key === relationKey({ from: node.id, to: neighbour.id }));
           assert.isDefined(cable, `${node.id} needs ${neighbour.id} and has no cable to it`);
           if (cable === undefined) continue;
           assert.strictEqual(glyphArrivalSeconds(neighbour.tone), arrivalSeconds(cableTiming(cable)), `${cable.key}`);

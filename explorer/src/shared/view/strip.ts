@@ -2,14 +2,14 @@ import { nameOf, type Graph } from "../graph";
 import { relationKey, type Evidence, type Node, type Relation } from "../model";
 import { isShown } from "./cable-class";
 import { purposeOf, type FinderHit } from "./finder";
+import type { Hidden } from "./lit";
 import { cutAtWord, sentenceOf } from "./sentence";
 import type { ViewState } from "./state";
 import { cursorNodeOf, type Trace } from "./trace";
 
-/** The one line below the map. Purpose and evidence show here, so nothing floats over the graph. */
 export type Strip =
   | { readonly kind: "idle"; readonly skills: number; readonly playbooks: number; readonly hosted: number; readonly relations: number }
-  | { readonly kind: "purpose"; readonly name: string; readonly text: string }
+  | { readonly kind: "purpose"; readonly name: string; readonly text: string; readonly hidden: Hidden }
   | { readonly kind: "evidence"; readonly from: string; readonly to: string; readonly relation: Relation; readonly shown: Evidence; readonly sentence: string }
   | {
       readonly kind: "trace";
@@ -20,11 +20,12 @@ export type Strip =
       readonly shown: Evidence | null;
       readonly sentence: string;
       readonly conditional: boolean;
+      readonly hidden: Hidden;
     }
-  | { readonly kind: "onlyRouter"; readonly name: string; readonly router: string; readonly sentences: readonly string[] }
-  | { readonly kind: "noMatch"; readonly query: string };
+  | { readonly kind: "onlyRouter"; readonly name: string; readonly router: string; readonly sentences: readonly string[]; readonly hidden: Hidden }
+  | { readonly kind: "noMatch"; readonly query: string }
+  | { readonly kind: "notInView"; readonly name: string };
 
-/** The block that the strip quotes, when it quotes one. The strip has a control that opens its file at its line. */
 export const evidenceOfStrip = (strip: Strip): Evidence | null => (strip.kind === "evidence" || strip.kind === "trace" ? strip.shown : null);
 
 const evidenceStrip = (relation: Relation, graph: Graph): Strip => {
@@ -41,13 +42,16 @@ const evidenceStrip = (relation: Relation, graph: Graph): Strip => {
   };
 };
 
-const purposeStrip = (node: Node): Strip => ({
+const NOTHING_HIDDEN: Hidden = { kind: "none" };
+
+const purposeStrip = (node: Node, hidden: Hidden): Strip => ({
   kind: "purpose",
   name: nameOf(node),
   text: node.kind !== "hosted" ? purposeOf(node) : node.title === nameOf(node) ? node.entry : `${node.title}. ${node.entry}`,
+  hidden,
 });
 
-const traceStrip = (trace: Trace, cursor: number, graph: Graph): Strip => {
+const traceStrip = (trace: Trace, cursor: number, graph: Graph, hidden: Hidden): Strip => {
   const current = trace.steps[cursor - 1];
   const at = cursorNodeOf(trace, cursor);
   const node = at === null ? undefined : graph.nodes.get(at);
@@ -62,11 +66,11 @@ const traceStrip = (trace: Trace, cursor: number, graph: Graph): Strip => {
     shown: evidence,
     sentence: evidence === null ? "" : node === undefined ? cutAtWord(evidence.text) : sentenceOf(evidence, node),
     conditional: current?.conditional ?? false,
+    hidden,
   };
 };
 
-/** A known zero: when the router is the only node that loads the node, the strip says so and gives the route or the trigger. */
-const onlyRouterStrip = (node: Node, graph: Graph): Strip | null => {
+const onlyRouterStrip = (node: Node, graph: Graph, hidden: Hidden): Strip | null => {
   const sources = (graph.into.get(node.id) ?? []).map((relation) => relation.from);
   const first = sources[0];
   if (first === undefined || !sources.every((source) => graph.routers.has(source))) return null;
@@ -76,11 +80,20 @@ const onlyRouterStrip = (node: Node, graph: Graph): Strip | null => {
     ...graph.index.triggers.filter((trigger) => trigger.target === node.id).map((trigger) => trigger.condition),
     ...graph.index.routes.filter((route) => route.playbook === node.id || route.skills.includes(node.id)).map((route) => route.task),
   ];
-  return { kind: "onlyRouter", name: nameOf(node), router: nameOf(router), sentences: [...new Set(sentences)] };
+  return { kind: "onlyRouter", name: nameOf(node), router: nameOf(router), sentences: [...new Set(sentences)], hidden };
 };
 
-export const stripOf = (input: { readonly state: ViewState; readonly graph: Graph; readonly trace: Trace | null; readonly hits: readonly FinderHit[] }): Strip => {
-  const { state, graph, trace, hits } = input;
+export const stripOf = (input: {
+  readonly state: ViewState;
+  readonly graph: Graph;
+  readonly trace: Trace | null;
+  readonly hits: readonly FinderHit[];
+  /** The selected node, when it is not on the locked stage. */
+  readonly absent: Node | null;
+  /** What the stage cannot draw of the selection. Only a strip that describes the selection has it. */
+  readonly hidden: Hidden;
+}): Strip => {
+  const { state, graph, trace, hits, hidden } = input;
 
   if (state.hover.kind === "cable") {
     const relation = graph.relations.get(state.hover.key);
@@ -96,14 +109,16 @@ export const stripOf = (input: { readonly state: ViewState; readonly graph: Grap
       }
       const traced = trace?.steps.find((item) => item.node === hovered.id);
       const via = traced === undefined ? undefined : graph.relations.get(traced.via);
-      return via === undefined ? purposeStrip(hovered) : evidenceStrip(via, graph);
+      const isTheSelection = state.focus.kind === "node" && state.focus.id === hovered.id;
+      return via === undefined ? purposeStrip(hovered, isTheSelection ? hidden : NOTHING_HIDDEN) : evidenceStrip(via, graph);
     }
   }
   if (state.query.trim() !== "" && hits.length === 0) return { kind: "noMatch", query: state.query.trim() };
-  if (state.focus.kind === "route" && trace !== null) return traceStrip(trace, state.focus.cursor, graph);
+  if (state.focus.kind === "route" && trace !== null) return traceStrip(trace, state.focus.cursor, graph, hidden);
+  if (input.absent !== null) return { kind: "notInView", name: nameOf(input.absent) };
   if (state.focus.kind === "node") {
     const node = graph.nodes.get(state.focus.id);
-    if (node !== undefined) return onlyRouterStrip(node, graph) ?? purposeStrip(node);
+    if (node !== undefined) return onlyRouterStrip(node, graph, hidden) ?? purposeStrip(node, hidden);
   }
   return {
     kind: "idle",

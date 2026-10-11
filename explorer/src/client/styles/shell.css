@@ -14,6 +14,33 @@
   background: var(--ground);
 }
 
+.stage-cue {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  z-index: 1;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  margin: 0;
+  padding: 2px 8px 2px 0;
+  background: var(--ground);
+  color: var(--ink-quiet);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.stage-cue .stage-cue-name {
+  color: var(--ink-soft);
+  font-weight: 400;
+  letter-spacing: 0;
+  font-size: 11px;
+  text-transform: none;
+}
+
 .text-button {
   flex: none;
   color: var(--ink);

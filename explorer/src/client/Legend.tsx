@@ -1,7 +1,8 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { LEGEND, type CableClass } from "../shared/view/cable-class";
+import { GATE } from "../shared/polyline";
+import { LEGEND, weightOf, wordOf, type CableClass } from "../shared/view/cable-class";
 import { GLYPHS } from "../shared/view/scene";
-import { GLYPH_NAMES, GlyphShape, MarkShape } from "./SkillMap";
+import { ChangedMark, GLYPH_NAMES, GlyphShape, MarkShape } from "./SkillMap";
 
 const NOTES: { readonly [Cls in CableClass]: string | null } = {
   flow: null,
@@ -18,16 +19,14 @@ const Sample = ({ children }: { readonly children: ReactNode }): ReactNode => (
   </svg>
 );
 
+const ARROW_HEAD = "M7,-3.2L12,0L7,3.2";
+
 export interface LegendProps {
   readonly muted: ReadonlySet<CableClass>;
   readonly onMute: (cls: CableClass) => void;
   readonly onClose: () => void;
 }
 
-/**
- * The key to the marks. Each cable row is a switch that hides its class.
- * The first switch takes the focus when the Key opens, and Escape closes the Key: the switches are the only controls here.
- */
 export const Legend = ({ muted, onMute, onClose }: LegendProps): ReactNode => {
   const firstSwitch = useRef<HTMLButtonElement | null>(null);
   useEffect(() => firstSwitch.current?.focus(), []);
@@ -71,6 +70,15 @@ export const Legend = ({ muted, onMute, onClose }: LegendProps): ReactNode => {
           </Sample>
           bundled script, shell command
         </li>
+        <li>
+          <Sample>
+            <g className="node" data-glyph="ring" data-tone="rest" transform="translate(-4 2)">
+              <GlyphShape glyph="ring" />
+              <ChangedMark reach={5.5} />
+            </g>
+          </Sample>
+          changed after the last index
+        </li>
       </ul>
       <ul aria-label="Cables">
         <li className="legend-title">Cables. Select a row to hide its cables.</li>
@@ -78,11 +86,11 @@ export const Legend = ({ muted, onMute, onClose }: LegendProps): ReactNode => {
           <li key={cls}>
             <button type="button" className="legend-switch" ref={index === 0 ? firstSwitch : undefined} aria-pressed={!muted.has(cls)} onClick={() => onMute(cls)}>
               <Sample>
-                <path className="cable legend-line" data-cls={cls} d="M-14,0H12" />
-                {cls === "avoid" ? <path className="legend-line bar" d="M12,-5.5V5.5" /> : null}
+                <path className="legend-line" data-weight={weightOf(cls)} d="M-14,0H12" />
+                <path className={cls === "avoid" ? "legend-line bar" : "legend-line head"} d={cls === "avoid" ? "M12,-5.5V5.5" : ARROW_HEAD} />
               </Sample>
               <span>
-                {kinds.join(", ")}
+                {kinds.map(wordOf).join(", ")}
                 {NOTES[cls] === null ? "" : ` (${NOTES[cls]})`}
               </span>
             </button>
@@ -90,23 +98,48 @@ export const Legend = ({ muted, onMute, onClose }: LegendProps): ReactNode => {
         ))}
         <li>
           <Sample>
-            <path className="cable legend-line" data-cls="flow" data-conditional="true" d="M-14,0H12" />
+            <path className="legend-line" data-weight="strong" d="M-14,0H12" />
+            <circle className="legend-line gate" cx={0} r={GATE.radius} />
+            <path className="legend-line head" d={ARROW_HEAD} />
           </Sample>
-          conditional
+          with a condition: if
+        </li>
+        <li>
+          <Sample>
+            <path className="legend-line" data-weight="strong" d="M-14,0H12" />
+            <path className="legend-line head needed-by" d="M-7,-3.2L-12,0L-7,3.2" />
+            <path className="legend-line head" d={ARROW_HEAD} />
+          </Sample>
+          it also needs the selection
         </li>
       </ul>
       <ul aria-label="Selection">
         <li>
           <Sample>
-            <path className="legend-line needs" d="M-14,0H12M7,-3.2L12,0L7,3.2" />
+            <path className="legend-line needs" d={`M-14,0H12${ARROW_HEAD}`} />
           </Sample>
           the selection needs it
         </li>
         <li>
           <Sample>
-            <path className="legend-line needed-by" d="M-14,0H12M7,-3.2L12,0L7,3.2" />
+            <path className="legend-line needed-by" d={`M-14,0H12${ARROW_HEAD}`} />
           </Sample>
           it needs the selection
+        </li>
+        <li>
+          <Sample>
+            <path className="stage-frame" d="M-14,0H12" />
+          </Sample>
+          how a locked view is arranged
+        </li>
+        <li>
+          <Sample>
+            <g className="node" data-tone="step">
+              <circle className="step-disc" cx={-7} r={5.5} />
+              <circle className="step-disc conditional" cx={7} r={5.5} />
+            </g>
+          </Sample>
+          step of a trace, step with a condition
         </li>
       </ul>
     </aside>

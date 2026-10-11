@@ -1,21 +1,15 @@
 import type { ReactNode } from "react";
 import { Answer, type Evidence, type Relation } from "../shared/model";
+import type { Hidden } from "../shared/view/lit";
 import type { Strip as StripView } from "../shared/view/strip";
 import { ArrowLeft, ArrowRight } from "./icons";
 import { InlineText } from "./LiveName";
+import { count } from "./count";
 
 const ANSWERS = Answer.literals.join("|");
 
-/** The key that opens the block that the strip quotes. `App` listens for it. */
 export const OPEN_EVIDENCE_KEY = "e";
 
-const count = (value: number, one: string, many: string): string => `${value} ${value === 1 ? one : many}`;
-
-/**
- * The file and the line are a control that opens the file at that line. The key does the same while the pointer or
- * the keyboard focus is on the cable or on the node, where no Tab press gets to this control.
- * Each heading above the block follows, from the top heading down.
- */
 const Source = ({ evidence, onOpen }: { readonly evidence: Evidence; readonly onOpen: (file: string, line: number) => void }): ReactNode => (
   <>
     <button
@@ -117,12 +111,37 @@ const content = (strip: StripView, actions: Actions): ReactNode => {
           </button>
         </>
       );
+    case "notInView":
+      return (
+        <>
+          <span className="strip-name">{strip.name}</span>
+          <span className="strip-text">is not in this view, and the map shows it when you turn off the lock.</span>
+        </>
+      );
     default: {
       const _exhaustive: never = strip;
       return _exhaustive;
     }
   }
 };
+
+/** A relation counts when its other node is not in the view, whether the relation goes to that node or comes from it. */
+const hiddenSentence = (hidden: Hidden): string | null => {
+  switch (hidden.kind) {
+    case "none":
+      return null;
+    case "relations":
+      return hidden.count === 1 ? "1 relation is with a node that is not in this view." : `${hidden.count} relations are with nodes that are not in this view.`;
+    case "steps":
+      return hidden.count === 1 ? "1 step is not in this view." : `${hidden.count} steps are not in this view.`;
+    default: {
+      const _exhaustive: never = hidden;
+      return _exhaustive;
+    }
+  }
+};
+
+const hiddenOf = (strip: StripView): Hidden => (strip.kind === "purpose" || strip.kind === "onlyRouter" || strip.kind === "trace" ? strip.hidden : { kind: "none" });
 
 export interface StripProps extends Actions {
   /** Null until the index is ready. */
@@ -132,19 +151,22 @@ export interface StripProps extends Actions {
   readonly onStep: (by: 1 | -1) => void;
 }
 
-/** One line under the map. Purpose and evidence show here, and nothing floats over the graph. */
-export const Strip = ({ strip, loading, tracing, onClear, onOpenEvidence, onStep }: StripProps): ReactNode => (
-  <footer className="strip" aria-live="polite">
-    {tracing ? (
-      <span className="strip-steps">
-        <button type="button" className="key-button" aria-label="Previous step" onClick={() => onStep(-1)}>
-          <ArrowLeft />
-        </button>
-        <button type="button" className="key-button" aria-label="Next step" onClick={() => onStep(1)}>
-          <ArrowRight />
-        </button>
-      </span>
-    ) : null}
-    {strip === null ? <span className="strip-quiet">{loading ? "Reading the skills." : ""}</span> : content(strip, { onClear, onOpenEvidence })}
-  </footer>
-);
+export const Strip = ({ strip, loading, tracing, onClear, onOpenEvidence, onStep }: StripProps): ReactNode => {
+  const hidden = strip === null ? null : hiddenSentence(hiddenOf(strip));
+  return (
+    <footer className="strip" aria-live="polite">
+      {tracing ? (
+        <span className="strip-steps">
+          <button type="button" className="key-button" aria-label="Previous step" onClick={() => onStep(-1)}>
+            <ArrowLeft />
+          </button>
+          <button type="button" className="key-button" aria-label="Next step" onClick={() => onStep(1)}>
+            <ArrowRight />
+          </button>
+        </span>
+      ) : null}
+      {strip === null ? <span className="strip-quiet">{loading ? "Reading the skills." : ""}</span> : content(strip, { onClear, onOpenEvidence })}
+      {hidden === null ? null : <span className="strip-hidden">{hidden}</span>}
+    </footer>
+  );
+};

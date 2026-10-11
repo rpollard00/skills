@@ -1,28 +1,26 @@
-import { animate, motion, useMotionValue, useReducedMotion } from "motion/react";
-import { memo, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from "react";
-import type { ColumnId } from "../shared/graph";
-import { FRAME, type Placement, type Point, type Seat } from "../shared/layout";
+import { animate, AnimatePresence, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from "react";
+import { FOCUS, GROUP_TITLES, hasCount, WORD_BOX, wordWidthOf, type Caption } from "../shared/focus-layout";
+import { FRAME, type Placement, type Point } from "../shared/layout";
 import type { NodeId, RelationKey } from "../shared/model";
+import { GATE, grownPath, tipOf } from "../shared/polyline";
+import type { Stand } from "../shared/view/arranged";
 import { cableSide, portMarksOf, type PortMark } from "../shared/view/ports";
 import { CHIP, type CableView, type Chip, type Glyph, type NodeTone, type NodeView, type Scene } from "../shared/view/scene";
 import type { Hover, Transform } from "../shared/view/state";
-import { arrivalSeconds, AT_ONCE, CAMERA_SPRING, cableTiming, glyphArrivalSeconds, GROW_EASE, QUICK_SPRING, TIMING } from "./timing";
+import { arrivalSeconds, AT_ONCE, CAMERA_SPRING, cableTiming, glyphArrivalSeconds, GROW_EASE, QUICK_SPRING, TIMING, TRAVEL_SPRING } from "./timing";
 
 declare module "react" {
   interface CSSProperties {
-    /** The time at which the cable that lights a node arrives. */
-    "--arrival-delay"?: string;
+    "--cable-arrival-delay"?: string;
+    "--node-travel"?: string;
     "--label-size"?: string;
     "--small-size"?: string;
+    "--word-size"?: string;
+    "--caption-size"?: string;
+    "--caption-spacing"?: string;
   }
 }
-
-const COLUMN_TITLES: { readonly [Column in ColumnId]: string } = {
-  router: "ROUTER",
-  playbooks: "PLAYBOOKS",
-  skills: "SKILLS",
-  principles: "PRINCIPLES",
-};
 
 export const GLYPH_NAMES: { readonly [Shape in Glyph]: string } = {
   hub: "router",
@@ -34,14 +32,19 @@ export const GLYPH_NAMES: { readonly [Shape in Glyph]: string } = {
   pip: "hosted file",
 };
 
-/** The two font sizes that the layout computes widths from. */
-const MAP_FONT_SIZES = { "--label-size": `${FRAME.labelFontPx}px`, "--small-size": `${FRAME.smallFontPx}px` } as const;
+const MAP_VARIABLES = {
+  "--label-size": `${FRAME.labelFontPx}px`,
+  "--small-size": `${FRAME.smallFontPx}px`,
+  "--word-size": `${FOCUS.wordFontPx}px`,
+  "--caption-size": `${FOCUS.captionFontPx}px`,
+  "--caption-spacing": `${FOCUS.captionSpacingEm}em`,
+  "--node-travel": `${TIMING.nodeTravelSeconds * 1000}ms`,
+} as const;
 
-/**
- * How far the focus ring of a node starts left of its centre. The left port is 13 px from the centre.
- * The ring starts left of the port, so the bar of a `boundary` cable at the port is inside the ring and not under its edge.
- */
-const RING_REACH = 17;
+const BAR = { half: 5.5, width: 2.2 } as const;
+
+const RING_CLEAR_OF_BAR = 2.9;
+const RING_REACH = FOCUS.portReach + BAR.width / 2 + RING_CLEAR_OF_BAR;
 
 const RAIL_GRADIENT = "rail-from-router";
 
@@ -74,6 +77,13 @@ export const GlyphShape = ({ glyph }: { readonly glyph: Glyph }): ReactNode => {
   }
 };
 
+/** `reach` is the radius of the glyph. */
+export const ChangedMark = ({ reach }: { readonly reach: number }): ReactNode => (
+  <path className="changed" d={`M${reach + 1},${-reach - 0.5}l3.2,-5.6l3.2,5.6Z`} />
+);
+
+const GLYPH_REACH: { readonly [Shape in Glyph]: number } = { hub: 9.5, square: 5.5, ring: 5.5, disc: 5.5, diamond: 5.5, "diamond-solid": 5.5, pip: 2.6 };
+
 export const MarkShape = ({ kind, x }: { readonly kind: Chip["kind"]; readonly x: number }): ReactNode =>
   kind === "script" ? (
     <rect className="mark" x={x} y={-4.5} width={5} height={9} rx={1} />
@@ -91,6 +101,7 @@ const sameTone = (a: NodeTone, b: NodeTone): boolean => {
 interface NodeProps {
   readonly view: NodeView;
   readonly instant: boolean;
+  readonly travels: boolean;
   readonly onHover: (hover: Hover) => void;
   readonly onPick: (id: NodeId) => void;
 }
@@ -98,6 +109,8 @@ interface NodeProps {
 const sameNode = (a: NodeProps, b: NodeProps): boolean =>
   a.view.id === b.view.id &&
   a.view.at === b.view.at &&
+  a.view.offStage === b.view.offStage &&
+  a.travels === b.travels &&
   sameTone(a.view.tone, b.view.tone) &&
   a.view.mako === b.view.mako &&
   a.view.chips.length === b.view.chips.length &&
@@ -111,29 +124,42 @@ const sameNode = (a: NodeProps, b: NodeProps): boolean =>
   a.onHover === b.onHover &&
   a.onPick === b.onPick;
 
-const LabelText = ({ seat, match }: { readonly seat: Seat; readonly match: NodeView["match"] }): ReactNode => {
-  const x = seat.label.x - seat.centre.x;
-  if (match === null) {
-    return (
-      <text className="label" x={x} y={0.5}>
-        {seat.text}
-      </text>
-    );
-  }
-  return (
-    <text className="label" x={x} y={0.5}>
-      {seat.text.slice(0, match[0])}
-      <tspan className="hit-text">{seat.text.slice(match[0], match[1])}</tspan>
-      {seat.text.slice(match[1])}
-    </text>
-  );
-};
+type Lined = Exclude<Stand, { kind: "pip" }>;
 
-const StepNumber = ({ tone, radius, instant }: { readonly tone: Extract<NodeTone, { kind: "step" }>; readonly radius: number; readonly instant: boolean }): ReactNode => (
+
+const LabelText = ({ at, match }: { readonly at: Lined; readonly match: NodeView["match"] }): ReactNode => (
+  <text className="label" x={at.textX - at.centre.x} y={0.5}>
+    {match === null ? (
+      at.text
+    ) : (
+      <>
+        {at.text.slice(0, match[0])}
+        <tspan className="hit-text">{at.text.slice(match[0], match[1])}</tspan>
+        {at.text.slice(match[1])}
+      </>
+    )}
+    {at.kind === "row" && at.note !== null ? (
+      <tspan className="note" dx={FRAME.charWidth}>
+        {at.note}
+      </tspan>
+    ) : null}
+  </text>
+);
+
+const afterTravel = (travels: boolean, seconds: number): number => (travels ? TIMING.nodeTravelSeconds : 0) + seconds;
+
+interface StepNumberProps {
+  readonly tone: Extract<NodeTone, { kind: "step" }>;
+  readonly radius: number;
+  readonly instant: boolean;
+  readonly travels: boolean;
+}
+
+const StepNumber = ({ tone, radius, instant, travels }: StepNumberProps): ReactNode => (
   <motion.g
     initial={instant ? false : { opacity: 0, scale: 0.3 }}
     animate={{ opacity: 1, scale: 1 }}
-    transition={instant ? AT_ONCE : { ...QUICK_SPRING, delay: glyphArrivalSeconds(tone) }}
+    transition={instant ? AT_ONCE : { ...QUICK_SPRING, delay: afterTravel(travels, glyphArrivalSeconds(tone)) }}
   >
     <circle className={tone.conditional ? "step-disc conditional" : "step-disc"} r={radius} />
     <text className={tone.conditional ? "step-number conditional" : "step-number"} y={0.6}>
@@ -172,36 +198,40 @@ const ChipMark = ({ chip, first, centre, instant }: { readonly chip: Chip; reado
   );
 };
 
-const NodeMark = memo(function NodeMark({ view, instant, onHover, onPick }: NodeProps): ReactNode {
+const NodeMark = memo(function NodeMark({ view, instant, travels, onHover, onPick }: NodeProps): ReactNode {
   const { at, tone } = view;
   const numbered = tone.kind === "step" && tone.n > 0;
-  const handlers = {
-    onPointerEnter: () => onHover({ kind: "node", id: view.id }),
-    onPointerLeave: () => onHover({ kind: "none" }),
-    onFocus: () => onHover({ kind: "node", id: view.id }),
-    onBlur: () => onHover({ kind: "none" }),
-    onClick: () => onPick(view.id),
-    onKeyDown: (event: KeyboardEvent) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      onPick(view.id);
-    },
-  };
+  const handlers = view.offStage
+    ? {}
+    : {
+        onFocus: () => onHover({ kind: "node", id: view.id }),
+        onBlur: () => onHover({ kind: "none" }),
+        onClick: () => onPick(view.id),
+        onKeyDown: (event: KeyboardEvent) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          onPick(view.id);
+        },
+      };
   const shared = {
     className: "node",
     "data-node": view.id,
     "data-glyph": view.glyph,
     "data-tone": tone.kind,
     "data-hovered": view.hovered,
+    "data-off-stage": view.offStage,
     "data-x": at.centre.x,
     "data-y": at.centre.y,
-    transform: `translate(${at.centre.x} ${at.centre.y})`,
-    tabIndex: 0,
+    initial: false,
+    animate: { x: at.centre.x, y: at.centre.y },
+    transition: instant ? AT_ONCE : TRAVEL_SPRING,
+    tabIndex: view.offStage ? -1 : 0,
     role: "button",
     "aria-pressed": tone.kind === "selected",
-    style: { "--arrival-delay": `${Math.round(glyphArrivalSeconds(tone) * 1000)}ms` },
+    "aria-hidden": view.offStage ? true : undefined,
+    style: { "--cable-arrival-delay": `${Math.round(afterTravel(travels, glyphArrivalSeconds(tone)) * 1000)}ms` },
     ...handlers,
-  };
+  } as const;
   const ringOnce = view.ringing ? (
     <motion.circle
       className="ring-once"
@@ -211,45 +241,48 @@ const NodeMark = memo(function NodeMark({ view, instant, onHover, onPick }: Node
       transition={instant ? AT_ONCE : { duration: TIMING.ringOnceSeconds, ease: "easeOut" }}
     />
   ) : null;
+  const changed = view.changed ? <ChangedMark reach={GLYPH_REACH[view.glyph]} /> : null;
 
   if (at.kind === "pip") {
     return (
-      <g {...shared} data-folded={at.folded} aria-label={`${view.name}, ${GLYPH_NAMES[view.glyph]}`}>
+      <motion.g {...shared} data-folded={at.folded} aria-label={`${view.name}, ${GLYPH_NAMES[view.glyph]}`}>
         <circle className="hit" r={5.5} />
         <circle className="ring" r={at.folded ? 9.5 : 6.5} />
         {numbered ? (
-          <StepNumber tone={tone} radius={6} instant={instant} />
+          <StepNumber tone={tone} radius={6} instant={instant} travels={travels} />
         ) : (
           <g className="glyph">
             <GlyphShape glyph={view.glyph} />
           </g>
         )}
-        {view.changed ? <circle className="changed" r={5} /> : null}
+        {changed}
         {ringOnce}
-      </g>
+      </motion.g>
     );
   }
 
-  const width = at.label.x + at.label.width - at.centre.x + 17;
+  const isMirrored = at.kind === "row" && at.mirrored;
+  const from = isMirrored ? at.label.x - at.centre.x - 4 : -FOCUS.portReach;
+  const to = isMirrored ? FOCUS.portReach : at.label.x + at.label.width - at.centre.x + 4;
   return (
-    <g {...shared} aria-label={`${view.name}, ${GLYPH_NAMES[view.glyph]}`}>
-      <rect className="hit" x={-13} y={-11} width={width} height={22} />
-      <rect className="ring" x={-RING_REACH} y={-10.5} width={width + RING_REACH - 13.5} height={21} rx={3} />
+    <motion.g {...shared} aria-label={`${view.name}, ${GLYPH_NAMES[view.glyph]}`}>
+      <rect className="hit" x={from} y={-11} width={to - from} height={22} />
+      <rect className="ring" x={isMirrored ? from + 0.5 : -RING_REACH} y={-10.5} width={isMirrored ? RING_REACH - from - 0.5 : to + RING_REACH - 0.5} height={21} rx={3} />
       {view.mako === "none" ? null : <path className="tick" data-mako={view.mako} d={view.mako === "named" ? "M-13.6,0H-8.6" : "M-13.6,-3L-8.6,0L-13.6,3Z"} />}
       {tone.kind === "selected" ? (
         <motion.circle className="halo" r={11} initial={instant ? false : { scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 0.55 }} transition={instant ? AT_ONCE : QUICK_SPRING} />
       ) : null}
       {numbered ? (
-        <StepNumber tone={tone} radius={7.5} instant={instant} />
+        <StepNumber tone={tone} radius={7.5} instant={instant} travels={travels} />
       ) : (
         <g className="glyph">
           <GlyphShape glyph={view.glyph} />
           {tone.kind === "mutual" ? <circle className="mutual-dot" r={1.8} /> : null}
         </g>
       )}
-      {view.changed ? <circle className="changed" r={view.glyph === "hub" ? 12 : 9} /> : null}
+      {changed}
       {view.defective ? <path className="defect" d="M-8,8L8,-8" /> : null}
-      <LabelText seat={at} match={view.match} />
+      <LabelText at={at} match={view.match} />
       {at.foldedPips === null ? null : (
         <text className="fold-count" x={at.foldedPips.x - at.centre.x} y={0.5}>
           +{at.foldedPips.count}
@@ -261,30 +294,27 @@ const NodeMark = memo(function NodeMark({ view, instant, onHover, onPick }: Node
           ))
         : at.marks.map((mark) => <MarkShape key={mark.kind} kind={mark.kind} x={mark.x - at.centre.x} />)}
       {ringOnce}
-    </g>
+    </motion.g>
   );
 }, sameNode);
 
 interface WeaveProps {
   readonly cables: readonly CableView[];
   readonly leaders: readonly string[];
-  /** A new placement has new paths for the same relations, so the weave draws again. */
-  readonly placement: Placement;
 }
 
 const sameWeave = (a: WeaveProps, b: WeaveProps): boolean =>
-  a.placement === b.placement &&
   a.cables.length === b.cables.length &&
   a.leaders.length === b.leaders.length &&
-  a.cables.every((cable, index) => cable.key === b.cables[index]?.key && cable.cls === b.cables[index]?.cls && cable.conditional === b.cables[index]?.conditional);
+  a.leaders.every((leader, index) => leader === b.leaders[index]) &&
+  a.cables.every((cable, index) => cable.key === b.cables[index]?.key && cable.weight === b.cables[index]?.weight && cable.rest === b.cables[index]?.rest);
 
-/** The resting relations. Screen blending makes a track brighter where many relations share it. */
 const Weave = memo(function Weave({ cables, leaders }: WeaveProps): ReactNode {
   return (
     <g className="weave">
       <path className="leaders" d={leaders.join("")} />
       {cables.map((cable) => (
-        <path key={cable.key} className="cable" data-cable={cable.key} data-cls={cable.cls} data-conditional={cable.conditional} d={cable.rest} />
+        <path key={cable.key} className="cable" data-cable={cable.key} data-weight={cable.weight} d={cable.rest} />
       ))}
     </g>
   );
@@ -293,81 +323,102 @@ const Weave = memo(function Weave({ cables, leaders }: WeaveProps): ReactNode {
 interface LitProps {
   readonly view: CableView;
   readonly instant: boolean;
-  readonly world: Placement["world"];
-  readonly onHover: (hover: Hover) => void;
+  readonly travels: boolean;
   readonly onInspect: (key: RelationKey) => void;
 }
 
 const sameLit = (a: LitProps, b: LitProps): boolean =>
   a.view.key === b.view.key &&
+  a.view.d === b.view.d &&
   a.view.tone === b.view.tone &&
   a.view.bright === b.view.bright &&
   a.view.order === b.view.order &&
-  a.view.cls === b.view.cls &&
+  a.view.weight === b.view.weight &&
   a.view.conditional === b.view.conditional &&
+  a.view.words?.text === b.view.words?.text &&
   a.instant === b.instant &&
-  a.world === b.world &&
-  a.onHover === b.onHover &&
+  a.travels === b.travels &&
   a.onInspect === b.onInspect;
 
 const isPreview = (cable: CableView): boolean => cable.tone === "previewOut" || cable.tone === "previewIn";
 
-/** A relation of the focus. It grows from its source to its target, so the direction is visible. */
-const LitCable = memo(function LitCable({ view, instant, world, onHover, onInspect }: LitProps): ReactNode {
-  const maskId = `grow-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+const ARROW = { length: 5, half: 3.2, setBack: 4.5 } as const;
+
+const hasMarksOnWire = (view: CableView): boolean => view.words !== null || view.gate !== null || view.back !== null;
+
+/** These are not in the group that glows, because the box under the words has the color of the ground and must cast no light. */
+const OnWire = ({ view, instant, travels }: { readonly view: CableView; readonly instant: boolean; readonly travels: boolean }): ReactNode => {
+  const { words, gate, back } = view;
+  const width = words === null ? 0 : wordWidthOf(words.text);
+  const still = instant || isPreview(view);
+  return (
+    <motion.g
+      className="on-wire"
+      data-tone={view.tone}
+      data-bright={view.bright}
+      initial={still ? false : { opacity: 0 }}
+      animate={{ opacity: 1, transition: still ? AT_ONCE : { delay: afterTravel(travels, arrivalSeconds(cableTiming(view))), duration: TIMING.fadeInSeconds } }}
+      exit={{ opacity: 0, transition: instant ? AT_ONCE : { duration: TIMING.cableFadeSeconds } }}
+    >
+      {words === null ? null : (
+        <>
+          <rect className="word-ground" x={words.at.x - width / 2} y={words.at.y - WORD_BOX.height / 2} width={width} height={WORD_BOX.height} />
+          <text className="word" x={words.at.x} y={words.at.y + 0.5}>
+            {words.text}
+          </text>
+        </>
+      )}
+      {gate === null ? null : <circle className="gate" cx={gate.x} cy={gate.y} r={GATE.radius} />}
+      {back === null ? null : <path className="back" d={`M${back.x + ARROW.length},${back.y - ARROW.half}L${back.x},${back.y}L${back.x + ARROW.length},${back.y + ARROW.half}`} />}
+    </motion.g>
+  );
+};
+
+const LitCable = memo(function LitCable({ view, instant, travels, onInspect }: LitProps): ReactNode {
   const preview = isPreview(view);
   const traced = view.tone === "step";
   const still = instant || preview;
   const [grown, setGrown] = useState(still);
   const { delaySeconds, travelSeconds } = cableTiming(view);
-  const masked = !still && !grown;
+  const progress = useMotionValue(still ? 1 : 0);
+  const { points } = view;
+  const growing = useTransform(progress, (part) => grownPath(points, part));
+  const tipX = useTransform(progress, (part) => tipOf(points, part).x);
+  const tipY = useTransform(progress, (part) => tipOf(points, part).y);
+  const tipOpacity = useTransform(progress, (part) => (part > 0 && part < 1 ? 1 : 0));
 
+  useEffect(() => {
+    if (still) return undefined;
+    const controls = animate(progress, 1, {
+      delay: afterTravel(travels, delaySeconds),
+      duration: travelSeconds,
+      ease: traced ? "linear" : GROW_EASE,
+      onComplete: () => setGrown(true),
+    });
+    return () => controls.stop();
+  }, [still, travels, delaySeconds, travelSeconds, traced, progress]);
+
+  const shown = still || grown;
   return (
-    <g className="lit-cable" data-cable={view.key} data-tone={view.tone} data-bright={view.bright}>
-      {masked ? (
-        <mask id={maskId} maskUnits="userSpaceOnUse" x={0} y={0} width={world.width} height={world.height}>
-          <motion.path
-            d={view.d}
-            fill="none"
-            stroke="#ffffff"
-            strokeWidth={12}
-            strokeLinecap="butt"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ delay: delaySeconds, duration: travelSeconds, ease: traced ? "linear" : GROW_EASE }}
-            onAnimationComplete={() => setGrown(true)}
-          />
-        </mask>
-      ) : null}
-      <path className="cable" data-cls={view.cls} data-conditional={view.conditional} d={view.d} mask={masked ? `url(#${maskId})` : undefined} />
-      {traced && !instant ? (
-        <motion.path
-          className="pulse"
-          d={view.d}
-          strokeDasharray={`18 ${view.length + 40}`}
-          initial={{ strokeDashoffset: 18, opacity: 1 }}
-          animate={{ strokeDashoffset: -view.length, opacity: [1, 1, 0] }}
-          transition={{ delay: delaySeconds, duration: travelSeconds, ease: "linear", opacity: { delay: delaySeconds, duration: travelSeconds, times: [0, 0.92, 1] } }}
-        />
-      ) : null}
+    <motion.g
+      className="lit-cable"
+      data-cable={view.key}
+      data-tone={view.tone}
+      data-bright={view.bright}
+      data-weight={view.weight}
+      exit={{ opacity: 0 }}
+      transition={instant ? AT_ONCE : { duration: TIMING.cableFadeSeconds }}
+    >
+      {shown ? <path className="cable" d={view.d} /> : <motion.path className="cable" d={growing} />}
+      {traced && !shown ? <motion.circle className="pulse" r={2.6} cx={tipX} cy={tipY} style={{ opacity: tipOpacity }} /> : null}
       {preview ? null : (
-        <path
-          className="hit"
-          d={view.d}
-          onPointerEnter={() => onHover({ kind: "cable", key: view.key })}
-          onPointerLeave={() => onHover({ kind: "none" })}
-          onClick={() => onInspect(view.key)}
-        />
+        <path className="hit" d={view.d} onClick={() => onInspect(view.key)} />
       )}
-    </g>
+    </motion.g>
   );
 }, sameLit);
 
-const ARROW = { length: 5, half: 3.2, setBack: 4.5 } as const;
-const BAR_HALF = 5.5;
-
-/** The mark of one port. It shows when the first cable gets to the port. */
-const PortEnd = ({ mark, instant }: { readonly mark: PortMark; readonly instant: boolean }): ReactNode => {
+const PortEnd = ({ mark, instant, travels }: { readonly mark: PortMark; readonly instant: boolean; readonly travels: boolean }): ReactNode => {
   const { at, arrives } = mark;
   const tip = at.x - (mark.hasBar ? ARROW.setBack * arrives : 0);
   const moving = mark.cables.filter((cable) => !isPreview(cable));
@@ -379,16 +430,34 @@ const PortEnd = ({ mark, instant }: { readonly mark: PortMark; readonly instant:
       data-tone={mark.tone}
       data-bright={mark.bright}
       initial={still ? false : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={still ? AT_ONCE : { delay: Math.max(0, firstArrival - TIMING.portMarkSeconds), duration: TIMING.portMarkSeconds }}
+      animate={{ opacity: 1, transition: still ? AT_ONCE : { delay: Math.max(0, afterTravel(travels, firstArrival) - TIMING.portMarkSeconds), duration: TIMING.portMarkSeconds } }}
+      exit={{ opacity: 0, transition: instant ? AT_ONCE : { duration: TIMING.cableFadeSeconds } }}
     >
       {mark.hasArrow ? <path d={`M${tip - ARROW.length * arrives},${at.y - ARROW.half}L${tip},${at.y}L${tip - ARROW.length * arrives},${at.y + ARROW.half}`} /> : null}
-      {mark.hasBar ? <path className="bar" d={`M${at.x},${at.y - BAR_HALF}V${at.y + BAR_HALF}`} /> : null}
+      {mark.hasBar ? <path className="bar" d={`M${at.x},${at.y - BAR.half}V${at.y + BAR.half}`} /> : null}
     </motion.g>
   );
 };
 
-/** Applies the camera to the world group. A gesture and a window resize jump. Every other change springs. */
+const GroupCaption = ({ caption, instant }: { readonly caption: Caption; readonly instant: boolean }): ReactNode => (
+  <motion.text
+    className="column-title"
+    x={caption.at.x}
+    y={caption.at.y}
+    textAnchor={caption.anchor}
+    initial={instant ? false : { opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={instant ? AT_ONCE : { delay: TIMING.nodeTravelSeconds, duration: TIMING.fadeInSeconds }}
+  >
+    {GROUP_TITLES[caption.group]}
+    {hasCount(caption.group) ? (
+      <tspan className="count" dx={7}>
+        {caption.count}
+      </tspan>
+    ) : null}
+  </motion.text>
+);
+
 const useCamera = (camera: Transform, jump: boolean, area: string): RefObject<SVGGElement | null> => {
   const world = useRef<SVGGElement | null>(null);
   const tx = useMotionValue(camera.tx);
@@ -423,11 +492,15 @@ const useCamera = (camera: Transform, jump: boolean, area: string): RefObject<SV
   return world;
 };
 
-/** The rail is brightest at the router and fades along the comb: the centre of the fade is the port of the router, and its edge is the farthest playbook. */
-const railFade = (scene: Scene): { readonly from: Point; readonly reach: number } | null => {
-  const router = scene.nodes.find((node) => node.glyph === "hub")?.at;
-  if (router === undefined || router.kind !== "seat") return null;
-  const reaches = scene.nodes.flatMap((node) => (node.glyph === "square" && node.at.kind === "seat" ? [Math.hypot(node.at.left.x - router.right.x, node.at.left.y - router.right.y)] : []));
+const railFade = (scene: Scene, placement: Placement): { readonly from: Point; readonly reach: number } | null => {
+  const seatsOf = (glyph: Glyph) =>
+    scene.nodes.flatMap((node) => {
+      const seat = node.glyph === glyph ? placement.nodes.get(node.id) : undefined;
+      return seat?.kind === "seat" ? [seat] : [];
+    });
+  const router = seatsOf("hub")[0];
+  if (router === undefined) return null;
+  const reaches = seatsOf("square").map((seat) => Math.hypot(seat.left.x - router.right.x, seat.left.y - router.right.y));
   return reaches.length === 0 ? null : { from: router.right, reach: Math.max(...reaches) };
 };
 
@@ -441,16 +514,21 @@ export interface SkillMapProps {
   readonly onHover: (hover: Hover) => void;
   readonly onPick: (id: NodeId) => void;
   readonly onInspect: (key: RelationKey) => void;
+  /** A click on the empty stage. */
+  readonly onDeselect: () => void;
   readonly onZoom: (factor: number, at: Point) => void;
   readonly onPan: (dx: number, dy: number) => void;
 }
 
-/** Draws a scene. It holds the motion, and no rule about what is lit. */
-export const SkillMap = ({ placement, camera, area, scene, onHover, onPick, onInspect, onZoom, onPan }: SkillMapProps): ReactNode => {
+const hoverName = (hover: Hover): string => (hover.kind === "none" ? "" : hover.kind === "cable" ? `cable ${hover.key}` : `${hover.kind} ${hover.id}`);
+
+const CLICK_SLOP_PX = 4;
+
+export const SkillMap = ({ placement, camera, area, scene, onHover, onPick, onInspect, onDeselect, onZoom, onPan }: SkillMapProps): ReactNode => {
   const instant = useReducedMotion() === true;
   const svg = useRef<SVGSVGElement | null>(null);
   const gestureAt = useRef(Number.NEGATIVE_INFINITY);
-  const drag = useRef<{ readonly pointer: number; x: number; y: number } | null>(null);
+  const drag = useRef<{ readonly pointer: number; x: number; y: number; travel: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const world = useCamera(camera, instant || performance.now() - gestureAt.current < TIMING.gestureWindowMs, area);
 
@@ -469,47 +547,85 @@ export const SkillMap = ({ placement, camera, area, scene, onHover, onPick, onIn
 
   const onPointerDown = (event: PointerEvent<SVGSVGElement>): void => {
     if (event.button !== 0 || !(event.target instanceof Element) || event.target.closest(".node, .lit-cable") !== null) return;
-    drag.current = { pointer: event.pointerId, x: event.clientX, y: event.clientY };
+    drag.current = { pointer: event.pointerId, x: event.clientX, y: event.clientY, travel: 0 };
     event.currentTarget.setPointerCapture(event.pointerId);
     setDragging(true);
   };
+  /**
+   * What is under the pointer comes from a move of the pointer, and not from a node that enters the place of a still pointer.
+   * A selection moves nodes, and a node that stops under the pointer must not start a hover that nobody made.
+   */
+  const pointerAt = useRef<Point | null>(null);
+  const hoverSent = useRef("");
+  const reportHover = useCallback(
+    (hover: Hover): void => {
+      hoverSent.current = hoverName(hover);
+      onHover(hover);
+    },
+    [onHover],
+  );
+  const sendHover = (hover: Hover): void => {
+    if (hoverSent.current !== hoverName(hover)) reportHover(hover);
+  };
+  const hoverUnder = (target: Element): Hover => {
+    const nodeId = target.closest<SVGGElement>('.node[data-off-stage="false"]')?.dataset["node"];
+    const node = nodeId === undefined ? undefined : scene?.nodes.find((item) => item.id === nodeId);
+    if (node !== undefined) return { kind: "node", id: node.id };
+    const cableKey = target.closest<SVGGElement>(".lit-cable")?.dataset["cable"];
+    const cable = cableKey === undefined ? undefined : scene?.cables.find((item) => item.key === cableKey && item.tone !== "weave");
+    return cable === undefined ? { kind: "none" } : { kind: "cable", key: cable.key };
+  };
+
   const onPointerMove = (event: PointerEvent<SVGSVGElement>): void => {
     const held = drag.current;
+    const last = pointerAt.current;
+    const pointerMoved = last === null || last.x !== event.clientX || last.y !== event.clientY;
+    pointerAt.current = { x: event.clientX, y: event.clientY };
+    if (held === null && pointerMoved && event.target instanceof Element) sendHover(hoverUnder(event.target));
     if (held === null || held.pointer !== event.pointerId) return;
     const dx = event.clientX - held.x;
     const dy = event.clientY - held.y;
     if (dx === 0 && dy === 0) return;
     held.x = event.clientX;
     held.y = event.clientY;
+    held.travel += Math.abs(dx) + Math.abs(dy);
+    if (held.travel < CLICK_SLOP_PX) return;
     gestureAt.current = performance.now();
     onPan(dx, dy);
   };
   const onPointerEnd = (event: PointerEvent<SVGSVGElement>): void => {
-    if (drag.current?.pointer !== event.pointerId) return;
+    const held = drag.current;
+    if (held?.pointer !== event.pointerId) return;
     drag.current = null;
     setDragging(false);
+    if (event.type === "pointerup" && held.travel < CLICK_SLOP_PX) onDeselect();
   };
 
   const hub = FRAME.columns.router;
   const hubY = FRAME.top + FRAME.pitch * hub.firstRow;
+  const arranged = scene?.arranged ?? false;
+  const travels = scene?.travels ?? false;
   const weave = scene === null ? [] : scene.cables.filter((cable) => cable.tone === "weave");
-  const lit = scene === null ? [] : scene.cables.filter((cable) => cable.tone !== "weave");
+  const frame = scene === null ? [] : scene.cables.filter((cable) => cable.tone === "frame");
+  const lit = scene === null ? [] : scene.cables.filter((cable) => cable.tone !== "weave" && cable.tone !== "frame");
   const marks = portMarksOf(lit);
-  const cursorAt = scene === null || scene.cursor === null ? undefined : placement.nodes.get(scene.cursor);
-  const fade = scene === null ? null : railFade(scene);
+  const cursor = scene === null || scene.cursor === null ? undefined : scene.nodes.find((node) => node.id === scene.cursor);
+  const fade = scene === null ? null : railFade(scene, placement);
 
   const litGroup = (side: "needs" | "neededBy"): ReactNode => (
     <g className={side === "needs" ? "lit glow-needs" : "lit glow-needed-by"}>
-      {lit
-        .filter((cable) => cableSide(cable.tone) === side)
-        .map((cable) => (
-          <LitCable key={`${cable.key}:${cable.tone}`} view={cable} instant={instant} world={placement.world} onHover={onHover} onInspect={onInspect} />
-        ))}
-      {marks
-        .filter((mark) => cableSide(mark.tone) === side)
-        .map((mark) => (
-          <PortEnd key={`${mark.key}:${mark.tone}`} mark={mark} instant={instant} />
-        ))}
+      <AnimatePresence>
+        {lit
+          .filter((cable) => cableSide(cable.tone) === side)
+          .map((cable) => (
+            <LitCable key={`${cable.key}:${cable.tone}:${cable.d}`} view={cable} instant={instant} travels={travels} onInspect={onInspect} />
+          ))}
+        {marks
+          .filter((mark) => cableSide(mark.tone) === side)
+          .map((mark) => (
+            <PortEnd key={`${mark.key}:${mark.tone}`} mark={mark} instant={instant} travels={travels} />
+          ))}
+      </AnimatePresence>
     </g>
   );
 
@@ -520,12 +636,18 @@ export const SkillMap = ({ placement, camera, area, scene, onHover, onPick, onIn
       role="group"
       aria-label="Skill map"
       data-weave={scene?.weave ?? "rest"}
+      data-arranged={arranged}
+      data-locked={scene !== null && scene.locked !== null}
       data-dragging={dragging}
-      style={MAP_FONT_SIZES}
+      style={MAP_VARIABLES}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerEnd}
       onPointerCancel={onPointerEnd}
+      onPointerLeave={() => {
+        pointerAt.current = null;
+        sendHover({ kind: "none" });
+      }}
     >
       {fade === null ? null : (
         <defs>
@@ -537,38 +659,52 @@ export const SkillMap = ({ placement, camera, area, scene, onHover, onPick, onIn
         </defs>
       )}
       <g ref={world}>
-        {placement.columns.map((column) => (
-          <text key={column.id} className="column-title" x={column.title.x} y={column.title.y}>
-            {COLUMN_TITLES[column.id]}
-            {scene === null || column.id === "router" ? null : (
-              <tspan className="count" dx={7}>
-                {column.count}
-              </tspan>
-            )}
-          </text>
-        ))}
+        <g className="rest-titles">
+          {placement.columns.map((column) => (
+            <text key={column.id} className="column-title" x={column.title.x} y={column.title.y}>
+              {GROUP_TITLES[column.id]}
+              {scene === null || !hasCount(column.id) ? null : (
+                <tspan className="count" dx={7}>
+                  {column.count}
+                </tspan>
+              )}
+            </text>
+          ))}
+        </g>
         {scene === null ? (
           <g>
             <circle className="frame-hub" cx={hub.x + FRAME.glyphInset} cy={hubY} r={9.5} />
-            <path className="rail frame" d={`M${hub.x + hub.width},${hubY}H${FRAME.columns.playbooks.x - FRAME.portGap}`} />
+            <path className="rail without-fade" d={`M${hub.x + hub.width},${hubY}H${FRAME.columns.playbooks.x - FRAME.portGap}`} />
           </g>
         ) : (
           <motion.g initial={instant ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={instant ? AT_ONCE : { duration: TIMING.mapSettleSeconds }}>
-            <path className={fade === null ? "rail frame" : "rail"} d={placement.rail} stroke={fade === null ? undefined : `url(#${RAIL_GRADIENT})`} />
-            <Weave cables={weave} leaders={scene.leaders} placement={placement} />
+            <path className={fade === null ? "rail without-fade" : "rail"} d={placement.rail} stroke={fade === null ? undefined : `url(#${RAIL_GRADIENT})`} />
+            <Weave cables={weave} leaders={scene.leaders} />
+            {/* One path for all the cables of the frame: where many of them share a trunk, the trunk is not brighter than a branch. */}
+            <path className="stage-frame" d={frame.map((cable) => cable.d).join("")} />
+            {scene.captions.map((caption) => (
+              <GroupCaption key={`${caption.key}:${caption.at.x},${caption.at.y}`} caption={caption} instant={instant} />
+            ))}
             {litGroup("neededBy")}
             {litGroup("needs")}
+            <g className="lit">
+              <AnimatePresence>
+                {lit.filter(hasMarksOnWire).map((cable) => (
+                  <OnWire key={`${cable.key}:${cable.tone}:${cable.d}`} view={cable} instant={instant} travels={travels} />
+                ))}
+              </AnimatePresence>
+            </g>
             <g className="nodes">
               {scene.nodes.map((node) => (
-                <NodeMark key={node.id} view={node} instant={instant} onHover={onHover} onPick={onPick} />
+                <NodeMark key={node.id} view={node} instant={instant} travels={travels} onHover={reportHover} onPick={onPick} />
               ))}
             </g>
-            {cursorAt === undefined ? null : (
+            {cursor === undefined ? null : (
               <motion.circle
                 className="cursor-ring"
-                r={cursorAt.kind === "pip" ? 9.5 : cursorAt.column === "router" ? 12.5 : 11.5}
+                r={cursor.at.kind === "pip" ? 9.5 : cursor.glyph === "hub" ? 12.5 : 11.5}
                 initial={false}
-                animate={{ cx: cursorAt.centre.x, cy: cursorAt.centre.y }}
+                animate={{ cx: cursor.at.centre.x, cy: cursor.at.centre.y }}
                 transition={instant ? AT_ONCE : QUICK_SPRING}
               />
             )}

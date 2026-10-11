@@ -4,7 +4,7 @@ import { splitFrontmatter } from "../shared/markdown";
 import { relationKey, type FileRecord, type Node, type NodeId, type Relation, type RouteId } from "../shared/model";
 import { byCodeUnit } from "../shared/order";
 import { encodeHash } from "../shared/view/hash";
-import type { Focus, Hover, Reading } from "../shared/view/state";
+import type { Focus, Hover, Pin, Reading } from "../shared/view/state";
 import { ArrowLeft, Cross } from "./icons";
 import { InlineText, type LiveNames } from "./LiveName";
 import { Markdown } from "./Markdown";
@@ -17,16 +17,10 @@ type DocState =
   | { readonly kind: "failed"; readonly message: string }
   | { readonly kind: "notListed" };
 
-/** Each text that the server sent, by the hash of that text and its path. A file that changes has a new hash, so its old text is never shown for it. */
 const textByHashAndPath = new Map<string, string>();
 
 const cacheKey = (sha256: string, path: string): string => `${sha256}:${path}`;
 
-/**
- * The text of one file. The index says which hash the file has, and the response says which hash it sent.
- * When the two differ, the file changed after the index was read: the text is kept under the hash of the response,
- * and `onIndexIsOld` asks for the index again.
- */
 const useDoc = (path: string, file: FileRecord | undefined, onIndexIsOld: () => void): { readonly doc: DocState; readonly retry: () => void } => {
   const key = file === undefined ? null : cacheKey(file.sha256, path);
   const [attempt, setAttempt] = useState(0);
@@ -80,7 +74,6 @@ const Fact = ({ name, children }: { readonly name: string; readonly children: Re
   </>
 );
 
-/** What the index knows about the node, before its text. */
 const Facts = ({ graph, node, marked, live, onPick, onTrace, onOpen }: FactsProps): ReactNode => {
   const host = node.kind === "skill" ? undefined : graph.nodes.get(node.host);
   const routes = graph.index.routes.filter((route) => route.playbook === node.id || route.skills.includes(node.id));
@@ -262,9 +255,10 @@ export interface ReaderProps {
   readonly reading: Extract<Reading, { kind: "open" }>;
   /** Grows each time the reader is sent to a target. The reader scrolls to the target again when it grows. */
   readonly visit: number;
-  /** The part that scrolls. The app moves the keyboard focus into it when a node opens the reader. */
+  /** The part that scrolls. */
   readonly region: RefObject<HTMLDivElement | null>;
   readonly focus: Focus;
+  readonly pin: Pin;
   readonly hover: Hover;
   readonly onIndexIsOld: () => void;
   readonly onPick: (id: NodeId) => void;
@@ -276,8 +270,7 @@ export interface ReaderProps {
   readonly onClose: () => void;
 }
 
-/** Facts, the files of the skill, then the document. It reads the index and one file. It changes nothing. */
-export const Reader = ({ graph, reading, visit, region, focus, hover, onIndexIsOld, onPick, onTrace, onHover, onFollow, onOpen, onBack, onClose }: ReaderProps): ReactNode => {
+export const Reader = ({ graph, reading, visit, region, focus, pin, hover, onIndexIsOld, onPick, onTrace, onHover, onFollow, onOpen, onBack, onClose }: ReaderProps): ReactNode => {
   const { path } = reading;
   const file = graph.files.get(path);
   const { doc, retry } = useDoc(path, file, onIndexIsOld);
@@ -296,13 +289,14 @@ export const Reader = ({ graph, reading, visit, region, focus, hover, onIndexIsO
       const node = graph.entries.get(target);
       return encodeHash({
         focus: node === undefined ? focus : { kind: "node", id: node },
+        pin,
         reading: { kind: "open", path: target, anchor, line: null, back: [] },
         query: "",
         lens: "relations",
         muted: new Set(),
       });
     },
-    [graph, focus],
+    [graph, focus, pin],
   );
 
   const ready = doc.kind === "ready";

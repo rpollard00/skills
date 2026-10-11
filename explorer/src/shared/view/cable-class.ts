@@ -1,6 +1,5 @@
 import { Answer, MechanicalKind, type EdgeKind, type Relation } from "../model";
 
-/** One stroke pattern for each class. */
 export const CABLE_CLASSES = ["flow", "cite", "reads", "aside", "avoid", "unjudged"] as const;
 export type CableClass = (typeof CABLE_CLASSES)[number];
 
@@ -30,17 +29,24 @@ export const classOf = (kind: EdgeKind): CableClass => {
   }
 };
 
+export const WEIGHTS = ["strong", "light"] as const;
+export type Weight = (typeof WEIGHTS)[number];
+
+export const weightOf = (cls: CableClass): Weight => (cls === "flow" ? "strong" : "light");
+
+export const wordOf = (kind: EdgeKind): string => kind.replace(/-principle$/, "").replaceAll("-", " ");
+
+export const wordsOf = (relation: Pick<Relation, "kinds" | "conditional">): string => `${wordOf(relation.kinds[0])}${relation.conditional ? " if" : ""}`;
+
 const drawnKinds: readonly EdgeKind[] = [
   ...MechanicalKind.literals,
   ...Answer.literals.filter((answer): answer is Exclude<Answer, "none"> => answer !== "none"),
   "mentions",
 ];
 
-/** The kinds of each class, in the order of the lists in the model. */
 export const LEGEND: readonly { readonly cls: CableClass; readonly kinds: readonly EdgeKind[] }[] = CABLE_CLASSES.map((cls) => ({
   cls,
   kinds: drawnKinds.filter((kind) => classOf(kind) === cls),
 }));
 
-/** A relation whose class the Key has switched off is absent from the map: no cable, and no node lit through it. */
 export const isShown = (relation: Relation, muted: ReadonlySet<CableClass>): boolean => !muted.has(classOf(relation.kinds[0]));

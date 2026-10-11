@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 import { NodeId, RouteId } from "../model";
 import { CABLE_CLASSES, type CableClass } from "./cable-class";
-import { LENSES, type Focus, type Lens, type Place } from "./state";
+import { LENSES, type Focus, type Lens, type Pin, type Place, type StageTarget } from "./state";
 
 const isNodeId = Schema.is(NodeId);
 const isRouteId = Schema.is(RouteId);
@@ -15,15 +15,27 @@ export const wellFormed = (text: string): string => text.replace(LONE_SURROGATE,
 
 const segment = (value: string): string => encodeURIComponent(wellFormed(value)).replace(/%2F/gi, "/").replace(/%3A/gi, ":");
 
-/** `#/skill/architect?doc=skills/architect/SKILL.md&q=root&lens=tools`. Hover, reader history, and the camera are not in the hash. */
+const nodePath = (id: string): string => id.replace(":", "/").split("/").map(segment).join("/");
+
+const REST_STAGE = "rest";
+
+const stagePath = (stage: StageTarget): string =>
+  stage.kind === "rest" ? REST_STAGE : stage.kind === "node" ? nodePath(stage.id) : `route/${encodeURIComponent(wellFormed(stage.route))}`;
+
+/**
+ * `#/skill/how?lock=skill/architect&doc=skills/how/SKILL.md&q=root&lens=tools`.
+ * The path is what is selected. `lock` is the stage that a lock holds, and it is absent when the stage follows the selection.
+ * Hover, reader history, and the camera are not in the hash.
+ */
 export const encodeHash = (place: Place): string => {
   const path =
     place.focus.kind === "node"
-      ? `/${place.focus.id.replace(":", "/").split("/").map(segment).join("/")}`
+      ? `/${nodePath(place.focus.id)}`
       : place.focus.kind === "route"
         ? `/route/${encodeURIComponent(wellFormed(place.focus.route))}/${place.focus.cursor}`
         : "/";
   const params: string[] = [];
+  if (place.pin.kind === "locked") params.push(`lock=${stagePath(place.pin.stage)}`);
   if (place.reading.kind === "open") {
     params.push(`doc=${segment(place.reading.path)}`);
     if (place.reading.anchor !== null) params.push(`anchor=${segment(place.reading.anchor)}`);
@@ -55,16 +67,34 @@ const focusOf = (path: string): Focus => {
   return isNodeId(id) ? { kind: "node", id } : { kind: "none" };
 };
 
+/** The first value of a parameter as the address has it. `URLSearchParams` gives a value with its escapes already read. */
+const writtenValue = (query: string, name: string): string | null => {
+  const part = query.split("&").find((item) => item.startsWith(`${name}=`));
+  return part === undefined ? null : part.slice(name.length + 1);
+};
+
+/** `written` has the form of a path, so it is split first and each part is read one time, as the path of the selection is. */
+const pinOf = (written: string | null): Pin => {
+  if (written === null) return { kind: "unlocked" };
+  if (written === REST_STAGE) return { kind: "locked", stage: { kind: "rest" } };
+  const focus = focusOf(written);
+  if (focus.kind === "node") return { kind: "locked", stage: { kind: "node", id: focus.id } };
+  if (focus.kind === "route") return { kind: "locked", stage: { kind: "route", route: focus.route } };
+  return { kind: "unlocked" };
+};
+
 /** Total: text that is not a place gives the empty place. `normalizePlace` checks the ids against the index. */
 export const decodeHash = (hash: string): Place => {
   const text = hash.startsWith("#") ? hash.slice(1) : hash;
   const mark = text.indexOf("?");
-  const params = new URLSearchParams(mark === -1 ? "" : text.slice(mark + 1));
+  const query = mark === -1 ? "" : text.slice(mark + 1);
+  const params = new URLSearchParams(query);
   const doc = params.get("doc");
   const line = Number(params.get("line") ?? "");
   const lens = params.get("lens");
   return {
     focus: focusOf(mark === -1 ? text : text.slice(0, mark)),
+    pin: pinOf(writtenValue(query, "lock")),
     reading:
       doc === null || doc === ""
         ? { kind: "closed" }
