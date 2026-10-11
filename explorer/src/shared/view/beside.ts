@@ -1,7 +1,7 @@
 import { captionRect, WORD_BOX, wordWidthOf, type Caption } from "../focus-layout";
 import { FRAME, rowExtent, type Point, type Rect, type Span } from "../layout";
 import type { NodeId, RelationKey } from "../model";
-import { GATE, isOneLine, uprightsOf, WORD_CLEAR, wordOn } from "../polyline";
+import { GATE, isOneLine, levelRunsOf, uprightsOf, WORD_CLEAR, wordOn } from "../polyline";
 import type { Stand } from "./arranged";
 import type { Unworded } from "./lit";
 import type { CableTone, CableView } from "./scene";
@@ -52,13 +52,18 @@ interface Entry {
   bright: boolean;
 }
 
-/** The level runs of the cables of a word that start at a port of its row, or that also end there. A word can stand on such a run. */
-interface OwnRuns {
-  readonly keys: readonly RelationKey[];
-  readonly port: Point;
-  /** `leaves`: only a run that starts at the port, because a run that ends there has its arrowhead there. */
-  readonly ends: "leaves" | "either";
-}
+/**
+ * The level runs that a word can stand on: the runs of its cables that start at a port of its row, or that also end there,
+ * or one run in the middle of its cable.
+ */
+type OwnRuns =
+  | {
+      readonly keys: readonly RelationKey[];
+      readonly port: Point;
+      /** `leaves`: only a run that starts at the port, because a run that ends there has its arrowhead there. */
+      readonly ends: "leaves" | "either";
+    }
+  | { readonly keys: readonly RelationKey[]; readonly run: readonly [Point, Point] };
 
 interface Band {
   readonly y: number;
@@ -68,6 +73,8 @@ interface Band {
 const widthOf = (entry: Entry): number => wordWidthOf(entry.text) + (entry.ofFile ? BESIDE.dot : 0);
 
 const isAt = (point: Point | undefined, port: Point): boolean => point !== undefined && point.x === port.x && point.y === port.y;
+
+const joins = (first: Point, second: Point, [from, to]: readonly [Point, Point]): boolean => (isAt(first, from) && isAt(second, to)) || (isAt(first, to) && isAt(second, from));
 
 const isLitTone = (tone: CableTone): boolean => tone === "out" || tone === "in" || tone === "step";
 
@@ -85,8 +92,9 @@ const isInside = (box: Rect, bounds: Rect): boolean => box.x >= bounds.x && box.
  * 1. after the name, in the empty room or on the first part of its own cable that leaves the node there;
  * 2. on its cable next to the node, with less air than a word has there by the first rule;
  * 3. under the name, when no lit row is directly below the word;
- * 4. on the other side of the node;
- * 5. on its cable next to the node at the other end.
+ * 4. on the other side of the node, when the row shows no mark of the router there;
+ * 5. on its cable next to the node at the other end;
+ * 6. on a level part in the middle of its cable, when no row is directly above it or below it.
  * A relation whose word has no such place shows no word.
  */
 export const wordsBeside = (input: {
@@ -94,11 +102,16 @@ export const wordsBeside = (input: {
   readonly stands: ReadonlyMap<NodeId, Stand>;
   /** The lit cables and the cables of the frame. */
   readonly cables: readonly CableView[];
-  readonly captions: readonly Caption[];
+  /** The branches of the rail, which the rest map draws at low strength. Empty for an arrangement. A word keeps off them as off a cable of the frame. */
+  readonly rail: readonly (readonly Point[])[];
+  /** The captions of an arrangement, or the column titles of the rest map. */
+  readonly captions: readonly Pick<Caption, "group" | "count" | "at" | "anchor">[];
   /** What the unfolded tool marks of a row cover. They go past the end of its label. Null for a row that has none. */
   readonly chipsOf: (id: NodeId) => Rect | null;
   /** The selection lights the node. */
   readonly isLit: (id: NodeId) => boolean;
+  /** The row shows a mark of the router before its glyph. A word before that mark would read as a relation into the node. */
+  readonly isTicked: (id: NodeId) => boolean;
   /** What the camera fits. A word outside it can be under the reader. */
   readonly bounds: Rect;
 }): Beside => {
@@ -145,30 +158,37 @@ export const wordsBeside = (input: {
     const mine = own === null ? [] : cables.filter((cable) => isLitTone(cable.tone) && own.keys.includes(cable.key));
     const ownRuns: Span[] = [];
     const otherRuns: { readonly span: Span; readonly isGray: boolean }[] = [];
+    const keepsOffUprights = (points: readonly Point[]): void => {
+      for (const upright of uprightsOf(points)) {
+        if (upright.top <= band.y + band.half && upright.bottom >= band.y - band.half) spans.push({ from: upright.x - airOfUpright, to: upright.x + airOfUpright });
+      }
+    };
 
     for (const cable of cables) {
       if (cable.tone === "weave") continue;
-      for (const upright of uprightsOf(cable.points)) {
-        if (upright.top <= band.y + band.half && upright.bottom >= band.y - band.half) spans.push({ from: upright.x - airOfUpright, to: upright.x + airOfUpright });
-      }
+      keepsOffUprights(cable.points);
       const isMine = mine.includes(cable);
       const isOneLineWithMine = !isMine && isLitTone(cable.tone) && mine.some((other) => isOneLine(other.points, cable.points));
       cable.points.forEach((point, index) => {
         const before = cable.points[index - 1];
         if (before === undefined || before.y !== point.y || !isOnBand(point.y)) return;
         const span = { from: Math.min(before.x, point.x), to: Math.max(before.x, point.x) };
-        const leaves = own !== null && index === 1 && isAt(before, own.port);
-        const arrives = own !== null && own.ends === "either" && index === cable.points.length - 1 && isAt(point, own.port);
-        if ((isMine || isOneLineWithMine) && (leaves || arrives)) ownRuns.push(span);
+        const isAtItsPlace =
+          own === null ? false : "run" in own ? joins(before, point, own.run) : (index === 1 && isAt(before, own.port)) || (own.ends === "either" && index === cable.points.length - 1 && isAt(point, own.port));
+        if ((isMine || isOneLineWithMine) && isAtItsPlace) ownRuns.push(span);
         else otherRuns.push({ span, isGray: cable.tone === "frame" });
       });
       if (cable.words !== null && Math.abs(cable.words.at.y - band.y) < band.half + WORD_BOX.height / 2) {
-        const reach = wordWidthOf(cable.words.text) / 2 + WORD_CLEAR.word;
-        spans.push({ from: cable.words.at.x - reach, to: cable.words.at.x + reach });
+        const reachOfWord = wordWidthOf(cable.words.text) / 2 + WORD_CLEAR.word;
+        spans.push({ from: cable.words.at.x - reachOfWord, to: cable.words.at.x + reachOfWord });
       }
       // The word of a relation can take the place of the ring of that relation, because the word says `if`. The ring of a different relation stays.
       const ring = own?.keys.includes(cable.key) === true ? null : cable.gate;
       if (ring !== null && Math.abs(ring.y - band.y) < band.half + GATE.radius) spans.push({ from: ring.x - GATE.radius - BESIDE.gap, to: ring.x + GATE.radius + BESIDE.gap });
+    }
+    for (const branch of input.rail) {
+      keepsOffUprights(branch);
+      for (const run of levelRunsOf(branch)) if (isOnBand(run.y)) otherRuns.push({ span: run, isGray: true });
     }
     for (const { span, isGray } of otherRuns) {
       for (const part of isGray ? outside(span, ownRuns) : [span]) spans.push({ from: part.from - BESIDE.gap, to: part.to + BESIDE.gap });
@@ -215,8 +235,8 @@ export const wordsBeside = (input: {
       return box;
     };
 
-    /** `at`: the end of the cable at this row, or the end at the other node. Only a word of one relation that is not of a hosted file stands on a cable, because a word there has no dot. */
-    const onItsCable = (entry: Entry, at: "this row" | "the other node"): Rect | null => {
+    /** Only a word of one relation that is not of a hosted file stands on a cable, because a word there has no dot. `startsHere`: the cable leaves this row. */
+    const cableOf = (entry: Entry): { readonly cable: CableView; readonly first: Point; readonly last: Point; readonly startsHere: boolean } | null => {
       const [key] = entry.keys;
       const cable = entry.keys.length === 1 && !entry.ofFile ? cables.find((item) => item.key === key && item.tone === entry.tone) : undefined;
       const first = cable?.points[0];
@@ -224,9 +244,16 @@ export const wordsBeside = (input: {
       if (cable === undefined || first === undefined || last === undefined) return null;
       const startsHere = [namePort, otherPort].some((port) => isAt(first, port));
       const endsHere = [namePort, otherPort].some((port) => isAt(last, port));
-      if (!startsHere && !endsHere) return null;
-      const near: "start" | "end" = (at === "this row") === startsHere ? "start" : "end";
-      const port = near === "start" ? first : last;
+      return startsHere || endsHere ? { cable, first, last, startsHere } : null;
+    };
+
+    /** `at`: the end of the cable at this row, or the end at the other node. */
+    const onItsCable = (entry: Entry, at: "this row" | "the other node"): Rect | null => {
+      const found = cableOf(entry);
+      if (found === null) return null;
+      const { cable } = found;
+      const near: "start" | "end" = (at === "this row") === found.startsHere ? "start" : "end";
+      const port = near === "start" ? found.first : found.last;
       const airAtArrow = cable.cls === "avoid" ? GATE.arrowRoom : WORD_CLEAR.tight;
       const air = { atEnd: near === "end" ? airAtArrow : BESIDE.gap, atCorner: WORD_CLEAR.tight };
       const width = wordWidthOf(entry.text);
@@ -234,6 +261,31 @@ export const wordsBeside = (input: {
       const centre = wordOn(cable.points, near, width, air, takenOn(band, at === "this row" ? id : null, { keys: entry.keys, port, ends: "either" }, WORD_CLEAR.tight));
       const box = centre === null ? null : boxAround(centre, width);
       return box !== null && isInside(box, input.bounds) ? box : null;
+    };
+
+    /**
+     * A level run of the cable that is at no end of it. The run nearest to this row comes first, and the word is at the end of the run that is nearer to this row,
+     * so it stays near the name that it is of. Such a run is between two rows, and the box of a word there reaches into each of the two: thus a row directly above or below is in the way.
+     */
+    const onAMiddleRun = (entry: Entry): Rect | null => {
+      const found = cableOf(entry);
+      if (found === null) return null;
+      const fromHere = found.startsHere ? found.cable.points : found.cable.points.toReversed();
+      const width = wordWidthOf(entry.text);
+      for (let index = 2; index < fromHere.length - 1; index += 1) {
+        const near = fromHere[index - 1];
+        const far = fromHere[index];
+        if (near === undefined || far === undefined || near.y !== far.y) continue;
+        const band: Band = { y: near.y, half: WORD_BOX.height / 2 };
+        const taken = takenOn(band, null, { keys: entry.keys, run: [near, far] }, WORD_CLEAR.tight);
+        const direction: 1 | -1 = far.x > near.x ? 1 : -1;
+        const free = outside({ from: Math.min(near.x, far.x) + WORD_CLEAR.tight, to: Math.max(near.x, far.x) - WORD_CLEAR.tight }, taken).filter((part) => part.to - part.from >= width);
+        const nearest = direction === 1 ? free.at(0) : free.at(-1);
+        if (nearest === undefined) continue;
+        const box = boxFrom(direction === 1 ? nearest.from : nearest.to, direction, width, band);
+        if (isInside(box, input.bounds)) return box;
+      }
+      return null;
     };
 
     const isOverALitRow = (box: Rect): boolean =>
@@ -259,6 +311,7 @@ export const wordsBeside = (input: {
     };
 
     const onOtherSide = (entry: Entry): Rect | null => {
+      if (input.isTicked(id)) return null;
       const box = boxFrom(next.other, inward, widthOf(entry), onRow);
       if (!isFree(box, takenOn(onRow, id, null, WORD_CLEAR.corner))) return null;
       next.other += inward * (box.width + BESIDE.gap);
@@ -266,7 +319,7 @@ export const wordsBeside = (input: {
     };
 
     for (const entry of entries) {
-      const box = afterName(entry) ?? onItsCable(entry, "this row") ?? underName(entry) ?? onOtherSide(entry) ?? onItsCable(entry, "the other node");
+      const box = afterName(entry) ?? onItsCable(entry, "this row") ?? underName(entry) ?? onOtherSide(entry) ?? onItsCable(entry, "the other node") ?? onAMiddleRun(entry);
       if (box !== null) words.push({ keys: entry.keys, node: id, text: entry.text, tone: entry.tone, bright: entry.bright, ofFile: entry.ofFile, box });
     }
   };

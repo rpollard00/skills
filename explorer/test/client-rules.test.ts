@@ -39,16 +39,18 @@ const ruleFor = (file: string, selector: string): Rule => {
 const positionOf = (file: string, selector: string): number => rules.indexOf(ruleFor(file, selector));
 
 describe("rules of the client that no type holds", () => {
-  it("reads no variable of the environment in the code that the browser loads", () => {
-    const hits = [...sourceFilesBelow("shared"), ...sourceFilesBelow("client")].flatMap((file) =>
-      readFileSync(nodePath.join(SOURCE, file), "utf8")
-        .split("\n")
-        .flatMap((line, index) => (/\bprocess\s*(?:\.|\[|\?\.)|\bimport\.meta\.env\b/.test(line) ? [`${file}:${index + 1}: ${line.trim()}`] : [])),
-    );
+  it("reads no variable of the environment in the code that the browser loads, and reads in one place the flag of Vite for a page of the dev server", () => {
+    const linesWith = (pattern: RegExp): string[] =>
+      [...sourceFilesBelow("shared"), ...sourceFilesBelow("client")].flatMap((file) =>
+        readFileSync(nodePath.join(SOURCE, file), "utf8")
+          .split("\n")
+          .flatMap((line, index) => (pattern.test(line) ? [`${file}:${index + 1}: ${line.trim()}`] : [])),
+      );
 
     assert.isAbove(sourceFilesBelow("shared").length, 10, "the shared files moved");
     assert.include(sourceFilesBelow("shared"), nodePath.join("shared", "address.ts"), "the file with the ports is in the bundle");
-    assert.deepStrictEqual(hits, []);
+    assert.deepStrictEqual(linesWith(/\bprocess\s*(?:\.|\[|\?\.)|\bimport\.meta\.env\b(?!\.DEV\b)/), []);
+    assert.deepStrictEqual(linesWith(/\bimport\.meta\.env\.DEV\b/).map((line) => line.split(":")[0]), [nodePath.join("client", "remote.ts")], "the flag is no variable of the environment: Vite sets it to true for the dev server and to false for a build");
   });
 
   it("takes the width of the reader from the one number that the camera also leaves room for", () => {
@@ -77,6 +79,13 @@ describe("rules of the client that no type holds", () => {
       const declarations = rule.declarations.split(";").filter((declaration) => declaration.includes("--tooling"));
       assert.isTrue(declarations.every((declaration) => declaration.trim().startsWith("--mark:")), `${rule.selectors.join(", ")}: only the color of a tool mark takes the tooling color`);
     }
+  });
+
+  it("fills the ground behind the chips of a row, so that the room between two chips is a part of the row for the pointer", () => {
+    const ground = ruleFor("nodes.css", ".node .chip-ground").declarations;
+
+    assert.match(ground, /(?:^|;)\s*fill\s*:\s*var\(--ground\)\s*;/, "a shape with no fill takes no pointer: the pointer in the room between two chips is then on nothing, and the preview of the row goes off");
+    assert.notMatch(ground, /pointer-events/);
   });
 
   it("takes each font size of the map from a layout constant, because the layouts compute widths from the same numbers", () => {

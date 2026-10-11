@@ -91,6 +91,11 @@
   font-weight: 500;
 }
 
+.node .chip-ground {
+  fill: var(--ground);
+  stroke: none;
+}
+
 .node .chip-box {
   fill: var(--ground);
   stroke: rgb(var(--tooling-rgb) / 0.55);

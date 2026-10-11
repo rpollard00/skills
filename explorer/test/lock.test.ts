@@ -4,7 +4,7 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import { toGraph, type Graph } from "../src/shared/graph";
-import { WORD_BOX, wordWidthOf } from "../src/shared/focus-layout";
+import { captionWidth, WORD_BOX, wordWidthOf } from "../src/shared/focus-layout";
 import { distance, FRAME, layout, type Point, type Rect } from "../src/shared/layout";
 import { NodeId, relationKey, RouteId, type ExplorerIndex, type Relation } from "../src/shared/model";
 import { GATE, WORD_CLEAR } from "../src/shared/polyline";
@@ -15,12 +15,12 @@ import { decodeHash, encodeHash } from "../src/shared/view/hash";
 import { historyAction, normalizePlace } from "../src/shared/view/history";
 import { eventsAtArrival, keyPressOf, lockKey, lockPressOf, togglesLock, type KeyPress, type PageKeyEvent } from "../src/shared/view/keys";
 import type { Hidden } from "../src/shared/view/lit";
-import { deriveScene, type CableView, type Scene } from "../src/shared/view/scene";
+import { CHIP, deriveScene, isAtChips, type CableView, type Scene } from "../src/shared/view/scene";
 import { INITIAL, placeOf, stageTargetOf, type Pin, type Stage, type StageTarget, type ViewEvent, type ViewState } from "../src/shared/view/state";
 import { step } from "../src/shared/view/step";
 import { traceOf } from "../src/shared/view/trace";
 import { indexAt, LIVE_REPO, snapshotIndex } from "./support";
-import { coveredByChips, isInside, overlap, placesOf, roomOn, rowOf, strangersUnder, thingsOf, visibleRectOf, wordBoxesOf, wordsUnderNames } from "./word-rules";
+import { coveredByChips, isInside, overlap, placesOf, railUnder, roomOn, rowOf, strangersUnder, thingsOf, visibleRectOf, wordBoxesOf, wordsBeforeATick, wordsUnderNames } from "./word-rules";
 import { WORDS_LEFT_OFF } from "./words-left-off";
 
 const stageOf = (index: ExplorerIndex): Stage => {
@@ -438,16 +438,18 @@ const nothingLeftOff = (): LeftOff => ({ byStage: {}, withAConditionAndNoRing: [
  * The rules of the relation words of one scene of a locked stage. Each rule reads the scene as the map draws it.
  * - A lit relation shows its word in one place, with its own text and the color of its own line. The relation back of a pair shows none.
  * - A relation shows no word only when no place that the rules permit has room for it. This notes it in `leftOff`.
- * - A word is inside what the camera fits. It is on no line of a different relation, over no part of a row, no caption, no mark of a line, and no other word.
- * - A word under a name has no lit row directly below it.
+ *   A place is on each level part of its own line, also on a part in the middle of the line, and beside the name of the other node.
+ * - A word is inside what the camera fits. It is on no line of a different relation and on no branch of the rail, over no part of a row, no caption, no mark of a line, and no other word.
+ * - A word under a name starts at the lower edge of its label, so it is nearer to its own name than to the row below. It has no lit row directly below it.
+ * - A word is not before the mark of the router of its row, where it would read as a relation into the node.
  */
 const checkWords = (label: string, scene: Scene, stage: Stage, target: StageTarget, lead: NodeId | null, leftOff: LeftOff): void => {
   const { graph } = stage;
   const mine = lit(scene);
   const bounds = stageBoundsOf(arrangementOf(graph, target), stage.placement);
   const boxes = wordBoxesOf(scene);
-  const things = thingsOf(scene);
-  const hasRoom = roomOn(scene, bounds);
+  const things = thingsOf(scene, stage.placement);
+  const hasRoom = roomOn(scene, stage.placement, bounds);
 
   for (const cable of mine) {
     const relation = graph.relations.get(cable.key);
@@ -478,12 +480,17 @@ const checkWords = (label: string, scene: Scene, stage: Stage, target: StageTarg
     const name = `${label}: the word "${word.text}" of ${word.keys.join(" and ")}`;
     assert.isTrue(isInside(word.rect, bounds), `${name} is outside what the camera fits`);
     assert.deepStrictEqual(strangersUnder(word, scene).map((cable) => `${cable.key} (${cable.tone})`), [], `${name} is on a line of a different relation`);
+    assert.deepStrictEqual(railUnder(word, scene, stage.placement), [], `${name} is on a branch of the rail`);
     for (const thing of things) assert.isFalse(overlap(word.rect, thing.rect), `${name} is over ${thing.name}`);
     for (const other of boxes.slice(index + 1)) assert.isFalse(overlap(word.rect, other.rect), `${name} is over the word "${other.text}" of ${other.keys.join(" and ")}`);
   }
-  for (const under of wordsUnderNames(scene)) {
-    assert.deepStrictEqual(under.litBelow, [], `${label}: the word "${under.word.text}" under ${under.word.node} is over a lit row, which is as near to it as its own name`);
+  for (const under of wordsUnderNames(scene, stage.placement)) {
+    const name = `${label}: the word "${under.word.text}" under ${under.word.node}`;
+    assert.deepStrictEqual(under.litBelow, [], `${name} is over a lit row, which is as near to it as its own name`);
+    assert.isAtLeast(under.gap.toItsName, 0, `${name} is over its own name`);
+    assert.isBelow(under.gap.toItsName, under.gap.toTheRowBelow, `${name} is ${under.gap.toItsName} below its own label and ${under.gap.toTheRowBelow} above the label of the row below: it is not nearer to its own name`);
   }
+  assert.deepStrictEqual(wordsBeforeATick(scene).map((word) => `"${word.text}" beside ${word.node}`), [], `${label}: a word is before the mark of the router of its row, so it reads as a relation into that node`);
 };
 
 const isUnderARingAt = (centre: Point, [first, second]: [Point, Point]): boolean =>
@@ -550,6 +557,9 @@ const checkMarks = (label: string, marked: readonly Marked[], faults: WordFaults
     }
   }
 };
+
+/** One scene for each pick or each trace on each locked stage: some thousand scenes, each with each rule. A machine with other work needs more than the 5 seconds that a test has. */
+const EACH_SELECTION_ON_EACH_STAGE_MS = 60_000;
 
 describe("what a locked stage lights", () => {
   /** The test of the picks of the snapshot gives its number to the test of the traces, which compares the sum. */
@@ -633,6 +643,7 @@ describe("what a locked stage lights", () => {
       assert.deepStrictEqual(boxFaultsOf(faults), NO_BOX_FAULTS, `over ${picks} picks`);
       assert.isAtLeast(picks, stage.graph.index.nodes.length, "the rest map alone has one pick for each node");
     }),
+    EACH_SELECTION_ON_EACH_STAGE_MS,
   );
 
   it.effect("leaves the listed relations of the snapshot without a word, and no other", () =>
@@ -648,13 +659,20 @@ describe("what a locked stage lights", () => {
       assert.deepStrictEqual(leftOff.byStage, WORDS_LEFT_OFF.picks, "the number of relations that show no word, for each locked stage. `npx tsx test/recount-words.ts --pin` writes the new numbers");
       conditionsLeftOff += leftOff.withAConditionAndNoRing.length;
     }),
+    EACH_SELECTION_ON_EACH_STAGE_MS,
   );
 
-  /** The Tools lens on the locked rest map, with each pick and each trace. It returns the number of chips and of rows that keep their marks folded for a lit line. */
+  /**
+   * The Tools lens on the rest map: each pick and each trace with the lock, and the pointer on each node with the lock and without it.
+   * A selection folds the chips of each row that a lit line is at, the selected row included. A preview folds the chips of each row but its own.
+   * It returns the number of chips, of rows that keep their marks folded for a line, and of rows under the pointer that keep their chips over a line of their own preview.
+   */
   const chipsAndLitLines = (stage: Stage) => {
-    const locked = run(stage, [{ kind: "lensed", lens: "tools" }, { kind: "lockToggled" }]);
-    const unfolded = new Map(deriveScene({ ...stage, state: locked }).nodes.map((node) => [node.id, node.chips.length]));
-    const seen = { chips: 0, rowsFoldedForALine: 0 };
+    const lensed = run(stage, [{ kind: "lensed", lens: "tools" }]);
+    const locked = step(lensed, { kind: "lockToggled" }, stage);
+    const atRest = deriveScene({ ...stage, state: locked });
+    const unfolded = new Map(atRest.nodes.map((node) => [node.id, node.chips.length]));
+    const seen = { chips: 0, rowsFoldedForALine: 0, pointersOnARowWithASelection: 0, previewLines: 0, rowsFoldedForAPreview: 0, rowsWithChipsOverTheirOwnPreview: 0 };
     const selections: (readonly [string, ViewEvent, NodeId | null])[] = [
       ...stage.graph.index.nodes.map((node): readonly [string, ViewEvent, NodeId | null] => [`${node.id} picked`, { kind: "picked", id: node.id }, node.id]),
       ...stage.graph.index.routes.map((route): readonly [string, ViewEvent, NodeId | null] => [`route ${route.id} traced`, { kind: "traced", route: route.id }, null]),
@@ -662,24 +680,53 @@ describe("what a locked stage lights", () => {
     for (const [name, event, lead] of selections) {
       const label = `the rest map with the Tools lens, ${name}`;
       const scene = deriveScene({ ...stage, state: step(locked, event, stage) });
-      assert.deepStrictEqual(coveredByChips(scene), [], `${label}: a chip is drawn over each line, so it covers what is under it`);
+      assert.deepStrictEqual(coveredByChips(scene, stage.placement), [], `${label}: a chip is drawn over each line, so it covers what is under it`);
       checkWords(label, scene, stage, { kind: "rest" }, lead, nothingLeftOff());
       for (const node of scene.nodes) {
         assert.isTrue(node.chips.length === 0 || node.chips.length === unfolded.get(node.id), `${label}: ${node.id} shows a part of its chips`);
         seen.chips += node.chips.length;
         if (node.chips.length === 0 && (unfolded.get(node.id) ?? 0) > 0) seen.rowsFoldedForALine += 1;
       }
+      // Only a preview keeps the chips of the row under the pointer. With a selection lit, the pointer on a row changes no chip.
+      for (const [row, chips] of unfolded) {
+        if (chips === 0) continue;
+        const pointed = deriveScene({ ...stage, state: run(stage, [event, { kind: "pointed", hover: { kind: "node", id: row } }], locked) });
+        assert.deepStrictEqual(coveredByChips(pointed, stage.placement), [], `${label}, the pointer on ${row}: a chip is drawn over a line of the selection`);
+        assert.deepStrictEqual(pointed.nodes.map((node) => node.chips.length), scene.nodes.map((node) => node.chips.length), `${label}, the pointer on ${row}: the pointer changed the chips of a row`);
+        seen.pointersOnARowWithASelection += 1;
+      }
+    }
+
+    for (const [lock, state] of [["with no lock", lensed], ["with the lock", locked]] as const) {
+      for (const under of stage.graph.index.nodes) {
+        const label = `the rest map with the Tools lens, ${lock}, the pointer on ${under.id}`;
+        const scene = deriveScene({ ...stage, state: step(state, { kind: "pointed", hover: { kind: "node", id: under.id } }, stage) });
+        const ownRow = rowOf(scene, under.id)?.id ?? null;
+        assert.deepStrictEqual(coveredByChips(scene, stage.placement, ownRow), [], `${label}: a chip of a different row is drawn over a line of the preview, so it covers what is under it`);
+        seen.previewLines += scene.cables.filter((cable) => cable.tone === "previewOut" || cable.tone === "previewIn").length;
+        for (const node of scene.nodes) {
+          assert.isTrue(node.chips.length === 0 || node.chips.length === unfolded.get(node.id), `${label}: ${node.id} shows a part of its chips`);
+          if (node.id === ownRow) assert.strictEqual(node.chips.length, unfolded.get(node.id), `${label}: the row under the pointer lost its chips, and a person who points at a row reads its tools there`);
+          if (node.chips.length === 0 && (unfolded.get(node.id) ?? 0) > 0) seen.rowsFoldedForAPreview += 1;
+        }
+        if (coveredByChips(scene, stage.placement).length > 0) seen.rowsWithChipsOverTheirOwnPreview += 1;
+      }
     }
     return seen;
   };
 
-  it.effect("keeps each tool chip of the Tools lens off each lit line, its arrowhead, its ring, and its word: a row with a lit line there keeps its marks folded", () =>
+  it.effect("keeps each tool chip of the Tools lens off each lit line, its arrowhead, its ring, and its word, and off each line of a preview but for the chips of the row under the pointer, which stay", () =>
     Effect.gen(function* () {
       chipsAndLitLines(yield* liveStage);
       const ofSnapshot = chipsAndLitLines(yield* snapshotStage);
       assert.isAbove(ofSnapshot.chips, 100, "the snapshot has skills with tools, and most selections leave their chips unfolded");
       assert.isAbove(ofSnapshot.rowsFoldedForALine, 0, "the snapshot has a selection with a lit line at a row that has tools");
+      assert.isAbove(ofSnapshot.pointersOnARowWithASelection, 100, "the snapshot has rows with tools to point at while each selection is lit");
+      assert.isAbove(ofSnapshot.previewLines, 100, "the snapshot has many nodes with relations to preview");
+      assert.isAbove(ofSnapshot.rowsFoldedForAPreview, 0, "the snapshot has a preview with a line at a different row that has tools");
+      assert.isAbove(ofSnapshot.rowsWithChipsOverTheirOwnPreview, 0, "the snapshot has a row with tools whose own line leaves it where its chips are");
     }),
+    EACH_SELECTION_ON_EACH_STAGE_MS,
   );
 
   it("shows each word of the snapshot in the view at two sizes of the window, with the reader open and closed, and at the same place for each", () => {
@@ -715,7 +762,41 @@ describe("what a locked stage lights", () => {
       }
     }
     assert.isAbove(words, 20000, "the snapshot has many words to check");
+  }, EACH_SELECTION_ON_EACH_STAGE_MS);
+
+  it("folds the chips of a row for a ring that reaches them, also when the line of the ring keeps its air from them", () => {
+    const chips: Rect = { x: 100, y: 92, width: 60, height: 16 };
+    const pastTheChips = chips.x + chips.width + CHIP.air + 1;
+    const line: Point[] = [{ x: pastTheChips, y: 0 }, { x: pastTheChips, y: 300 }];
+
+    assert.isFalse(isAtChips({ points: line, gate: null }, chips), "the line has the air of a chip from the chips");
+    assert.isTrue(isAtChips({ points: line, gate: { x: pastTheChips, y: 100 } }, chips), "the ring is on the line and reaches 3 units from it, so it has less than the air of a chip");
+    assert.isFalse(isAtChips({ points: line, gate: { x: pastTheChips, y: 200 } }, chips), "the ring is on a part of the line that is far from the chips");
+    assert.isTrue(isAtChips({ points: [{ x: chips.x + chips.width + CHIP.air, y: 0 }, { x: chips.x + chips.width + CHIP.air, y: 300 }], gate: null }, chips), "a line with less than the air of a chip is at the chips");
   });
+
+  it.effect("keeps a word in the middle of a line off a column title of the rest map", () =>
+    Effect.gen(function* () {
+      const stage = yield* snapshotStage;
+      const key = relationKey({ from: id("playbook:hillclimb"), to: id("skill:principle-separate-before-serializing-shared-state") });
+      const wordWith = (placement: Stage["placement"]): Rect | undefined =>
+        deriveScene({ ...stage, placement, state: run({ ...stage, placement }, [{ kind: "lockToggled" }, { kind: "picked", id: id("playbook:hillclimb") }]) }).beside.find((word) => word.keys.includes(key))?.box;
+
+      const usual = wordWith(stage.placement);
+      assert.isDefined(usual, "the snapshot no longer has this word in the middle of its line");
+      if (usual === undefined) return;
+
+      /** The same rest map with the title of one column directly below that word. The map draws the title where the placement has it. */
+      const title = { x: usual.x + 8, y: usual.y + usual.height / 2 + FRAME.pitch / 2 };
+      const moved = { ...stage.placement, columns: stage.placement.columns.map((column) => (column.id === "principles" ? { ...column, title } : column)) };
+      const beside = wordWith(moved);
+      const drawn: Rect = { x: title.x, y: title.y - FRAME.labelHeight / 2, width: captionWidth("principles", moved.columns.find((column) => column.id === "principles")?.count ?? 0), height: FRAME.labelHeight };
+
+      assert.isTrue(overlap(usual, drawn), "the title is where the word is with no title there");
+      assert.isDefined(beside, "the line has room for the word before the title");
+      if (beside !== undefined) assert.isFalse(overlap(beside, drawn), "the word is over the title of a column");
+    }),
+  );
 
   it.effect("lights nothing for a pick of a node that is not on the stage, opens it in the reader, and says so in the strip", () =>
     Effect.gen(function* () {
@@ -824,6 +905,7 @@ describe("what a locked stage lights", () => {
       assert.strictEqual(traces, everyStage(stage.graph).length * stage.graph.index.routes.length);
       assert.deepStrictEqual(boxFaultsOf(faults), NO_BOX_FAULTS, `over ${traces} traces`);
     }),
+    EACH_SELECTION_ON_EACH_STAGE_MS,
   );
 
   it.effect("leaves the listed relations of the traces of the snapshot without a word, and no other", () =>
@@ -834,6 +916,7 @@ describe("what a locked stage lights", () => {
       assert.deepStrictEqual(leftOff.byStage, WORDS_LEFT_OFF.traces, "the number of relations that show no word, for each locked stage");
       assert.strictEqual(conditionsLeftOff + leftOff.withAConditionAndNoRing.length, WORDS_LEFT_OFF.withAConditionAndNoRing, "of the relations of the picks and of the traces that show no word, the ones that show no condition");
     }),
+    EACH_SELECTION_ON_EACH_STAGE_MS,
   );
 
   it.effect("gives the two cables from `architect` to `codebase-design` and to its file one word, on the locked rest map", () =>

@@ -2,7 +2,7 @@ import type { Caption } from "../focus-layout";
 import { nameOf, type Graph } from "../graph";
 import { cutMiddle, FRAME, monoAdvance, type MarkKind, type Point, type Rect } from "../layout";
 import { relationKey, type EdgeKind, type Node, type NodeId, type RelationKey } from "../model";
-import { crosses } from "../polyline";
+import { crosses, GATE } from "../polyline";
 import { arrangementOf, stageBoundsOf, standOf, type Stand } from "./arranged";
 import { wordsBeside, type WordBeside } from "./beside";
 import { classOf, isShown, weightOf, type CableClass, type Weight } from "./cable-class";
@@ -43,6 +43,8 @@ export interface NodeView {
   readonly mako: "route" | "trigger" | "named" | "none";
   /** Tool marks unfolded by the tools lens. */
   readonly chips: readonly Chip[];
+  /** What the chips of the row cover, from the start of the first one to the end of the last one. Null for a row that shows no chip. */
+  readonly chipsBox: Rect | null;
   readonly changed: boolean;
   readonly defective: boolean;
   readonly hovered: boolean;
@@ -114,8 +116,11 @@ const glyphOf = (node: Node): Glyph => {
 
 const hasTooling = (node: Node): boolean => node.kind === "skill" && (node.tooling.scripts.length > 0 || node.tooling.commands.length > 0);
 
-/** `lead` and `half`: the box of a chip starts this far before its text, and it is this high above and below the middle of its row. */
-export const CHIP = { pad: 5, icon: 12, gap: 5, reach: 62, lead: 3, half: 8 } as const;
+/**
+ * `lead` and `half`: the box of a chip starts this far before its text, and it is this high above and below the middle of its row.
+ * `air`: the ground between the chips of a row and a lit line. A line has a width and a chip has a border, so a line that only goes past the box of a chip is against it.
+ */
+export const CHIP = { pad: 5, icon: 12, gap: 5, reach: 62, lead: 3, half: 8, air: 3 } as const;
 const CHIP_CHAR = monoAdvance(FRAME.smallFontPx);
 
 const chipsOf = (node: Node, placed: Stand): Chip[] => {
@@ -146,6 +151,12 @@ const boxOfChips = (chips: readonly Chip[], y: number): Rect | null => {
   const last = chips.at(-1);
   return first === undefined || last === undefined ? null : { x: first.x - CHIP.lead, y: y - CHIP.half, width: last.x + last.width - first.x, height: CHIP.half * 2 };
 };
+
+const grownBy = (rect: Rect, by: number): Rect => ({ x: rect.x - by, y: rect.y - by, width: rect.width + by * 2, height: rect.height + by * 2 });
+
+/** A lit line, its arrowhead, or its ring is where the chips are, or has less than the air of a chip from them. The arrowhead is on the line, and the ring reaches past it. */
+export const isAtChips = (cable: Pick<CableView, "points" | "gate">, box: Rect): boolean =>
+  crosses(cable.points, grownBy(box, CHIP.air)) || (cable.gate !== null && crosses([cable.gate, cable.gate], grownBy(box, CHIP.air + GATE.radius)));
 
 const matchRange = (label: string, query: string): readonly [number, number] | null => {
   const token = tokensOf(query)[0];
@@ -182,7 +193,10 @@ export const deriveScene = (input: Stage & { readonly state: ViewState }): Scene
   const onStage = new Set(arrangement?.order ?? []);
   const ordered = arrangement === null ? inMapOrder : [...arrangement.order.flatMap((id) => graph.nodes.get(id) ?? []), ...inMapOrder.filter((node) => !onStage.has(node.id))];
 
-  const litLines = lit.cables.filter((cable) => cable.tone === "out" || cable.tone === "in" || cable.tone === "step");
+  const litLines = lit.cables.filter((cable) => cable.tone !== "frame");
+  const pointedAt = state.focus.kind === "none" && state.hover.kind === "node" ? standOf(state.hover.id, arrangement, placement) : undefined;
+  // The preview of a node folds no chip of its own row: a person who points at a row reads its tools there. A hosted file is on the row of its host.
+  const rowOfThePreview = pointedAt === undefined ? null : pointedAt.kind === "pip" ? pointedAt.host : hoverId;
   const chips = new Map<NodeId, Chip[]>();
   const chipBoxes = new Map<NodeId, Rect>();
   if (state.lens === "tools") {
@@ -191,20 +205,26 @@ export const deriveScene = (input: Stage & { readonly state: ViewState }): Scene
       if (at === undefined || (arrangement !== null && !onStage.has(node.id))) continue;
       const unfolded = chipsOf(node, at);
       const box = boxOfChips(unfolded, at.centre.y);
-      // A chip is drawn over each line. Thus a row keeps its tool marks folded when a lit line, its arrowhead, or its word would be under a chip.
-      const coversALitLine = box !== null && litLines.some((cable) => crosses(cable.points, box));
-      if (coversALitLine) continue;
+      if (box === null) continue;
+      // A chip is drawn over each line. Thus a row keeps its tool marks folded when a lit line, its arrowhead, its ring, or its word would be under a chip.
+      if (node.id !== rowOfThePreview && litLines.some((cable) => isAtChips(cable, box))) continue;
       chips.set(node.id, unfolded);
-      if (box !== null) chipBoxes.set(node.id, box);
+      chipBoxes.set(node.id, box);
     }
   }
+  const tickOf = (node: Node): NodeView["mako"] => (arrangement !== null || node.kind === "playbook" || graph.routers.has(node.id) ? "none" : makoMark(graph, node.id));
   const beside = wordsBeside({
     unworded: lit.unworded,
     stands: arrangement?.nodes ?? placement.nodes,
     cables: lit.cables,
-    captions: arrangement?.captions ?? [],
+    rail: arrangement === null ? placement.rail.lines : [],
+    captions: arrangement?.captions ?? placement.columns.map((column) => ({ group: column.id, count: column.count, at: column.title, anchor: "start" as const })),
     chipsOf: (id) => chipBoxes.get(id) ?? null,
     isLit: (id) => lit.tones.has(id),
+    isTicked: (id) => {
+      const node = graph.nodes.get(id);
+      return node !== undefined && tickOf(node) !== "none";
+    },
     bounds: stageBoundsOf(arrangement, placement),
   });
 
@@ -225,8 +245,9 @@ export const deriveScene = (input: Stage & { readonly state: ViewState }): Scene
       name: nameOf(node),
       glyph: glyphOf(node),
       tone: offStage ? { kind: "dim" } : (lit.tones.get(node.id) ?? fallback),
-      mako: arrangement !== null || node.kind === "playbook" || graph.routers.has(node.id) ? "none" : makoMark(graph, node.id),
+      mako: tickOf(node),
       chips: chips.get(node.id) ?? [],
+      chipsBox: chipBoxes.get(node.id) ?? null,
       changed: graph.changed.has(node.id),
       defective: node.kind === "skill" && node.defects.length > 0,
       hovered: !offStage && hoverId === node.id,

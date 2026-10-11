@@ -2,6 +2,9 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
+import { vi } from "vitest";
+import { App } from "../src/client/App";
+import { noApiAnswers } from "../src/client/remote";
 import { SkillMap } from "../src/client/SkillMap";
 import { StageCue } from "../src/client/StageCue";
 import { Strip } from "../src/client/Strip";
@@ -11,11 +14,17 @@ import { layout } from "../src/shared/layout";
 import { NodeId, relationKey, RouteId } from "../src/shared/model";
 import { GATE } from "../src/shared/polyline";
 import type { Hidden } from "../src/shared/view/lit";
-import { deriveScene, type Scene } from "../src/shared/view/scene";
+import { CHIP, deriveScene, type Scene } from "../src/shared/view/scene";
 import { INITIAL, type Stage, type StageTarget, type ViewEvent } from "../src/shared/view/state";
 import { step } from "../src/shared/view/step";
 import type { Strip as StripView } from "../src/shared/view/strip";
 import { indexAt, LIVE_REPO, snapshotIndex } from "./support";
+
+/** The page with an index request that got no answer, so that a test can draw what the page shows then. No test here makes a request. */
+vi.mock("../src/client/useIndex", async () => {
+  const remote = await import("../src/client/remote");
+  return { useIndex: () => ({ load: { kind: "failed", message: remote.noApiAnswers({ kind: "dev", apiPort: 4800, devPort: 4801 }) }, retry: () => undefined }) };
+});
 
 const liveStage = Effect.gen(function* () {
   const graph = toGraph(yield* (yield* indexAt(LIVE_REPO)).live);
@@ -88,39 +97,67 @@ describe("the cue of a locked stage", () => {
 
 const nothing = (): void => undefined;
 
+const barOf = (stage: Stage, change: { readonly locked?: boolean; readonly problem?: string | null }): string =>
+  renderToStaticMarkup(
+    <TopBar
+      input={{ current: null }}
+      legendControl={{ current: null }}
+      graph={stage.graph}
+      load={{ kind: "ready", graph: stage.graph, placement: stage.placement, problem: change.problem ?? null }}
+      query=""
+      hits={[]}
+      lens="relations"
+      legendOpen={false}
+      fitted
+      locked={change.locked ?? false}
+      onType={nothing}
+      onPick={nothing}
+      onTrace={nothing}
+      onHover={nothing}
+      onLens={nothing}
+      onFit={nothing}
+      onLock={nothing}
+      onLegend={nothing}
+      onRetry={nothing}
+    />,
+  );
+
 describe("the lock control", () => {
   it.effect("says whether the stage is locked, to a screen reader also", () =>
     Effect.gen(function* () {
-      const { graph, placement } = yield* liveStage;
-      const bar = (locked: boolean): string =>
-        renderToStaticMarkup(
-          <TopBar
-            input={{ current: null }}
-            legendControl={{ current: null }}
-            graph={graph}
-            load={{ kind: "ready", graph, placement, problem: null }}
-            query=""
-            hits={[]}
-            lens="relations"
-            legendOpen={false}
-            fitted
-            locked={locked}
-            onType={nothing}
-            onPick={nothing}
-            onTrace={nothing}
-            onHover={nothing}
-            onLens={nothing}
-            onFit={nothing}
-            onLock={nothing}
-            onLegend={nothing}
-            onRetry={nothing}
-          />,
-        );
+      const stage = yield* liveStage;
       const lockOf = (html: string): string => /<button[^>]*aria-label="Lock each node in its place"[^>]*>/.exec(html)?.[0] ?? "";
 
-      assert.isTrue(lockOf(bar(true)).includes('aria-pressed="true"'), lockOf(bar(true)));
-      assert.isTrue(lockOf(bar(false)).includes('aria-pressed="false"'), lockOf(bar(false)));
-      assert.isTrue(lockOf(bar(true)).includes('aria-keyshortcuts="l"'));
+      assert.isTrue(lockOf(barOf(stage, { locked: true })).includes('aria-pressed="true"'), lockOf(barOf(stage, { locked: true })));
+      assert.isTrue(lockOf(barOf(stage, { locked: false })).includes('aria-pressed="false"'), lockOf(barOf(stage, { locked: false })));
+      assert.isTrue(lockOf(barOf(stage, { locked: true })).includes('aria-keyshortcuts="l"'));
+    }),
+  );
+});
+
+describe("what the page shows when no API answers", () => {
+  const NO_API = noApiAnswers({ kind: "dev", apiPort: 4800, devPort: 4801 });
+  const SENTENCE = "No explorer API answers on port 4800: start one in a second terminal with <code>EXPLORER_PORT=4800 npm run serve</code>.";
+  const RETRY = '<button type="button" class="text-button">Retry</button>';
+
+  it("has the sentence and a Retry control in the middle of the page, when the first request got no answer", () => {
+    const page = renderToStaticMarkup(<App />);
+    const notice = /<div class="notice" role="alert">(.*?)<\/div>/s.exec(page)?.[1];
+
+    assert.strictEqual(textOf(SENTENCE), NO_API.replaceAll("`", ""), "the sentence of the client, with its command as code");
+    assert.strictEqual(notice, `<p>${SENTENCE}</p>${RETRY}`);
+    assert.isFalse(page.includes("status-alert"), "the bar has no second copy of the sentence");
+  });
+
+  it.effect("has the sentence in one element of the bar and a Retry control after it, when a later request got no answer", () =>
+    Effect.gen(function* () {
+      const stage = yield* liveStage;
+      // The alert of the request is the first part of the status. The part after it is of the index record, which is an alert also when the record is behind.
+      const alert = /<span class="status-part status-alert">(.*?)<\/span><span class="status-part/s.exec(barOf(stage, { problem: NO_API }))?.[1] ?? "";
+      const parts = /^(<svg class="status-mark".*?<\/svg>)(.*)$/s.exec(alert)?.[2];
+
+      assert.strictEqual(parts, `<span class="status-text">The map can be old. ${SENTENCE}</span>${RETRY}`, "the bar is a row with a gap between its parts: a command that is a part of its own gets a gap before its period");
+      assert.isFalse(barOf(stage, { problem: null }).includes("Retry"), "with no problem the bar has no alert of the request");
     }),
   );
 });
@@ -179,13 +216,76 @@ describe("the stage as markup", () => {
     });
   const ringsIn = (html: string): { readonly x: number; readonly y: number }[] => (html.match(/<circle class="gate"[^>]*>/g) ?? []).map((tag) => ({ x: numberOf(tag, "cx"), y: numberOf(tag, "cy") }));
 
-  it.effect("draws each name in full on a locked stage, and each relation word of the scene one time with its own color: a pick takes no character from a name", () =>
+  const hundredths = (value: number): number => Math.round(value * 100) / 100;
+
+  /** The markup of each node of the map, from the start of its group to the start of the next one. */
+  const rowsIn = (html: string): Map<string, string> => new Map(html.split('<g class="node"').slice(1).map((row) => [unescaped(/^ data-node="([^"]*)"/.exec(row)?.[1] ?? ""), row]));
+
+  /** What the markup of one row draws for its tools, with each x from the middle of its glyph: each folded mark, each chip, the ground behind the chips, and where the ring of the keyboard focus ends. */
+  const toolsIn = (row: string) => {
+    const ground = /<rect class="chip-ground"[^>]*>/.exec(row)?.[0];
+    const ring = /<rect class="ring"[^>]*>/.exec(row)?.[0] ?? "";
+    return {
+      ringEnd: hundredths(numberOf(ring, "x") + numberOf(ring, "width")),
+      marks: [
+        ...[...row.matchAll(/<rect class="mark" x="([^"]*)"/g)].map((match) => ({ kind: "script", x: hundredths(Number(match[1])) })),
+        ...[...row.matchAll(/<path class="mark line" d="M([^,]*),/g)].map((match) => ({ kind: "command", x: hundredths(Number(match[1]) - 0.7) })),
+      ].toSorted((a, b) => a.x - b.x),
+      chips: [...row.matchAll(/<rect class="chip-box" x="([^"]*)".*?<text class="chip-text"[^>]*>([^<]*)<\/text>/gs)].map((match) => ({ text: unescaped(match[2] ?? ""), x: hundredths(Number(match[1])) })),
+      ground: ground === undefined ? null : { from: hundredths(numberOf(ground, "x")), to: hundredths(numberOf(ground, "x") + numberOf(ground, "width")), half: numberOf(ground, "height") / 2 },
+      // The ground is behind each chip, so its markup comes first.
+      isGroundFirst: ground === undefined || row.indexOf('class="chip-ground"') < row.indexOf('class="chip-box"'),
+    };
+  };
+
+  /**
+   * What the scene says that one row shows for its tools: its folded marks, or its chips with one mark before the first chip of each kind.
+   * One ground is behind all the chips of the row, from the start of the first one to the end of the last one, so that no part of a line shows between two chips.
+   */
+  const toolsOf = (node: Scene["nodes"][number]) => {
+    if (node.at.kind === "pip") return null;
+    const { at } = node;
+    const fromGlyph = (x: number): number => hundredths(x - at.centre.x);
+    const firstOfEachKind = node.chips.filter((chip, index) => node.chips[index - 1]?.kind !== chip.kind);
+    const first = node.chips[0];
+    const last = node.chips.at(-1);
+    const endOfTheRow = Math.max(at.label.x + at.label.width, last === undefined ? Number.NEGATIVE_INFINITY : last.x - CHIP.lead + last.width);
+    return {
+      // The ring ends 3.5 past the end of the row. A row of the left zone is a mirror image and has no chip, so its ring ends at its port.
+      ringEnd: at.kind === "row" && at.mirrored ? null : fromGlyph(endOfTheRow + 3.5),
+      marks: node.chips.length > 0 ? firstOfEachKind.map((chip) => ({ kind: chip.kind, x: fromGlyph(chip.x + 1) })) : at.marks.map((mark) => ({ kind: mark.kind, x: fromGlyph(mark.x) })),
+      chips: node.chips.map((chip) => ({ text: chip.text, x: fromGlyph(chip.x - CHIP.lead) })),
+      ground: first === undefined || last === undefined ? null : { from: fromGlyph(first.x - CHIP.lead), to: fromGlyph(last.x - CHIP.lead + last.width), half: CHIP.half },
+    };
+  };
+
+  /** Asserts that the markup draws the tools of each row as the scene has them. It returns the number of marks and of chips. */
+  const checkTools = (label: string, scene: Scene, html: string): { readonly marks: number; readonly chips: number } => {
+    const rows = rowsIn(html);
+    const seen = { marks: 0, chips: 0 };
+    for (const node of scene.nodes) {
+      const expected = toolsOf(node);
+      if (node.offStage || expected === null) continue;
+      const drawn = toolsIn(rows.get(node.id) ?? "");
+      assert.deepStrictEqual(drawn.marks, expected.marks.toSorted((a, b) => a.x - b.x), `${label}: the tool marks of ${node.id}`);
+      assert.deepStrictEqual(drawn.chips, expected.chips, `${label}: the chips of ${node.id}`);
+      assert.deepStrictEqual(drawn.ground, expected.ground, `${label}: the ground behind the chips of ${node.id}`);
+      if (expected.ringEnd !== null) assert.strictEqual(drawn.ringEnd, expected.ringEnd, `${label}: the ring of the keyboard focus of ${node.id} ends past the last thing of its row, and a chip is such a thing`);
+      assert.isTrue(drawn.isGroundFirst, `${label}: the ground of ${node.id} is drawn over a chip`);
+      seen.marks += drawn.marks.length;
+      seen.chips += drawn.chips.length;
+    }
+    return seen;
+  };
+
+  it.effect("draws each name in full on a locked stage, each tool mark of each row, and each relation word of the scene one time with its own color: a pick takes no character from a name", () =>
     Effect.gen(function* () {
       const stage = yield* liveStage;
       const namesIn = (html: string): Map<string, string> =>
         new Map([...html.matchAll(/<g class="node" data-node="([^"]+)"[^>]*data-off-stage="false"[^>]*>.*?<text class="label"[^>]*>([^<]*)/gs)].map((match) => [match[1] ?? "", match[2] ?? ""]));
       const stages: StageTarget[] = [{ kind: "rest" }, ...stage.graph.index.nodes.map((node): StageTarget => ({ kind: "node", id: node.id })), ...stage.graph.index.routes.map((route): StageTarget => ({ kind: "route", route: route.id }))];
       let picks = 0;
+      let toolMarks = 0;
       for (const target of stages) {
         const selects: ViewEvent[] = target.kind === "rest" ? [] : target.kind === "node" ? [{ kind: "picked", id: target.id }] : [{ kind: "traced", route: target.route }];
         const locked = [...selects, { kind: "lockToggled" }, { kind: "deselected" }] satisfies ViewEvent[];
@@ -198,6 +298,7 @@ describe("the stage as markup", () => {
           const scene = sceneAfter(stage, [...locked, { kind: "picked", id: row.id }]);
           const html = mapOf(stage, scene);
           assert.deepStrictEqual([...namesIn(html)], [...names], `${label}: a name is not as it is with no selection`);
+          toolMarks += checkTools(label, scene, html).marks;
 
           const drawn = wordsIn(html);
           const onLines = scene.cables.flatMap((cable) => (cable.tone === "weave" || cable.words === null ? [] : [{ beside: null, keys: cable.key, tone: cable.tone, text: cable.words.text, hasDot: false }]));
@@ -214,6 +315,47 @@ describe("the stage as markup", () => {
         }
       }
       assert.isAtLeast(picks, stage.graph.index.nodes.filter((node) => node.kind !== "hosted").length, "the rest map alone has one pick for each row");
+      const rowsWithTools = stage.graph.index.nodes.filter((node) => node.kind === "skill" && node.tooling.scripts.length + node.tooling.commands.length > 0).length;
+      assert.isAtLeast(toolMarks, rowsWithTools, "the rest map alone shows a mark for each row with a script or a command");
+    }),
+    MARKUP_OF_EACH_PICK_MS,
+  );
+
+  it.effect("draws the chips of each row with the Tools lens over one ground, or its folded marks where a line is: the row under the pointer keeps its chips, and a selected row does not", () =>
+    Effect.gen(function* () {
+      const check = (stage: Stage): { marks: number; chips: number; rowsFoldedForAPreview: number; rowsThatKeepTheirChips: number } => {
+        const seen = { marks: 0, chips: 0, rowsFoldedForAPreview: 0, rowsThatKeepTheirChips: 0 };
+        const count = (label: string, scene: Scene, html: string): string => {
+          const tools = checkTools(label, scene, html);
+          seen.marks += tools.marks;
+          seen.chips += tools.chips;
+          return html;
+        };
+        const lensed: ViewEvent[] = [{ kind: "lensed", lens: "tools" }];
+        const still = sceneAfter(stage, lensed);
+        const chipsAtRest = new Map([...rowsIn(count("the Tools lens", still, mapOf(stage, still)))].map(([node, row]) => [node, (row.match(/class="chip-box"/g) ?? []).length]));
+        for (const node of stage.graph.index.nodes) {
+          const picked = sceneAfter(stage, [...lensed, { kind: "lockToggled" }, { kind: "picked", id: node.id }]);
+          count(`the Tools lens, the rest map locked, ${node.id} picked`, picked, mapOf(stage, picked));
+
+          const label = `the Tools lens, the pointer on ${node.id}`;
+          const pointed = sceneAfter(stage, [...lensed, { kind: "pointed", hover: { kind: "node", id: node.id } }]);
+          const rows = rowsIn(count(label, pointed, mapOf(stage, pointed)));
+          const own = pointed.nodes.find((row) => row.id === node.id)?.at;
+          const ownRow = own?.kind === "pip" ? own.host : node.id;
+          const drawnOnItsRow = (rows.get(ownRow)?.match(/class="chip-box"/g) ?? []).length;
+          assert.strictEqual(drawnOnItsRow, chipsAtRest.get(ownRow), `${label}: the markup of the row under the pointer has each chip that it has with no pointer`);
+          if (drawnOnItsRow > 0) seen.rowsThatKeepTheirChips += 1;
+          seen.rowsFoldedForAPreview += [...rows].filter(([row, markup]) => !markup.includes('class="chip-box"') && (chipsAtRest.get(row) ?? 0) > 0).length;
+        }
+        return seen;
+      };
+      check(yield* liveStage);
+      const ofSnapshot = check(yield* snapshotStage);
+      assert.isAbove(ofSnapshot.chips, 500, "the snapshot has skills with tools, and most scenes leave their chips unfolded");
+      assert.isAbove(ofSnapshot.marks, 500, "each unfolded row has one mark for each kind of tool, and each folded row has its marks");
+      assert.isAbove(ofSnapshot.rowsFoldedForAPreview, 0, "the snapshot has a preview with a line at a different row that has tools");
+      assert.isAbove(ofSnapshot.rowsThatKeepTheirChips, 0, "the snapshot has a row with tools to point at");
     }),
     MARKUP_OF_EACH_PICK_MS,
   );

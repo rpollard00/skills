@@ -16,27 +16,33 @@ const UPDATE = (
   </>
 );
 
+/**
+ * `children`: the text of the alert. It is in one element, because the alert is a row with a gap between its parts:
+ * a code span that is a part of its own gets that gap before the comma or the period that follows it.
+ */
+const StatusAlert = ({ children, action }: { readonly children: ReactNode; readonly action?: ReactNode }): ReactNode => (
+  <span className="status-part status-alert">
+    <StatusMark />
+    <span className="status-text">{children}</span>
+    {action}
+  </span>
+);
+
 const recordStatus = (record: ExplorerIndex["record"]): ReactNode => {
   switch (record.kind) {
     case "current":
       return <span className="status-part">Index current</span>;
     case "missing":
-      return (
-        <span className="status-part status-alert">
-          <StatusMark />
-          No index record. {UPDATE}
-        </span>
-      );
+      return <StatusAlert>No index record. {UPDATE}</StatusAlert>;
     case "behind": {
       const changes = record.added.length + record.changed.length + record.removed.length;
       return (
-        <span className="status-part status-alert">
-          <StatusMark />
+        <StatusAlert>
           {changes === 0
             ? "Index behind: the record has a different format. "
             : `Index behind: ${record.added.length} added, ${record.changed.length} changed, ${record.removed.length} removed. `}
           {UPDATE}
-        </span>
+        </StatusAlert>
       );
     }
     default: {
@@ -105,13 +111,15 @@ export const TopBar = ({ legendControl, load, lens, legendOpen, fitted, locked, 
 
       <div className="status" role="status">
         {load.kind === "ready" && load.problem !== null ? (
-          <span className="status-part status-alert">
-            <StatusMark />
-            The map can be old. <InlineText text={load.problem} />{" "}
-            <button type="button" className="text-button" onClick={onRetry}>
-              Retry
-            </button>
-          </span>
+          <StatusAlert
+            action={
+              <button type="button" className="text-button" onClick={onRetry}>
+                Retry
+              </button>
+            }
+          >
+            The map can be old. <InlineText text={load.problem} />
+          </StatusAlert>
         ) : null}
         {index === null ? null : (
           <>

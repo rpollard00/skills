@@ -144,8 +144,8 @@ export interface Placement {
   readonly columns: readonly ColumnFrame[];
   readonly nodes: ReadonlyMap<NodeId, Placed>;
   readonly cables: ReadonlyMap<RelationKey, Cable>;
-  /** The outbound playbook cables of the router as one path. */
-  readonly rail: string;
+  /** The outbound playbook cables of the router: as one path, and the corners of each one. */
+  readonly rail: { readonly d: string; readonly lines: readonly (readonly Point[])[] };
 }
 
 const rowY = (row: number): number => FRAME.top + FRAME.pitch * row;
@@ -435,7 +435,7 @@ export const layout = (graph: Graph): Placement => {
   });
 
   const cables = new Map<RelationKey, Cable>();
-  const rail: string[] = [];
+  const rail: Cable[] = [];
   for (const relation of graph.index.relations) {
     const source = anchors.get(relation.from);
     const target = anchors.get(relation.to);
@@ -445,7 +445,7 @@ export const layout = (graph: Graph): Placement => {
     const placed = cable(key, source, target);
     if (placed === null) continue;
     cables.set(key, placed);
-    if (graph.routers.has(relation.from) && graph.nodes.get(relation.to)?.kind === "playbook") rail.push(placed.d);
+    if (graph.routers.has(relation.from) && graph.nodes.get(relation.to)?.kind === "playbook") rail.push(placed);
   }
 
   return {
@@ -453,7 +453,7 @@ export const layout = (graph: Graph): Placement => {
     columns,
     nodes,
     cables,
-    rail: rail.join(""),
+    rail: { d: rail.map((branch) => branch.d).join(""), lines: rail.map((branch) => [branch.start, ...branch.segments.map(([, to]) => to)]) },
   };
 };
 

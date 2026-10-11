@@ -127,7 +127,6 @@ const sameNode = (a: NodeProps, b: NodeProps): boolean =>
 
 type Lined = Exclude<Stand, { kind: "pip" }>;
 
-
 const LabelText = ({ at, match }: { readonly at: Lined; readonly match: NodeView["match"] }): ReactNode => (
   <text className="label" x={at.textX - at.centre.x} y={0.5}>
     {match === null ? (
@@ -265,10 +264,13 @@ const NodeMark = memo(function NodeMark({ view, instant, travels, onHover, onPic
   const isMirrored = at.kind === "row" && at.mirrored;
   const from = isMirrored ? at.label.x - at.centre.x - 4 : -FOCUS.portReach;
   const to = isMirrored ? FOCUS.portReach : at.label.x + at.label.width - at.centre.x + 4;
+  const chipsBox = view.chipsBox;
+  // The ring of the keyboard focus goes around the chips of the row, which reach past its label.
+  const ringTo = chipsBox === null ? to : Math.max(to, chipsBox.x + chipsBox.width - at.centre.x + 4);
   return (
     <motion.g {...shared} aria-label={`${view.name}, ${GLYPH_NAMES[view.glyph]}`}>
       <rect className="hit" x={from} y={-11} width={to - from} height={22} />
-      <rect className="ring" x={isMirrored ? from + 0.5 : -RING_REACH} y={-10.5} width={isMirrored ? RING_REACH - from - 0.5 : to + RING_REACH - 0.5} height={21} rx={3} />
+      <rect className="ring" x={isMirrored ? from + 0.5 : -RING_REACH} y={-10.5} width={isMirrored ? RING_REACH - from - 0.5 : ringTo + RING_REACH - 0.5} height={21} rx={3} />
       {view.mako === "none" ? null : <path className="tick" data-mako={view.mako} d={view.mako === "named" ? "M-13.6,0H-8.6" : "M-13.6,-3L-8.6,0L-13.6,3Z"} />}
       {tone.kind === "selected" ? (
         <motion.circle className="halo" r={11} initial={instant ? false : { scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 0.55 }} transition={instant ? AT_ONCE : QUICK_SPRING} />
@@ -289,6 +291,8 @@ const NodeMark = memo(function NodeMark({ view, instant, travels, onHover, onPic
           +{at.foldedPips.count}
         </text>
       )}
+      {/* One ground behind all the chips of the row: the row under the pointer keeps its chips over its own line, and no part of that line shows between two chips. */}
+      {chipsBox === null ? null : <rect className="chip-ground" x={chipsBox.x - at.centre.x} y={chipsBox.y - at.centre.y} width={chipsBox.width} height={chipsBox.height} />}
       {view.chips.length > 0
         ? view.chips.map((chip, index) => (
             <ChipMark key={`${chip.kind}:${chip.text}`} chip={chip} first={view.chips[index - 1]?.kind !== chip.kind} centre={at.centre} instant={instant} />
@@ -706,7 +710,7 @@ export const SkillMap = ({ placement, camera, area, scene, onHover, onPick, onIn
           </g>
         ) : (
           <motion.g initial={instant ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={instant ? AT_ONCE : { duration: TIMING.mapSettleSeconds }}>
-            <path className={fade === null ? "rail without-fade" : "rail"} d={placement.rail} stroke={fade === null ? undefined : `url(#${RAIL_GRADIENT})`} />
+            <path className={fade === null ? "rail without-fade" : "rail"} d={placement.rail.d} stroke={fade === null ? undefined : `url(#${RAIL_GRADIENT})`} />
             <Weave cables={weave} leaders={scene.leaders} />
             {/* One path for all the cables of the frame: where many of them share a trunk, the trunk is not brighter than a branch. */}
             <path className="stage-frame" d={frame.map((cable) => cable.d).join("")} />

@@ -4,9 +4,9 @@
  * On the live skills that test states the rule only. `npx tsx test/recount-words.ts --pin` writes this file. Run it after a refresh of the snapshot, and read the difference.
  */
 export const WORDS_LEFT_OFF: { readonly picks: { readonly [stage: string]: number }; readonly traces: { readonly [stage: string]: number }; readonly withAConditionAndNoRing: number } = {
-  // 314 in all.
+  // 318 in all.
   picks: {
-    "the rest map": 9,
+    "the rest map": 24,
     "hosted:skills/mako/references/execution.md": 8,
     "playbook:autopilot-full": 4,
     "playbook:autopilot-stack": 2,
@@ -54,26 +54,26 @@ export const WORDS_LEFT_OFF: { readonly picks: { readonly [stage: string]: numbe
     "route understand-behavior-placement-or-a-claim": 4,
     "route investigate-historical-rationale": 1,
     "route design-a-module-or-interface": 1,
-    "route build-new-or-changed-behavior": 4,
-    "route restructure-without-changing-behavior": 2,
-    "route diagnose-and-fix-measured-slowness": 3,
-    "route repeatedly-improve-a-measured-outcome": 3,
+    "route build-new-or-changed-behavior": 3,
+    "route restructure-without-changing-behavior": 1,
+    "route diagnose-and-fix-measured-slowness": 2,
+    "route repeatedly-improve-a-measured-outcome": 1,
     "route diagnose-a-live-process": 2,
     "route diagnose-an-existing-capture": 1,
     "route settle-a-behavioral-or-timing-uncertainty-experimentally": 3,
-    "route implement-a-ui-goal-without-an-interactive-design-session": 4,
-    "route preserve-appearance-across-implementations": 2,
-    "route author-or-revise-a-skill": 2,
+    "route implement-a-ui-goal-without-an-interactive-design-session": 3,
+    "route preserve-appearance-across-implementations": 1,
+    "route author-or-revise-a-skill": 1,
     "route compare-skill-or-prompt-behavior": 1,
-    "route resume-a-specific-task": 2,
+    "route resume-a-specific-task": 1,
     "route explicitly-pause-current-work": 2,
     "route check-pr-status-address-threads-or-reach-merge-ready": 2,
-    "route merge-authorized-changes": 3,
+    "route merge-authorized-changes": 2,
     "route drive-one-objective-without-routine-intervention": 1,
     "route deliver-independent-prs-with-merge-authority": 4,
-    "route build-and-verify-a-stack-for-operator-landing": 8,
+    "route build-and-verify-a-stack-for-operator-landing": 7,
   },
-  // 55 in all.
+  // 53 in all.
   traces: {
     "the rest map": 3,
     "hosted:skills/mako/references/execution.md": 1,
@@ -95,8 +95,8 @@ export const WORDS_LEFT_OFF: { readonly picks: { readonly [stage: string]: numbe
     "skill:principle-sequence-verifiable-units": 3,
     "skill:refine-ui": 1,
     "route diagnose-and-fix-measured-slowness": 1,
-    "route check-pr-status-address-threads-or-reach-merge-ready": 2,
-    "route merge-authorized-changes": 2,
+    "route check-pr-status-address-threads-or-reach-merge-ready": 1,
+    "route merge-authorized-changes": 1,
     "route deliver-independent-prs-with-merge-authority": 2,
     "route build-and-verify-a-stack-for-operator-landing": 1,
   },
