@@ -93,7 +93,6 @@ describe("rules of the client that no type holds", () => {
       ["nodes.css", ".node .label", "--label-size"],
       ["nodes.css", ".node .chip-text", "--small-size"],
       ["nodes.css", ".node .fold-count", "--small-size"],
-      ["map.css", ".word", "--word-size"],
       ["map.css", ".column-title", "--caption-size"],
     ];
     for (const [file, selector, variable] of sized) {

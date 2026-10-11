@@ -2,7 +2,7 @@
  * Writes the snapshot of `../skills` that the tests read:
  * `live-index.json`, the index as it is now, in the shape that `GET /api/index` returns, and `docs/`, the two files that the reader tests render.
  * A test that names a skill, a route, a file, or a count reads the snapshot and not the live skills, so an edit of `../skills` cannot fail it.
- * A refresh is a deliberate act: each list and each count in the tests that read the snapshot then needs a look, and `test/words-left-off.ts` a new list.
+ * A refresh is a deliberate act: each list and each count in the tests that read the snapshot then needs a look.
  *
  * Usage, in `explorer/`: npx tsx test/fixtures/refresh-snapshot.ts
  */

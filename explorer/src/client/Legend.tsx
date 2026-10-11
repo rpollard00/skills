@@ -102,7 +102,7 @@ export const Legend = ({ muted, onMute, onClose }: LegendProps): ReactNode => {
             <circle className="legend-line gate" cx={0} r={GATE.radius} />
             <path className="legend-line head" d={ARROW_HEAD} />
           </Sample>
-          with a condition: if
+          with a condition
         </li>
         <li>
           <Sample>

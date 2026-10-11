@@ -12,7 +12,6 @@ import { TopBar } from "../src/client/TopBar";
 import { toGraph } from "../src/shared/graph";
 import { layout } from "../src/shared/layout";
 import { NodeId, relationKey, RouteId } from "../src/shared/model";
-import { GATE } from "../src/shared/polyline";
 import type { Hidden } from "../src/shared/view/lit";
 import { CHIP, deriveScene, type Scene } from "../src/shared/view/scene";
 import { INITIAL, type Stage, type StageTarget, type ViewEvent } from "../src/shared/view/state";
@@ -197,24 +196,17 @@ describe("the stage as markup", () => {
   const unescaped = (text: string): string => text.replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
   const numberOf = (tag: string, name: string): number => Number(new RegExp(` ${name}="([^"]*)"`).exec(tag)?.[1] ?? Number.NaN);
 
-  /** Each relation word that the markup draws: the group of a word on a line or beside a name, with the box behind the word and the text. */
-  const wordsIn = (html: string) =>
-    [...html.matchAll(/<g class="on-wire"([^>]*)>(.*?)<\/g>/gs)].flatMap((match) => {
-      const [, attributes = "", inner = ""] = match;
-      const ground = /<rect class="word-ground"[^>]*>/.exec(inner)?.[0];
-      if (ground === undefined) return [];
-      return [
-        {
-          beside: / data-beside="([^"]*)"/.exec(attributes)?.[1] ?? null,
-          keys: unescaped(/ data-cables?="([^"]*)"/.exec(attributes)?.[1] ?? ""),
-          tone: / data-tone="([^"]*)"/.exec(attributes)?.[1] ?? "",
-          text: unescaped(/<text class="word"[^>]*>([^<]*)<\/text>/.exec(inner)?.[1] ?? ""),
-          hasDot: inner.includes('class="word-dot"'),
-          box: { x: numberOf(ground, "x"), y: numberOf(ground, "y"), width: numberOf(ground, "width"), height: numberOf(ground, "height") },
-        },
-      ];
-    });
-  const ringsIn = (html: string): { readonly x: number; readonly y: number }[] => (html.match(/<circle class="gate"[^>]*>/g) ?? []).map((tag) => ({ x: numberOf(tag, "cx"), y: numberOf(tag, "cy") }));
+  const inOrder = (points: readonly { readonly x: number; readonly y: number }[]): string[] => points.map((point) => `${point.x},${point.y}`).sort();
+  const ringsIn = (html: string): string[] => inOrder((html.match(/<circle class="gate"[^>]*>/g) ?? []).map((tag) => ({ x: numberOf(tag, "cx"), y: numberOf(tag, "cy") })));
+
+  /** Each kind of text that the map draws: a name, a caption or the title of a column, the count of the files that have no dot, the text of a chip, and the number of a step of a trace. */
+  const TEXTS_OF_THE_MAP = ["label", "column-title", "fold-count", "chip-text", "step-number"];
+
+  /** Asserts that the markup of a map has no text of a different kind: the map states no kind of a relation in words, and the strip does. */
+  const checkTexts = (label: string, html: string): void => {
+    const kinds = [...html.matchAll(/<text\b([^>]*)>/g)].map((match) => / class="([^" ]*)/.exec(match[1] ?? "")?.[1] ?? "a text with no class");
+    assert.deepStrictEqual([...new Set(kinds)].filter((kind) => !TEXTS_OF_THE_MAP.includes(kind)), [], `${label}: the map draws a text that is not a name, a caption, a count, a chip, or the number of a step`);
+  };
 
   const hundredths = (value: number): number => Math.round(value * 100) / 100;
 
@@ -278,7 +270,7 @@ describe("the stage as markup", () => {
     return seen;
   };
 
-  it.effect("draws each name in full on a locked stage, each tool mark of each row, and each relation word of the scene one time with its own color: a pick takes no character from a name", () =>
+  it.effect("draws each name in full on a locked stage, each tool mark of each row, each ring of the scene, and no word of a relation: a pick takes no character from a name", () =>
     Effect.gen(function* () {
       const stage = yield* liveStage;
       const namesIn = (html: string): Map<string, string> =>
@@ -300,23 +292,22 @@ describe("the stage as markup", () => {
           assert.deepStrictEqual([...namesIn(html)], [...names], `${label}: a name is not as it is with no selection`);
           toolMarks += checkTools(label, scene, html).marks;
 
-          const drawn = wordsIn(html);
-          const onLines = scene.cables.flatMap((cable) => (cable.tone === "weave" || cable.words === null ? [] : [{ beside: null, keys: cable.key, tone: cable.tone, text: cable.words.text, hasDot: false }]));
-          const besideNames = scene.beside.map((word) => ({ beside: word.node, keys: word.keys.join(" "), tone: word.tone, text: word.text, hasDot: word.ofFile, box: word.box }));
-          const withoutBox = ({ beside, keys, tone, text, hasDot }: (typeof drawn)[number] | (typeof onLines)[number]) => ({ beside, keys, tone, text, hasDot });
-          const inOrder = <Item extends { readonly keys: string }>(items: readonly Item[]): Item[] => items.toSorted((a, b) => (a.keys < b.keys ? -1 : a.keys > b.keys ? 1 : 0));
-          assert.deepStrictEqual(inOrder(drawn.filter((word) => word.beside !== null)), inOrder(besideNames), `${label}: the markup draws each word that the scene puts beside a name one time, with its relations, its color, its text, and its box`);
-          assert.deepStrictEqual(inOrder(drawn.filter((word) => word.beside === null).map(withoutBox)), inOrder(onLines), `${label}: the markup draws each word on a line one time`);
-          for (const ring of ringsIn(html)) {
-            const under = drawn.find(({ box }) => ring.x + GATE.radius > box.x && ring.x - GATE.radius < box.x + box.width && ring.y + GATE.radius > box.y && ring.y - GATE.radius < box.y + box.height);
-            assert.isUndefined(under, `${label}: a ring is under the word "${under?.text}" of ${under?.keys}`);
-          }
+          assert.deepStrictEqual(ringsIn(html), inOrder(scene.cables.flatMap((cable) => (cable.gate === null ? [] : [cable.gate]))), `${label}: the markup draws each ring of the scene one time`);
+          checkTexts(label, html);
           picks += 1;
         }
       }
       assert.isAtLeast(picks, stage.graph.index.nodes.filter((node) => node.kind !== "hosted").length, "the rest map alone has one pick for each row");
       const rowsWithTools = stage.graph.index.nodes.filter((node) => node.kind === "skill" && node.tooling.scripts.length + node.tooling.commands.length > 0).length;
       assert.isAtLeast(toolMarks, rowsWithTools, "the rest map alone shows a mark for each row with a script or a command");
+
+      for (const route of stage.graph.index.routes) {
+        for (const [where, events] of [["on its own arrangement", []], ["on the locked rest map", [{ kind: "lockToggled" }]]] as const) {
+          const scene = sceneAfter(stage, [...events, { kind: "traced", route: route.id }]);
+          checkTexts(`route ${route.id} traced ${where}`, mapOf(stage, scene));
+        }
+      }
+      for (const node of stage.graph.index.nodes) checkTexts(`${node.id} selected`, mapOf(stage, sceneAfter(stage, [{ kind: "picked", id: node.id }])));
     }),
     MARKUP_OF_EACH_PICK_MS,
   );
@@ -326,6 +317,7 @@ describe("the stage as markup", () => {
       const check = (stage: Stage): { marks: number; chips: number; rowsFoldedForAPreview: number; rowsThatKeepTheirChips: number } => {
         const seen = { marks: 0, chips: 0, rowsFoldedForAPreview: 0, rowsThatKeepTheirChips: 0 };
         const count = (label: string, scene: Scene, html: string): string => {
+          checkTexts(label, html);
           const tools = checkTools(label, scene, html);
           seen.marks += tools.marks;
           seen.chips += tools.chips;

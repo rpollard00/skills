@@ -4,7 +4,7 @@ export const PORT = 4747;
 export const DEV_PORT = 4748;
 
 /** A server of this project to start. `npm start` and `npm run serve` listen on one port. `npm run dev` listens on its own port and sends each API request to a second one. */
-export type Start =
+type Start =
   | { readonly script: "npm start" | "npm run serve"; readonly port: number }
   | { readonly script: "npm run dev"; readonly apiPort: number; readonly devPort: number };
 

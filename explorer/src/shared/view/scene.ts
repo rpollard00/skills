@@ -3,8 +3,7 @@ import { nameOf, type Graph } from "../graph";
 import { cutMiddle, FRAME, monoAdvance, type MarkKind, type Point, type Rect } from "../layout";
 import { relationKey, type EdgeKind, type Node, type NodeId, type RelationKey } from "../model";
 import { crosses, GATE } from "../polyline";
-import { arrangementOf, stageBoundsOf, standOf, type Stand } from "./arranged";
-import { wordsBeside, type WordBeside } from "./beside";
+import { arrangementOf, standOf, type Stand } from "./arranged";
 import { classOf, isShown, weightOf, type CableClass, type Weight } from "./cable-class";
 import { litOf } from "./lit";
 import { resolveCamera } from "./camera";
@@ -67,8 +66,6 @@ export interface CableView {
   readonly weight: Weight;
   readonly tone: CableTone;
   readonly conditional: boolean;
-  /** The relation as words on the cable. Null when the cable has no run with room for them. */
-  readonly words: { readonly text: string; readonly at: Point } | null;
   /** Where the gate of a conditional relation sits. Null when the relation has no condition, and for the resting weave. */
   readonly gate: Point | null;
   /** Where the mark sits that says the target also needs the source. `conditional`: that relation back has a condition. */
@@ -85,8 +82,6 @@ export interface Scene {
   /** In keyboard order. In a focus arrangement: the left zone, the node in the middle, the right zone, then the nodes that are off the stage. */
   readonly nodes: readonly NodeView[];
   readonly cables: readonly CableView[];
-  /** The relation word of each lit cable in place that has no room for it, beside the name of the lit neighbour. */
-  readonly beside: readonly WordBeside[];
   /** One quiet line from a label to the edge of its column, for each row that a resting cable leaves or enters on the right. */
   readonly leaders: readonly string[];
   readonly weave: "rest" | "low" | "off";
@@ -206,28 +201,12 @@ export const deriveScene = (input: Stage & { readonly state: ViewState }): Scene
       const unfolded = chipsOf(node, at);
       const box = boxOfChips(unfolded, at.centre.y);
       if (box === null) continue;
-      // A chip is drawn over each line. Thus a row keeps its tool marks folded when a lit line, its arrowhead, its ring, or its word would be under a chip.
+      // A chip is drawn over each line. Thus a row keeps its tool marks folded when a lit line, its arrowhead, or its ring would be under a chip.
       if (node.id !== rowOfThePreview && litLines.some((cable) => isAtChips(cable, box))) continue;
       chips.set(node.id, unfolded);
       chipBoxes.set(node.id, box);
     }
   }
-  const tickOf = (node: Node): NodeView["mako"] => (arrangement !== null || node.kind === "playbook" || graph.routers.has(node.id) ? "none" : makoMark(graph, node.id));
-  const beside = wordsBeside({
-    unworded: lit.unworded,
-    stands: arrangement?.nodes ?? placement.nodes,
-    cables: lit.cables,
-    rail: arrangement === null ? placement.rail.lines : [],
-    captions: arrangement?.captions ?? placement.columns.map((column) => ({ group: column.id, count: column.count, at: column.title, anchor: "start" as const })),
-    chipsOf: (id) => chipBoxes.get(id) ?? null,
-    isLit: (id) => lit.tones.has(id),
-    isTicked: (id) => {
-      const node = graph.nodes.get(id);
-      return node !== undefined && tickOf(node) !== "none";
-    },
-    bounds: stageBoundsOf(arrangement, placement),
-  });
-
   const nodes: NodeView[] = [];
   for (const node of ordered) {
     const at = standOf(node.id, arrangement, placement);
@@ -245,7 +224,7 @@ export const deriveScene = (input: Stage & { readonly state: ViewState }): Scene
       name: nameOf(node),
       glyph: glyphOf(node),
       tone: offStage ? { kind: "dim" } : (lit.tones.get(node.id) ?? fallback),
-      mako: tickOf(node),
+      mako: arrangement !== null || node.kind === "playbook" || graph.routers.has(node.id) ? "none" : makoMark(graph, node.id),
       chips: chips.get(node.id) ?? [],
       chipsBox: chipBoxes.get(node.id) ?? null,
       changed: graph.changed.has(node.id),
@@ -273,7 +252,6 @@ export const deriveScene = (input: Stage & { readonly state: ViewState }): Scene
       weight: weightOf(cls),
       tone: "weave",
       conditional: relation.conditional,
-      words: null,
       gate: null,
       back: null,
       end: atRest.end,
@@ -288,8 +266,7 @@ export const deriveScene = (input: Stage & { readonly state: ViewState }): Scene
   const cursor = state.focus.kind === "route" && lit.trace !== null ? cursorNodeOf(lit.trace, state.focus.cursor) : null;
   return {
     nodes,
-    cables: [...weave, ...lit.cables.map((cable) => (beside.ungated.has(cable.key) ? { ...cable, gate: null } : cable))],
-    beside: beside.words,
+    cables: [...weave, ...lit.cables],
     leaders: [...leaders].flatMap((id) => {
       const placed = placement.nodes.get(id);
       return placed?.kind === "seat" && placed.leader !== "" ? [placed.leader] : [];

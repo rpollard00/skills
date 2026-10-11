@@ -1,11 +1,10 @@
 import { animate, AnimatePresence, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from "react";
-import { FOCUS, GROUP_TITLES, hasCount, WORD_BOX, wordWidthOf, type Caption } from "../shared/focus-layout";
+import { FOCUS, GROUP_TITLES, hasCount, type Caption } from "../shared/focus-layout";
 import { FRAME, type Placement, type Point } from "../shared/layout";
 import type { NodeId, RelationKey } from "../shared/model";
 import { GATE, grownPath, tipOf } from "../shared/polyline";
 import type { Stand } from "../shared/view/arranged";
-import { BESIDE, FILE_DOT, type WordBeside } from "../shared/view/beside";
 import { cableSide, portMarksOf, type PortMark } from "../shared/view/ports";
 import { CHIP, type CableView, type Chip, type Glyph, type NodeTone, type NodeView, type Scene } from "../shared/view/scene";
 import type { Hover, Transform } from "../shared/view/state";
@@ -17,7 +16,6 @@ declare module "react" {
     "--node-travel"?: string;
     "--label-size"?: string;
     "--small-size"?: string;
-    "--word-size"?: string;
     "--caption-size"?: string;
     "--caption-spacing"?: string;
   }
@@ -36,7 +34,6 @@ export const GLYPH_NAMES: { readonly [Shape in Glyph]: string } = {
 const MAP_VARIABLES = {
   "--label-size": `${FRAME.labelFontPx}px`,
   "--small-size": `${FRAME.smallFontPx}px`,
-  "--word-size": `${FOCUS.wordFontPx}px`,
   "--caption-size": `${FOCUS.captionFontPx}px`,
   "--caption-spacing": `${FOCUS.captionSpacingEm}em`,
   "--node-travel": `${TIMING.nodeTravelSeconds * 1000}ms`,
@@ -340,7 +337,6 @@ const sameLit = (a: LitProps, b: LitProps): boolean =>
   a.view.order === b.view.order &&
   a.view.weight === b.view.weight &&
   a.view.conditional === b.view.conditional &&
-  a.view.words?.text === b.view.words?.text &&
   a.instant === b.instant &&
   a.travels === b.travels &&
   a.onInspect === b.onInspect;
@@ -349,12 +345,11 @@ const isPreview = (cable: CableView): boolean => cable.tone === "previewOut" || 
 
 const ARROW = { length: 5, half: 3.2, setBack: 4.5 } as const;
 
-const hasMarksOnWire = (view: CableView): boolean => view.words !== null || view.gate !== null || view.back !== null;
+const hasMarksOnWire = (view: CableView): boolean => view.gate !== null || view.back !== null;
 
-/** These are not in the group that glows, because the box under the words has the color of the ground and must cast no light. */
+/** These are not in the group that glows, because the fill of a ring has the color of the ground and must cast no light. */
 const OnWire = ({ view, instant, travels }: { readonly view: CableView; readonly instant: boolean; readonly travels: boolean }): ReactNode => {
-  const { words, gate, back } = view;
-  const width = words === null ? 0 : wordWidthOf(words.text);
+  const { gate, back } = view;
   const still = instant || isPreview(view);
   return (
     <motion.g
@@ -366,42 +361,10 @@ const OnWire = ({ view, instant, travels }: { readonly view: CableView; readonly
       animate={{ opacity: 1, transition: still ? AT_ONCE : { delay: afterTravel(travels, arrivalSeconds(cableTiming(view))), duration: TIMING.fadeInSeconds } }}
       exit={{ opacity: 0, transition: instant ? AT_ONCE : { duration: TIMING.cableFadeSeconds } }}
     >
-      {words === null ? null : (
-        <>
-          <rect className="word-ground" x={words.at.x - width / 2} y={words.at.y - WORD_BOX.height / 2} width={width} height={WORD_BOX.height} />
-          <text className="word" x={words.at.x} y={words.at.y + 0.5}>
-            {words.text}
-          </text>
-        </>
-      )}
       {gate === null ? null : <circle className="gate" cx={gate.x} cy={gate.y} r={GATE.radius} />}
       {back === null ? null : (
         <path className="back" data-conditional={back.conditional} d={`M${back.x + ARROW.length},${back.y - ARROW.half}L${back.x},${back.y}L${back.x + ARROW.length},${back.y + ARROW.half}${back.conditional ? "Z" : ""}`} />
       )}
-    </motion.g>
-  );
-};
-
-const WordBesideName = ({ word, delaySeconds, instant }: { readonly word: WordBeside; readonly delaySeconds: number; readonly instant: boolean }): ReactNode => {
-  const { box } = word;
-  const dot = word.ofFile ? BESIDE.dot : 0;
-  const middle = box.y + box.height / 2;
-  return (
-    <motion.g
-      className="on-wire"
-      data-beside={word.node}
-      data-cables={word.keys.join(" ")}
-      data-tone={word.tone}
-      data-bright={word.bright}
-      initial={instant ? false : { opacity: 0 }}
-      animate={{ opacity: 1, transition: instant ? AT_ONCE : { delay: delaySeconds, duration: TIMING.fadeInSeconds } }}
-      exit={{ opacity: 0, transition: instant ? AT_ONCE : { duration: TIMING.cableFadeSeconds } }}
-    >
-      <rect className="word-ground" x={box.x} y={box.y} width={box.width} height={box.height} />
-      {word.ofFile ? <circle className="word-dot" cx={box.x + WORD_BOX.pad + FILE_DOT.radius} cy={middle} r={FILE_DOT.radius} /> : null}
-      <text className="word" x={box.x + dot + (box.width - dot) / 2} y={middle + 0.5}>
-        {word.text}
-      </text>
     </motion.g>
   );
 };
@@ -710,7 +673,7 @@ export const SkillMap = ({ placement, camera, area, scene, onHover, onPick, onIn
           </g>
         ) : (
           <motion.g initial={instant ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={instant ? AT_ONCE : { duration: TIMING.mapSettleSeconds }}>
-            <path className={fade === null ? "rail without-fade" : "rail"} d={placement.rail.d} stroke={fade === null ? undefined : `url(#${RAIL_GRADIENT})`} />
+            <path className={fade === null ? "rail without-fade" : "rail"} d={placement.rail} stroke={fade === null ? undefined : `url(#${RAIL_GRADIENT})`} />
             <Weave cables={weave} leaders={scene.leaders} />
             {/* One path for all the cables of the frame: where many of them share a trunk, the trunk is not brighter than a branch. */}
             <path className="stage-frame" d={frame.map((cable) => cable.d).join("")} />
@@ -724,10 +687,6 @@ export const SkillMap = ({ placement, camera, area, scene, onHover, onPick, onIn
                 {lit.filter(hasMarksOnWire).map((cable) => (
                   <OnWire key={`${cable.key}:${cable.tone}:${cable.d}`} view={cable} instant={instant} travels={travels} />
                 ))}
-                {scene.beside.map((word) => {
-                  const cable = lit.find((item) => item.key === word.keys[0]);
-                  return <WordBesideName key={`${word.tone}:${word.keys.join(" ")}`} word={word} delaySeconds={cable === undefined ? 0 : arrivalSeconds(cableTiming(cable))} instant={instant} />;
-                })}
               </AnimatePresence>
             </g>
             <g className="nodes">

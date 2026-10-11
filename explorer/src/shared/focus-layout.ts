@@ -1,11 +1,11 @@
 import { COLUMN_IDS, nameOf, type ColumnId, type Graph } from "./graph";
 import { corners, countRun, cutMiddle, FRAME, markSpanOf, marksOf, monoAdvance, pathOf, pipRun, pipsOf, PRINCIPLE_PREFIX, round, type MarkKind, type Pip, type Point, type Rect } from "./layout";
 import { relationKey, type Node, type NodeId, type RelationKey, type RouteId } from "./model";
-import { GATE, lengthOf, WORD_CLEAR } from "./polyline";
+import { GATE, lengthOf } from "./polyline";
 import { traceOf } from "./view/trace";
 
 export const GROUP_IDS = [...COLUMN_IDS, "files"] as const;
-export type GroupId = (typeof GROUP_IDS)[number];
+type GroupId = (typeof GROUP_IDS)[number];
 
 export const GROUP_TITLES: { readonly [Group in GroupId]: string } = {
   router: "ROUTER",
@@ -17,7 +17,6 @@ export const GROUP_TITLES: { readonly [Group in GroupId]: string } = {
 
 const CAPTION_FONT_PX = 9.5;
 const CAPTION_SPACING_EM = 0.14;
-const WORD_FONT_PX = 9;
 
 export const FOCUS = {
   /** The row of the selected node: the row of the router at rest, which is the middle of the rest map. */
@@ -32,17 +31,13 @@ export const FOCUS = {
   textReach: FRAME.labelInset - FRAME.glyphInset,
   maxChars: 44,
   maxPips: 8,
-  wordFontPx: WORD_FONT_PX,
   captionFontPx: CAPTION_FONT_PX,
   captionSpacingEm: CAPTION_SPACING_EM,
   captionCharWidth: monoAdvance(CAPTION_FONT_PX) + CAPTION_FONT_PX * CAPTION_SPACING_EM,
-  wordClear: { trunk: 12, gate: WORD_CLEAR.gate, bothWays: 26 },
+  /** From the lane of a branch to the mark of a relation that goes both ways. */
+  laneToBackMark: 13,
   pad: { x: 36, y: 30 },
 } as const;
-
-export const WORD_BOX = { charWidth: monoAdvance(WORD_FONT_PX), pad: 3.5, height: 11 } as const;
-
-export const wordWidthOf = (text: string): number => text.length * WORD_BOX.charWidth + WORD_BOX.pad * 2;
 
 type Side = "left" | "centre" | "right";
 
@@ -85,8 +80,6 @@ export interface Branch {
   readonly d: string;
   readonly length: number;
   readonly end: Point;
-  /** The middle of the word that names the relation. */
-  readonly word: Point;
   /** Where the gate sits when the relation is conditional. */
   readonly gate: Point;
   /** Where the mark of a relation that goes both ways sits. Null when the relation goes one way. */
@@ -262,7 +255,7 @@ type RowMaker = (id: NodeId, centre: Point) => Row | null;
 
 export const hasCount = (group: GroupId): boolean => group !== "router";
 
-export const captionWidth = (group: GroupId, count: number): number =>
+const captionWidth = (group: GroupId, count: number): number =>
   (GROUP_TITLES[group].length + (hasCount(group) ? 1 + String(count).length : 0)) * FOCUS.captionCharWidth;
 
 const endOf = (rect: Rect): number => rect.x + rect.width;
@@ -335,24 +328,21 @@ const leftward = (target: Point, plans: readonly ColumnPlan[], make: RowMaker): 
   return comb;
 };
 
-const branchOf = (input: { readonly key: RelationKey; readonly wire: Wire; readonly wordAt: "source" | "target"; readonly goesBothWays: boolean }): Branch | null => {
+const branchOf = (input: { readonly key: RelationKey; readonly wire: Wire; readonly gateAt: "source" | "target"; readonly goesBothWays: boolean }): Branch | null => {
   const { wire } = input;
   const start = wire.points[0];
   const end = wire.points.at(-1);
   if (start === undefined || end === undefined) return null;
-  const clear = FOCUS.wordClear;
-  const atTarget = input.wordAt === "target";
+  const atTarget = input.gateAt === "target";
   const y = atTarget ? end.y : start.y;
-  const wordX = atTarget ? (wire.lane + (input.goesBothWays ? clear.bothWays : clear.trunk) + end.x - clear.gate) / 2 : (start.x + clear.gate + wire.lane - clear.trunk) / 2;
   return {
     key: input.key,
     points: wire.points,
     d: pathOf(wire.points),
     length: lengthOf(wire.points),
     end,
-    word: { x: wordX, y },
     gate: { x: atTarget ? end.x - GATE.setBack : start.x + GATE.setBack, y },
-    back: input.goesBothWays && atTarget ? { x: wire.lane + clear.trunk + 1, y } : null,
+    back: input.goesBothWays && atTarget ? { x: wire.lane + FOCUS.laneToBackMark, y } : null,
   };
 };
 
@@ -395,7 +385,6 @@ const settled = (draft: Draft): Arrangement => {
       points,
       d: pathOf(points),
       end: moved(branch.end, dx),
-      word: moved(branch.word, dx),
       gate: moved(branch.gate, dx),
       back: branch.back === null ? null : moved(branch.back, dx),
     });
@@ -428,11 +417,11 @@ const settled = (draft: Draft): Arrangement => {
 const branchesOf = (input: {
   readonly wires: ReadonlyMap<NodeId, Wire>;
   readonly keyOf: (id: NodeId) => RelationKey;
-  readonly wordAt: "source" | "target";
+  readonly gateAt: "source" | "target";
   readonly bothWays: ReadonlySet<NodeId>;
 }): Branch[] =>
   [...input.wires].flatMap(([id, wire]) => {
-    const branch = branchOf({ key: input.keyOf(id), wire, wordAt: input.wordAt, goesBothWays: input.bothWays.has(id) });
+    const branch = branchOf({ key: input.keyOf(id), wire, gateAt: input.gateAt, goesBothWays: input.bothWays.has(id) });
     return branch === null ? [] : [branch];
   });
 
@@ -469,8 +458,8 @@ const aroundNode = (graph: Graph, id: NodeId): Arrangement | null => {
     order: [...left.order, id, ...pips.map(([file]) => file), ...right.order],
     captions: [...left.captions, ...right.captions],
     branches: [
-      ...branchesOf({ wires: left.wires, keyOf: (from) => relationKey({ from, to: id }), wordAt: "source", bothWays: NONE }),
-      ...branchesOf({ wires: right.wires, keyOf: (to) => relationKey({ from: id, to }), wordAt: "target", bothWays }),
+      ...branchesOf({ wires: left.wires, keyOf: (from) => relationKey({ from, to: id }), gateAt: "source", bothWays: NONE }),
+      ...branchesOf({ wires: right.wires, keyOf: (to) => relationKey({ from: id, to }), gateAt: "target", bothWays }),
     ],
   });
 };
@@ -501,7 +490,7 @@ const alongRoute = (graph: Graph, route: RouteId): Arrangement | null => {
       pips: [],
       order: [origin.id, ...comb.order],
       captions: [],
-      branches: branchesOf({ wires: comb.wires, keyOf: stepKey, wordAt: "target", bothWays: NONE }),
+      branches: branchesOf({ wires: comb.wires, keyOf: stepKey, gateAt: "target", bothWays: NONE }),
     });
   }
 
@@ -520,8 +509,8 @@ const alongRoute = (graph: Graph, route: RouteId): Arrangement | null => {
     order: [origin.id, ...heads.order, ...(comb?.order ?? [])],
     captions: [],
     branches: [
-      ...branchesOf({ wires: heads.wires, keyOf: (to) => relationKey({ from: origin.id, to }), wordAt: "target", bothWays: NONE }),
-      ...(comb === null ? [] : branchesOf({ wires: comb.wires, keyOf: stepKey, wordAt: "target", bothWays: NONE })),
+      ...branchesOf({ wires: heads.wires, keyOf: (to) => relationKey({ from: origin.id, to }), gateAt: "target", bothWays: NONE }),
+      ...(comb === null ? [] : branchesOf({ wires: comb.wires, keyOf: stepKey, gateAt: "target", bothWays: NONE })),
     ],
   });
 };

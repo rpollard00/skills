@@ -2,8 +2,8 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import { toGraph } from "../src/shared/graph";
-import { cablesOnOneTrunk, FRAME, layout, monoAdvance, pathOf, type Placement, type Rect, type Seat, type Segment } from "../src/shared/layout";
-import { ExplorerIndex, relationKey, type NodeId, type Relation, type SkillNode } from "../src/shared/model";
+import { cablesOnOneTrunk, FRAME, layout, monoAdvance, type Placement, type Rect, type Seat, type Segment } from "../src/shared/layout";
+import { ExplorerIndex, type NodeId, type Relation, type SkillNode } from "../src/shared/model";
 import { indexAt, LIVE_REPO, snapshotIndex } from "./support";
 
 const liveIndex = Effect.gen(function* () {
@@ -157,27 +157,6 @@ describe("layout on the live index", () => {
       const ofSnapshot = combsOnOneTrunk(snapshotIndex);
       assert.isAbove(ofSnapshot.combs, 40, "the snapshot has many nodes with more than one cable on a side");
       assert.isAbove(ofSnapshot.ofRouter, 20, "the router of the snapshot has cables to playbooks and to skills");
-    }),
-  );
-
-  /** Asserts the rule of the rail for one index. It returns the number of branches. */
-  const branchesOfTheRail = (index: ExplorerIndex): number => {
-    const graph = toGraph(index);
-    const placement = layout(graph);
-    const toPlaybooks = index.relations.filter((relation) => graph.routers.has(relation.from) && graph.nodes.get(relation.to)?.kind === "playbook" && placement.cables.has(relationKey(relation)));
-    assert.strictEqual(placement.rail.lines.length, toPlaybooks.length, "one branch for each cable from the router to a playbook");
-    assert.strictEqual(placement.rail.d, placement.rail.lines.map(pathOf).join(""), "the corners of each branch are the corners of the path that the map draws");
-    for (const [branch, relation] of placement.rail.lines.map((line, at) => [line, toPlaybooks[at]] as const)) {
-      const cable = relation === undefined ? undefined : placement.cables.get(relationKey(relation));
-      assert.deepStrictEqual<unknown>([branch[0], branch.at(-1)], [cable?.start, cable?.end], "a branch goes from the port of the router to the port of its playbook");
-    }
-    return placement.rail.lines.length;
-  };
-
-  it.effect("gives the corners of each branch of the rail, which are the corners of its path", () =>
-    Effect.gen(function* () {
-      branchesOfTheRail(yield* liveIndex);
-      assert.isAbove(branchesOfTheRail(snapshotIndex), 10, "the router of the snapshot has many playbooks");
     }),
   );
 
@@ -391,6 +370,6 @@ describe("layout rules", () => {
 
     assert.deepStrictEqual(placement.columns.map((column) => column.id), ["router", "playbooks", "skills", "principles"]);
     assert.strictEqual(placement.world.width, FRAME.width);
-    assert.deepStrictEqual<unknown>(placement.rail, { d: "", lines: [] });
+    assert.strictEqual(placement.rail, "");
   });
 });

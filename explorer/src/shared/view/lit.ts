@@ -1,10 +1,10 @@
-import { WORD_BOX, wordWidthOf, type Arrangement, type Branch } from "../focus-layout";
+import type { Arrangement, Branch } from "../focus-layout";
 import type { Graph } from "../graph";
-import { cablesOnOneTrunk, pathOf, type Cable, type Placement, type Point, type Span } from "../layout";
+import { cablesOnOneTrunk, pathOf, type Cable, type Placement, type Point } from "../layout";
 import { relationKey, type NodeId, type Relation, type RelationKey } from "../model";
-import { crosses, GATE, gateOn, isOneLine, lengthOf, levelRunsOf, pointsOf, uprightsOf, WORD_CLEAR, wordOn } from "../polyline";
+import { crosses, GATE, gateOn, lengthOf, pointsOf } from "../polyline";
 import { latticeOf, routeInPlace, type Lattice } from "../stage-lattice";
-import { classOf, isShown, weightOf, wordsOf } from "./cable-class";
+import { classOf, isShown, weightOf } from "./cable-class";
 import { nodesInMapOrder } from "./finder";
 import type { CableTone, CableView, NodeTone } from "./scene";
 import { stageTargetOf, type StageTarget, type ViewState } from "./state";
@@ -13,21 +13,10 @@ import { traceOf, type Trace } from "./trace";
 /** What a locked stage cannot draw, because one end is a node that is not on it. */
 export type Hidden = { readonly kind: "none" } | { readonly kind: "relations"; readonly count: number } | { readonly kind: "steps"; readonly count: number };
 
-/** A lit cable in place that has no room for its word. The word then goes beside the name of `neighbour`. */
-export interface Unworded {
-  readonly key: RelationKey;
-  readonly text: string;
-  readonly tone: CableTone;
-  /** The node at the other end from the selection. For a trace, the target of the cable. */
-  readonly neighbour: NodeId;
-  readonly bright: boolean;
-}
-
 export interface Lit {
   readonly tones: ReadonlyMap<NodeId, NodeTone>;
   /** The cables of the selection, of the node under the pointer, and of the quiet frame. The resting weave is not here. */
   readonly cables: readonly CableView[];
-  readonly unworded: readonly Unworded[];
   readonly trace: Trace | null;
   readonly hidden: Hidden;
   /** The selected node, when a lock holds a stage that does not have it. */
@@ -102,7 +91,6 @@ const viewOf = (input: {
   readonly wire: Wire;
   readonly tone: CableTone;
   readonly order: number;
-  readonly words: CableView["words"];
   readonly gate: Point | null;
   readonly back: CableView["back"];
   readonly bright: boolean;
@@ -117,7 +105,6 @@ const viewOf = (input: {
     weight: weightOf(cls),
     tone: input.tone,
     conditional: input.relation.conditional,
-    words: input.words,
     gate: input.gate,
     back: input.back,
     end: input.wire.end,
@@ -127,14 +114,6 @@ const viewOf = (input: {
     bright: input.bright,
   };
 };
-
-interface Marked {
-  readonly cables: CableView[];
-  readonly unworded: readonly Unworded[];
-}
-
-/** The lines that the stage keeps at low strength under the lit lines: the frame of a locked arrangement, or the rail of the rest map. */
-type Quiet = readonly (readonly Point[])[];
 
 /** A cable of the selection that is drawn where its two nodes are. `far` is its end at the other node. */
 interface InPlaceLine {
@@ -155,83 +134,40 @@ const farPortOf = (line: InPlaceLine): Point | undefined => (line.far === "end" 
 const nameOfPort = (port: Point | undefined): string => (port === undefined ? "" : `${port.x},${port.y}`);
 
 /**
- * The word and the gate of a cable are next to the other node, on the run that ends at the port of that node.
+ * The gate of a cable is next to the other node, on the run that ends at the port of that node.
  * The cables that end at one port share that run: a relation and the relation back, or the cables to a skill and to its file.
- * Thus one port has one word and one gate, those of the first cable in `lines`. Each other cable at the port has neither.
+ * Thus one port has one gate, that of the first cable in `lines`. Each other cable at the port has none.
  * A gate on a run that a cable to a different port also uses reads as the condition of that cable, so a gate has no place there.
- * A word on a part of the run that a different line also uses reads as the word of that line, so a word has no place there.
- * Two cables between the same two ports are one line, and the word of the first one is the word of that line.
- * A word has the color of the ground behind it, so it keeps clear of each upright of `lines` and of `quiet`, and of each word before it.
  */
-const withMarks = (lines: readonly InPlaceLine[], quiet: Quiet, shown: Shown, hasWords: boolean): Marked => {
-  const uprights = [...quiet, ...lines.map((line) => line.wire.points)].flatMap(uprightsOf);
-  const portsWithASpeaker = new Set<string>();
-  const words: { readonly y: number; readonly span: Span }[] = [];
-  const isOnRow = (y: number, top: number, bottom: number): boolean => top <= y + WORD_BOX.height / 2 && bottom >= y - WORD_BOX.height / 2;
-  const unworded: Unworded[] = [];
-  const isTheRelationBack = (line: InPlaceLine): boolean =>
-    line.far === "start" && lines.some((other) => other.far === "end" && other.relation.from === line.relation.to && other.relation.to === line.relation.from);
-
-  const cables = lines.map((line) => {
+const withGates = (lines: readonly InPlaceLine[], shown: Shown): CableView[] => {
+  const portsWithAGate = new Set<string>();
+  return lines.map((line) => {
     const { relation, wire } = line;
-    const port = farPortOf(line);
-    const portName = nameOfPort(port);
-    const speaks = !portsWithASpeaker.has(portName);
-    portsWithASpeaker.add(portName);
+    const portName = nameOfPort(farPortOf(line));
+    const isFirstAtItsPort = !portsWithAGate.has(portName);
+    portsWithAGate.add(portName);
     const isOnlyOnCablesOfThisPort = (spot: Point): boolean => !lines.some((other) => nameOfPort(farPortOf(other)) !== portName && passesUnderAGateAt(other.wire.points, spot));
-
-    const text = wordsOf(relation);
-    const width = wordWidthOf(text);
-    const taken: Span[] =
-      port === undefined
-        ? []
-        : [
-            ...uprights.filter((upright) => isOnRow(port.y, upright.top, upright.bottom)).map((upright) => ({ from: upright.x - WORD_CLEAR.corner, to: upright.x + WORD_CLEAR.corner })),
-            ...words.filter((word) => isOnRow(port.y, word.y, word.y)).map((word) => word.span),
-            ...lines
-              .filter((other) => other !== line && !isOneLine(other.wire.points, wire.points))
-              .flatMap((other) => levelRunsOf(other.wire.points))
-              .filter((run) => isOnRow(port.y, run.y, run.y))
-              .map((run) => ({ from: run.from - WORD_CLEAR.line, to: run.to + WORD_CLEAR.line })),
-          ];
-    const gate = speaks && relation.conditional ? gateOn(wire.points, line.far, isOnlyOnCablesOfThisPort) : null;
-    const isGateOnTheRunOfTheWord = gate !== null && gate.y === port?.y;
-    const air = { atEnd: isGateOnTheRunOfTheWord ? WORD_CLEAR.gate : WORD_CLEAR.arrow, atCorner: WORD_CLEAR.corner };
-    const at = speaks && hasWords ? wordOn(wire.points, line.far, width, air, taken) : null;
-    if (at !== null) words.push({ y: at.y, span: { from: at.x - width / 2 - WORD_CLEAR.word, to: at.x + width / 2 + WORD_CLEAR.word } });
-    if (at === null && hasWords && !isTheRelationBack(line)) {
-      unworded.push({ key: relationKey(relation), text, tone: line.tone, neighbour: line.far === "end" ? relation.to : relation.from, bright: shown.isBright(relationKey(relation)) });
-    }
-
     return viewOf({
       relation,
       wire,
       tone: line.tone,
       order: line.order,
-      words: at === null ? null : { text, at },
-      gate,
+      gate: isFirstAtItsPort && relation.conditional ? gateOn(wire.points, line.far, isOnlyOnCablesOfThisPort) : null,
       back: null,
       bright: shown.isBright(relationKey(relation)),
     });
   });
-  return { cables, unworded };
 };
 
-interface InPlace extends Marked {
+interface InPlace {
+  readonly cables: readonly CableView[];
   readonly out: readonly { readonly relation: Relation; readonly order: number; readonly length: number }[];
   readonly into: readonly { readonly relation: Relation; readonly order: number }[];
   readonly elsewhere: number;
 }
 
-/** A cable out of the lead comes before a cable into it. Thus, of a pair that goes both ways, the cable out of the lead has the word. */
-const relationsInPlace = (
-  lead: NodeId,
-  stage: OnStage,
-  quiet: Quiet,
-  shown: Shown,
-  tones: { readonly out: CableTone; readonly into: CableTone },
-  hasWords: boolean,
-): InPlace => {
+/** A cable out of the lead comes before a cable into it. Thus, of a pair that goes both ways, the cable out of the lead has the gate. */
+const relationsInPlace = (lead: NodeId, stage: OnStage, shown: Shown, tones: { readonly out: CableTone; readonly into: CableTone }): InPlace => {
   const { graph } = shown;
   const allOut = (graph.out.get(lead) ?? []).filter((relation) => isShown(relation, shown.muted));
   const allInto = (graph.into.get(lead) ?? []).filter((relation) => isShown(relation, shown.muted));
@@ -246,7 +182,7 @@ const relationsInPlace = (
   const intoLines = into.flatMap((relation, order) => lineOf(relation, order, tones.into, "start"));
   const lengthOfOut = new Map(outLines.map((line) => [line.relation, line.wire.length]));
   return {
-    ...withMarks([...outLines, ...intoLines], quiet, shown, hasWords),
+    cables: withGates([...outLines, ...intoLines], shown),
     out: out.map((relation, order) => ({ relation, order, length: lengthOfOut.get(relation) ?? 0 })),
     into: into.map((relation, order) => ({ relation, order })),
     elsewhere: allOut.length - out.length + allInto.length - into.length,
@@ -257,7 +193,7 @@ const frameOf = (arrangement: Arrangement | null, shown: Shown): CableView[] =>
   [...(arrangement?.cables.values() ?? [])].flatMap((branch) => {
     const relation = shown.graph.relations.get(branch.key);
     if (relation === undefined || !isShown(relation, shown.muted)) return [];
-    return [viewOf({ relation, wire: { d: branch.d, points: branch.points, length: branch.length, end: branch.end, arrives: 1 }, tone: "frame", order: 0, words: null, gate: null, back: null, bright: false })];
+    return [viewOf({ relation, wire: { d: branch.d, points: branch.points, length: branch.length, end: branch.end, arrives: 1 }, tone: "frame", order: 0, gate: null, back: null, bright: false })];
   });
 
 /** `back`: the relation from the target to the source, when the branch has the mark of a relation that goes both ways. */
@@ -267,13 +203,12 @@ const viewOfBranch = (branch: Branch, relation: Relation, tone: CableTone, order
     wire: { d: branch.d, points: branch.points, length: branch.length, end: branch.end, arrives: 1 },
     tone,
     order,
-    words: { text: wordsOf(relation), at: branch.word },
     gate: relation.conditional ? branch.gate : null,
     back: branch.back === null ? null : { ...branch.back, conditional: back?.conditional ?? false },
     bright,
   });
 
-const NOTHING: Lit = { tones: new Map(), cables: [], unworded: [], trace: null, hidden: { kind: "none" }, absent: null, dimsTheRest: false };
+const NOTHING: Lit = { tones: new Map(), cables: [], trace: null, hidden: { kind: "none" }, absent: null, dimsTheRest: false };
 
 const ownCombs = (id: NodeId, arrangement: Arrangement, shown: Shown): Lit => {
   const { graph } = shown;
@@ -294,12 +229,12 @@ const ownCombs = (id: NodeId, arrangement: Arrangement, shown: Shown): Lit => {
     draw(relation, "in", order);
   });
   tones.set(id, { kind: "selected" });
-  return { tones, cables, unworded: [], trace: null, hidden: { kind: "none" }, absent: null, dimsTheRest: true };
+  return { tones, cables, trace: null, hidden: { kind: "none" }, absent: null, dimsTheRest: true };
 };
 
-const nodeInPlace = (id: NodeId, stage: OnStage, frame: readonly CableView[], quiet: Quiet, shown: Shown): Lit => {
+const nodeInPlace = (id: NodeId, stage: OnStage, frame: readonly CableView[], shown: Shown): Lit => {
   if (!stage.has(id)) return { ...NOTHING, cables: [...frame], absent: id };
-  const placed = relationsInPlace(id, stage, quiet, shown, { out: "out", into: "in" }, true);
+  const placed = relationsInPlace(id, stage, shown, { out: "out", into: "in" });
   const tones = new Map<NodeId, NodeTone>();
   for (const { relation, order, length } of placed.out) tones.set(relation.to, { kind: "needs", via: relation.kinds[0], order, length });
   for (const { relation, order } of placed.into) tones.set(relation.from, tones.has(relation.from) ? { kind: "mutual" } : { kind: "neededBy", via: relation.kinds[0], order });
@@ -307,7 +242,6 @@ const nodeInPlace = (id: NodeId, stage: OnStage, frame: readonly CableView[], qu
   return {
     tones,
     cables: [...frame, ...placed.cables],
-    unworded: placed.unworded,
     trace: null,
     hidden: placed.elsewhere === 0 ? { kind: "none" } : { kind: "relations", count: placed.elsewhere },
     absent: null,
@@ -356,23 +290,21 @@ const ownTrace = (trace: Trace, arrangement: Arrangement, shown: Shown): Lit => 
     const relation = shown.graph.relations.get(item.key);
     return branch === undefined || relation === undefined ? [] : [viewOfBranch(branch, relation, "step", item.order, shown.isBright(item.key), undefined)];
   });
-  return { tones: tonesOfTrace(trace, traced, () => true), cables, unworded: [], trace, hidden: { kind: "none" }, absent: null, dimsTheRest: true };
+  return { tones: tonesOfTrace(trace, traced, () => true), cables, trace, hidden: { kind: "none" }, absent: null, dimsTheRest: true };
 };
 
-const traceInPlace = (trace: Trace, stage: OnStage, frame: readonly CableView[], quiet: Quiet, shown: Shown): Lit => {
+const traceInPlace = (trace: Trace, stage: OnStage, frame: readonly CableView[], shown: Shown): Lit => {
   const traced = cablesOfTrace(trace, shown.graph);
   const lineOf = (item: TraceCable): InPlaceLine[] => {
     const relation = shown.graph.relations.get(item.key);
     const wire = relation === undefined || !stage.has(relation.from) || !stage.has(relation.to) ? null : stage.wire(relation, relation.from);
     return relation === undefined || wire === null ? [] : [{ relation, wire, tone: "step", order: item.order, far: "end" }];
   };
-  const stepsBeforeHeadsSoThatAStepHasTheWordOfASharedPort = [...traced.steps, ...traced.heads].flatMap(lineOf);
+  const stepsBeforeHeadsSoThatAStepHasTheGateOfASharedPort = [...traced.steps, ...traced.heads].flatMap(lineOf);
   const absentSteps = trace.steps.filter((item) => !stage.has(item.node)).length;
-  const marked = withMarks(stepsBeforeHeadsSoThatAStepHasTheWordOfASharedPort, quiet, shown, true);
   return {
     tones: tonesOfTrace(trace, traced, stage.has),
-    cables: [...frame, ...marked.cables],
-    unworded: marked.unworded,
+    cables: [...frame, ...withGates(stepsBeforeHeadsSoThatAStepHasTheGateOfASharedPort, shown)],
     trace,
     hidden: absentSteps === 0 ? { kind: "none" } : { kind: "steps", count: absentSteps },
     absent: null,
@@ -397,17 +329,16 @@ export const litOf = (input: {
   const isOwn = isArrangedFor(target, state.focus);
   const stage = arrangement === null ? onRestMap(graph, input.placement) : onArrangement(arrangement);
   const frame = isOwn ? [] : frameOf(arrangement, shown);
-  const quiet = arrangement === null ? input.placement.rail.lines : frame.map((cable) => cable.points);
 
   if (state.focus.kind === "node") {
-    return isOwn && arrangement !== null ? ownCombs(state.focus.id, arrangement, shown) : nodeInPlace(state.focus.id, stage, frame, quiet, shown);
+    return isOwn && arrangement !== null ? ownCombs(state.focus.id, arrangement, shown) : nodeInPlace(state.focus.id, stage, frame, shown);
   }
   if (state.focus.kind === "route") {
     const trace = traceOf(graph, state.focus.route);
     if (trace === null) return { ...NOTHING, cables: frame };
-    return isOwn && arrangement !== null ? ownTrace(trace, arrangement, shown) : traceInPlace(trace, stage, frame, quiet, shown);
+    return isOwn && arrangement !== null ? ownTrace(trace, arrangement, shown) : traceInPlace(trace, stage, frame, shown);
   }
   const under = state.hover.kind === "node" && stage.has(state.hover.id) ? state.hover.id : null;
-  const preview = under === null ? [] : relationsInPlace(under, stage, quiet, shown, { out: "previewOut", into: "previewIn" }, false).cables;
+  const preview = under === null ? [] : relationsInPlace(under, stage, shown, { out: "previewOut", into: "previewIn" }).cables;
   return { ...NOTHING, cables: [...frame, ...preview] };
 };

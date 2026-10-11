@@ -157,33 +157,6 @@
   pointer-events: none;
 }
 
-.word-ground {
-  fill: var(--ground);
-  stroke: none;
-}
-
-.word {
-  fill: var(--lit);
-  stroke: none;
-  font-size: var(--word-size);
-  font-weight: 500;
-  text-anchor: middle;
-  pointer-events: none;
-}
-
-.on-wire[data-bright="true"] .word {
-  fill: var(--lit-bright);
-}
-
-.word-dot {
-  fill: var(--lit);
-  stroke: none;
-}
-
-.on-wire[data-bright="true"] .word-dot {
-  fill: var(--lit-bright);
-}
-
 .gate {
   fill: var(--ground);
   stroke: var(--lit);

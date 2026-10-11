@@ -4,24 +4,21 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import { toGraph, type Graph } from "../src/shared/graph";
-import { captionWidth, WORD_BOX, wordWidthOf } from "../src/shared/focus-layout";
 import { distance, FRAME, layout, type Point, type Rect } from "../src/shared/layout";
 import { NodeId, relationKey, RouteId, type ExplorerIndex, type Relation } from "../src/shared/model";
-import { GATE, WORD_CLEAR } from "../src/shared/polyline";
-import { arrangementOf, stageBoundsOf } from "../src/shared/view/arranged";
-import { wordsOf } from "../src/shared/view/cable-class";
+import { GATE } from "../src/shared/polyline";
+import { arrangementOf } from "../src/shared/view/arranged";
 import { resolveCamera } from "../src/shared/view/camera";
 import { decodeHash, encodeHash } from "../src/shared/view/hash";
 import { historyAction, normalizePlace } from "../src/shared/view/history";
 import { eventsAtArrival, keyPressOf, lockKey, lockPressOf, togglesLock, type KeyPress, type PageKeyEvent } from "../src/shared/view/keys";
 import type { Hidden } from "../src/shared/view/lit";
+import { portMarksOf } from "../src/shared/view/ports";
 import { CHIP, deriveScene, isAtChips, type CableView, type Scene } from "../src/shared/view/scene";
 import { INITIAL, placeOf, stageTargetOf, type Pin, type Stage, type StageTarget, type ViewEvent, type ViewState } from "../src/shared/view/state";
 import { step } from "../src/shared/view/step";
 import { traceOf } from "../src/shared/view/trace";
 import { indexAt, LIVE_REPO, snapshotIndex } from "./support";
-import { coveredByChips, isInside, overlap, placesOf, railUnder, roomOn, rowOf, strangersUnder, thingsOf, visibleRectOf, wordBoxesOf, wordsBeforeATick, wordsUnderNames } from "./word-rules";
-import { WORDS_LEFT_OFF } from "./words-left-off";
 
 const stageOf = (index: ExplorerIndex): Stage => {
   const graph = toGraph(index);
@@ -390,14 +387,6 @@ const rectsMeet = (a: Rect, b: Rect): boolean => a.x <= b.x + b.width && b.x <= 
 
 const segmentsOf = (points: readonly Point[]): [Point, Point][] => points.slice(1).map((to, index) => [points[index] ?? to, to]);
 
-const boxOf = (words: NonNullable<CableView["words"]>): Rect => {
-  const width = wordWidthOf(words.text);
-  return { x: words.at.x - width / 2, y: words.at.y - WORD_BOX.height / 2, width, height: WORD_BOX.height };
-};
-
-const uprightsOf = (cable: CableView): Rect[] =>
-  segmentsOf(cable.points).flatMap(([first, second]) => (first.x === second.x && first.y !== second.y ? [{ x: first.x, y: Math.min(first.y, second.y), width: 0, height: Math.abs(first.y - second.y) }] : []));
-
 /** The run of a cable next to the node at its other end: from the port of that node to the first corner. */
 const farRunOf = (cable: CableView, far: "start" | "end"): { readonly port: Point; readonly corner: Point } => {
   const [port, corner] = far === "end" ? cable.points.toReversed() : cable.points;
@@ -413,105 +402,22 @@ interface Marked {
   readonly conditional: boolean;
 }
 
-interface WordFaults {
-  boxesThatMeet: number;
-  boxesUnderAnUpright: number;
-  boxesUnderAnUprightOfTheFrame: number;
-  words: number;
-  wordsBeside: number;
-  gates: number;
-  /** A cable with a condition whose run next to the other node is too short for a ring, and whose bend is on a trunk. */
-  conditionsWithoutRoomForAGate: number;
+interface RingCounts {
+  /** The lit cables with a condition. */
+  withACondition: number;
+  rings: number;
 }
-
-const NO_FAULTS: WordFaults = { boxesThatMeet: 0, boxesUnderAnUpright: 0, boxesUnderAnUprightOfTheFrame: 0, words: 0, wordsBeside: 0, gates: 0, conditionsWithoutRoomForAGate: 0 };
-
-/** What the locked stages leave without a word: how many relations for each stage, and of all of these the relations with a condition that have no ring also. */
-interface LeftOff {
-  readonly byStage: { [stage: string]: number };
-  readonly withAConditionAndNoRing: string[];
-}
-
-const nothingLeftOff = (): LeftOff => ({ byStage: {}, withAConditionAndNoRing: [] });
-
-/**
- * The rules of the relation words of one scene of a locked stage. Each rule reads the scene as the map draws it.
- * - A lit relation shows its word in one place, with its own text and the color of its own line. The relation back of a pair shows none.
- * - A relation shows no word only when no place that the rules permit has room for it. This notes it in `leftOff`.
- *   A place is on each level part of its own line, also on a part in the middle of the line, and beside the name of the other node.
- * - A word is inside what the camera fits. It is on no line of a different relation and on no branch of the rail, over no part of a row, no caption, no mark of a line, and no other word.
- * - A word under a name starts at the lower edge of its label, so it is nearer to its own name than to the row below. It has no lit row directly below it.
- * - A word is not before the mark of the router of its row, where it would read as a relation into the node.
- */
-const checkWords = (label: string, scene: Scene, stage: Stage, target: StageTarget, lead: NodeId | null, leftOff: LeftOff): void => {
-  const { graph } = stage;
-  const mine = lit(scene);
-  const bounds = stageBoundsOf(arrangementOf(graph, target), stage.placement);
-  const boxes = wordBoxesOf(scene);
-  const things = thingsOf(scene, stage.placement);
-  const hasRoom = roomOn(scene, stage.placement, bounds);
-
-  for (const cable of mine) {
-    const relation = graph.relations.get(cable.key);
-    assert.isDefined(relation, cable.key);
-    if (relation === undefined) continue;
-    const isTheRelationBack = lead !== null && relation.to === lead && mine.some((other) => other.key === relationKey({ from: lead, to: relation.from }));
-    const neighbour = lead === null || relation.from === lead ? relation.to : relation.from;
-    const shown = boxes.filter((word) => word.keys.includes(cable.key));
-    assert.isAtMost(shown.length, isTheRelationBack ? 0 : 1, `${label}: ${cable.key} shows its word in ${shown.length} places`);
-    const [word] = shown;
-    if (word !== undefined) {
-      assert.strictEqual(word.text, wordsOf(relation), `${label}: the word of ${cable.key}`);
-      assert.strictEqual(word.tone, cable.tone, `${label}: the word of ${cable.key} has the color of a different line`);
-      if (word.place === "beside") assert.strictEqual(word.node, rowOf(scene, neighbour)?.id, `${label}: the word of ${cable.key} is beside a node that is not at the other end from the selection`);
-    }
-    if (word !== undefined || isTheRelationBack) continue;
-    const free = placesOf(scene, cable, wordsOf(relation), neighbour).find((place) => hasRoom(place, cable, neighbour));
-    assert.isUndefined(free, `${label}: ${cable.key} shows no word, and the place ${free?.name} has room for it`);
-    leftOff.byStage[nameOfStage(target)] = (leftOff.byStage[nameOfStage(target)] ?? 0) + 1;
-    if (relation.conditional && cable.gate === null) leftOff.withAConditionAndNoRing.push(`${label}: ${cable.key}`);
-  }
-
-  for (const word of scene.beside) {
-    assert.isAbove(word.keys.length, 0, `${label}: a word beside ${word.node} is of no relation`);
-    assert.isTrue(word.keys.every((key) => mine.some((cable) => cable.key === key)), `${label}: a word beside ${word.node} is of a relation that is not lit`);
-  }
-  for (const [index, word] of boxes.entries()) {
-    const name = `${label}: the word "${word.text}" of ${word.keys.join(" and ")}`;
-    assert.isTrue(isInside(word.rect, bounds), `${name} is outside what the camera fits`);
-    assert.deepStrictEqual(strangersUnder(word, scene).map((cable) => `${cable.key} (${cable.tone})`), [], `${name} is on a line of a different relation`);
-    assert.deepStrictEqual(railUnder(word, scene, stage.placement), [], `${name} is on a branch of the rail`);
-    for (const thing of things) assert.isFalse(overlap(word.rect, thing.rect), `${name} is over ${thing.name}`);
-    for (const other of boxes.slice(index + 1)) assert.isFalse(overlap(word.rect, other.rect), `${name} is over the word "${other.text}" of ${other.keys.join(" and ")}`);
-  }
-  for (const under of wordsUnderNames(scene, stage.placement)) {
-    const name = `${label}: the word "${under.word.text}" under ${under.word.node}`;
-    assert.deepStrictEqual(under.litBelow, [], `${name} is over a lit row, which is as near to it as its own name`);
-    assert.isAtLeast(under.gap.toItsName, 0, `${name} is over its own name`);
-    assert.isBelow(under.gap.toItsName, under.gap.toTheRowBelow, `${name} is ${under.gap.toItsName} below its own label and ${under.gap.toTheRowBelow} above the label of the row below: it is not nearer to its own name`);
-  }
-  assert.deepStrictEqual(wordsBeforeATick(scene).map((word) => `"${word.text}" beside ${word.node}`), [], `${label}: a word is before the mark of the router of its row, so it reads as a relation into that node`);
-};
 
 const isUnderARingAt = (centre: Point, [first, second]: [Point, Point]): boolean =>
   rectsMeet({ x: centre.x - GATE.radius, y: centre.y - GATE.radius, width: GATE.radius * 2, height: GATE.radius * 2 }, { x: Math.min(first.x, second.x), y: Math.min(first.y, second.y), width: Math.abs(first.x - second.x), height: Math.abs(first.y - second.y) });
 
 /**
- * The rules of the words and the gates on the cables of one selection.
- * It counts two faults and does not stop at them, because the count over all picks is a number to report. Each other rule is an assertion.
+ * The rules of the rings on the cables of one selection. A ring is the sign of a condition.
+ * - A ring is on its own cable, next to the other node: on the run that ends at that node, or on the bend of a run that is too short.
+ * - A ring is on no part that a cable to a different port uses, because it would read as the condition of that cable.
+ * - One port has one ring: that of the first cable at the port. The first cable has a ring when it has a condition and its run has room that is its own.
  */
-const checkMarks = (label: string, marked: readonly Marked[], faults: WordFaults, scene: Scene): void => {
-  const boxes = [...marked.flatMap(({ cable }) => (cable.words === null ? [] : [{ key: cable.key, box: boxOf(cable.words) }])), ...scene.beside.map((word) => ({ key: word.keys[0] ?? "", box: word.box }))];
-  const frame = scene.cables.filter((cable) => cable.tone === "frame");
-  for (const [index, first] of boxes.entries()) {
-    for (const second of boxes.slice(index + 1)) if (rectsMeet(first.box, second.box)) faults.boxesThatMeet += 1;
-  }
-  for (const { box } of boxes) {
-    if (marked.some(({ cable }) => uprightsOf(cable).some((upright) => rectsMeet(box, upright)))) faults.boxesUnderAnUpright += 1;
-    if (frame.some((cable) => uprightsOf(cable).some((upright) => rectsMeet(box, upright)))) faults.boxesUnderAnUprightOfTheFrame += 1;
-  }
-  faults.wordsBeside += scene.beside.length;
-
+const checkRings = (label: string, marked: readonly Marked[], counts: RingCounts): void => {
   const portOf = (item: Marked): string => {
     const { port } = farRunOf(item.cable, item.far);
     return `${port.x},${port.y}`;
@@ -520,22 +426,17 @@ const checkMarks = (label: string, marked: readonly Marked[], faults: WordFaults
   for (const item of marked) {
     const { port, corner } = farRunOf(item.cable, item.far);
     atPort.set(portOf(item), [...(atPort.get(portOf(item)) ?? []), item]);
+    if (item.conditional) counts.withACondition += 1;
 
-    const { words, gate } = item.cable;
-    if (words !== null) {
-      const box = boxOf(words);
-      assert.strictEqual(words.at.y, port.y, `${label}: the word of ${item.cable.key} is not on the run next to the other node`);
-      assert.isTrue(box.x >= Math.min(port.x, corner.x) && box.x + box.width <= Math.max(port.x, corner.x), `${label}: the word of ${item.cable.key} is longer than the run next to the other node`);
-      faults.words += 1;
-    }
-    if (gate !== null) {
-      const onTheRun = gate.y === port.y && gate.x >= Math.min(port.x, corner.x) && gate.x <= Math.max(port.x, corner.x);
-      const onTheBendOfAShortRun = gate.x === corner.x && Math.abs(gate.y - corner.y) <= FRAME.corner + GATE.radius + 2;
-      assert.isTrue(onTheRun || onTheBendOfAShortRun, `${label}: the gate of ${item.cable.key} is ${distance(gate, port)} from the other node`);
-      const strangers = marked.filter((other) => portOf(other) !== portOf(item) && segmentsOf(other.cable.points).some((segment) => isUnderARingAt(gate, segment)));
-      assert.deepStrictEqual(strangers.map((other) => other.cable.key), [], `${label}: the gate of ${item.cable.key} is on a run that it shares with a cable to a different port, so it reads as the condition of that cable`);
-      faults.gates += 1;
-    }
+    const { gate } = item.cable;
+    if (gate === null) continue;
+    const onTheRun = gate.y === port.y && gate.x >= Math.min(port.x, corner.x) && gate.x <= Math.max(port.x, corner.x);
+    const onTheBendOfAShortRun = gate.x === corner.x && Math.abs(gate.y - corner.y) <= FRAME.corner + GATE.radius + 2;
+    assert.isTrue(onTheRun || onTheBendOfAShortRun, `${label}: the gate of ${item.cable.key} is ${distance(gate, port)} from the other node`);
+    assert.isTrue(segmentsOf(item.cable.points).some((segment) => isUnderARingAt(gate, segment)), `${label}: the gate of ${item.cable.key} is not on its own cable`);
+    const strangers = marked.filter((other) => portOf(other) !== portOf(item) && segmentsOf(other.cable.points).some((segment) => isUnderARingAt(gate, segment)));
+    assert.deepStrictEqual(strangers.map((other) => other.cable.key), [], `${label}: the gate of ${item.cable.key} is on a run that it shares with a cable to a different port, so it reads as the condition of that cable`);
+    counts.rings += 1;
   }
 
   for (const sharers of atPort.values()) {
@@ -544,34 +445,73 @@ const checkMarks = (label: string, marked: readonly Marked[], faults: WordFaults
     const { port, corner } = farRunOf(speaker.cable, speaker.far);
     const hasRoomOnItsRun = distance(port, corner) >= GATE.setBack + GATE.radius + FRAME.corner;
     if (!speaker.conditional) assert.isNull(speaker.cable.gate, `${label}: ${speaker.cable.key} has no condition, so it has no gate`);
-    else if (speaker.cable.gate === null && scene.beside.some((word) => word.keys.includes(speaker.cable.key))) {
-      assert.isTrue(scene.beside.find((word) => word.keys.includes(speaker.cable.key))?.text.endsWith(" if"), `${label}: a word is in the place of the ring of ${speaker.cable.key}, so the word says the condition`);
-    } else if (speaker.cable.gate === null) {
+    else if (speaker.cable.gate === null) {
       const strangersOnItsRun = marked.filter((other) => portOf(other) !== portOf(speaker) && segmentsOf(other.cable.points).some((segment) => isUnderARingAt({ x: port.x + Math.sign(corner.x - port.x) * GATE.setBack, y: port.y }, segment)));
       assert.isTrue(!hasRoomOnItsRun || strangersOnItsRun.length > 0, `${label}: ${speaker.cable.key} is the first cable at its port, it has a condition, and its run has room, so it has a gate`);
-      faults.conditionsWithoutRoomForAGate += 1;
     }
-    for (const { cable } of silent) {
-      assert.isNull(cable.words, `${label}: ${cable.key} shares its last run with ${speaker.cable.key}, and one run has one word`);
-      assert.isNull(cable.gate, `${label}: ${cable.key} shares its last run with ${speaker.cable.key}, and one run has one gate`);
-    }
+    for (const { cable } of silent) assert.isNull(cable.gate, `${label}: ${cable.key} shares its last run with ${speaker.cable.key}, and one run has one gate`);
   }
+};
+
+/** The row of a node on the stage. A hosted file is on the row of its host. */
+const rowOf = (scene: Scene, node: NodeId): NodeId | null => {
+  const stand = scene.nodes.find((item) => item.id === node && !item.offStage)?.at;
+  return stand === undefined ? null : stand.kind === "pip" ? stand.host : node;
+};
+
+/** What the map draws for a line and its marks: half of the width of a line, the arrowhead, and the bar. */
+const DRAWN = { lineHalf: 0.75, arrow: { length: 5, half: 3.2, setBack: 4.5 }, bar: { half: 5.5, width: 2.2 } } as const;
+
+/** A chip has a border and a lit line has a glow: with less ground than this between the two, the chip is against the line. */
+const GROUND_AT_A_CHIP = 2;
+
+/**
+ * What each tool chip of the scene covers or stands against: a lit line, or the arrowhead, the bar, the ring, or the back mark of one.
+ * A chip is drawn over each of them. A lit line here is a line of the selection or a line of the preview of the node under the pointer.
+ * The geometry comes from what the map draws, and not from the code that folds the chips.
+ * `ownRow`: the row that a preview is of. Its chips stay over its own lines, so they do not count.
+ */
+const coveredByChips = (scene: Scene, ownRow: NodeId | null = null): string[] => {
+  const overlap = (a: Rect, b: Rect): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+  const chips = scene.nodes.flatMap((node) =>
+    node.offStage || node.id === ownRow
+      ? []
+      : node.chips.map((chip) => ({ name: `a chip of ${node.id}`, rect: { x: chip.x - CHIP.lead - GROUND_AT_A_CHIP, y: node.at.centre.y - CHIP.half - GROUND_AT_A_CHIP, width: chip.width + GROUND_AT_A_CHIP * 2, height: (CHIP.half + GROUND_AT_A_CHIP) * 2 } })),
+  );
+  const drawn = scene.cables.filter((cable) => cable.tone !== "weave" && cable.tone !== "frame");
+  const marks: { readonly name: string; readonly rect: Rect }[] = [];
+  for (const mark of portMarksOf(drawn)) {
+    const tip = mark.at.x - (mark.hasBar ? DRAWN.arrow.setBack * mark.arrives : 0);
+    const of = mark.cables.map((cable) => cable.key).join(" and ");
+    if (mark.hasArrow) marks.push({ name: `the arrowhead of ${of}`, rect: { x: Math.min(tip, tip - DRAWN.arrow.length * mark.arrives), y: mark.at.y - DRAWN.arrow.half, width: DRAWN.arrow.length, height: DRAWN.arrow.half * 2 } });
+    if (mark.hasBar) marks.push({ name: `the bar of ${of}`, rect: { x: mark.at.x - DRAWN.bar.width / 2, y: mark.at.y - DRAWN.bar.half, width: DRAWN.bar.width, height: DRAWN.bar.half * 2 } });
+  }
+  for (const cable of drawn) {
+    if (cable.gate !== null) marks.push({ name: `the ring of ${cable.key}`, rect: { x: cable.gate.x - GATE.radius, y: cable.gate.y - GATE.radius, width: GATE.radius * 2, height: GATE.radius * 2 } });
+    if (cable.back !== null) marks.push({ name: `the back mark of ${cable.key}`, rect: { x: cable.back.x, y: cable.back.y - DRAWN.arrow.half, width: DRAWN.arrow.length, height: DRAWN.arrow.half * 2 } });
+  }
+  const rectOfRun = ([first, second]: [Point, Point]): Rect => ({
+    x: Math.min(first.x, second.x) - DRAWN.lineHalf,
+    y: Math.min(first.y, second.y) - DRAWN.lineHalf,
+    width: Math.abs(first.x - second.x) + DRAWN.lineHalf * 2,
+    height: Math.abs(first.y - second.y) + DRAWN.lineHalf * 2,
+  });
+  return chips.flatMap((chip) => [
+    ...marks.filter((mark) => overlap(chip.rect, mark.rect)).map((mark) => `${chip.name} covers ${mark.name}`),
+    ...drawn.filter((cable) => segmentsOf(cable.points).some((run) => overlap(chip.rect, rectOfRun(run)))).map((cable) => `${chip.name} covers the line ${cable.key}`),
+  ]);
 };
 
 /** One scene for each pick or each trace on each locked stage: some thousand scenes, each with each rule. A machine with other work needs more than the 5 seconds that a test has. */
 const EACH_SELECTION_ON_EACH_STAGE_MS = 60_000;
 
 describe("what a locked stage lights", () => {
-  /** The test of the picks of the snapshot gives its number to the test of the traces, which compares the sum. */
-  let conditionsLeftOff = 0;
-
   /** Each pick of a node on each locked stage. It asserts each rule of the cables in place, and it returns the counts. */
   const picksInPlace = (stage: Stage) => {
     let cables = 0;
     let hiddenSomewhere = 0;
     let picks = 0;
-    const faults: WordFaults = { ...NO_FAULTS };
-    const leftOff = nothingLeftOff();
+    const rings: RingCounts = { withACondition: 0, rings: 0 };
     for (const target of everyStage(stage.graph)) {
       const locked = lockedOn(stage, target);
       const frozen = deriveScene({ ...stage, state: locked });
@@ -611,16 +551,14 @@ describe("what a locked stage lights", () => {
           cables += 1;
         }
 
-        checkMarks(
+        checkRings(
           label,
           mine.map((cable) => {
             const leaves = cable.key.startsWith(`${node}>`);
             return { cable, far: leaves ? "end" : "start", precedence: (leaves ? 0 : 1000) + cable.order, conditional: stage.graph.relations.get(cable.key)?.conditional ?? false };
           }),
-          faults,
-          scene,
+          rings,
         );
-        checkWords(label, scene, stage, target, node, leftOff);
         picks += 1;
 
         assert.strictEqual(hiddenRelations(scene), elsewhere.length, `${label}: the count of relations that are not in this view`);
@@ -630,34 +568,61 @@ describe("what a locked stage lights", () => {
         if (elsewhere.length > 0) hiddenSomewhere += 1;
       }
     }
-    return { cables, hiddenSomewhere, picks, faults, leftOff };
+    return { cables, hiddenSomewhere, picks, rings };
   };
 
-  const NO_BOX_FAULTS = { boxesThatMeet: 0, boxesUnderAnUpright: 0, boxesUnderAnUprightOfTheFrame: 0 };
-  const boxFaultsOf = (faults: WordFaults) => ({ boxesThatMeet: faults.boxesThatMeet, boxesUnderAnUpright: faults.boxesUnderAnUpright, boxesUnderAnUprightOfTheFrame: faults.boxesUnderAnUprightOfTheFrame });
+  /** Each route traced on each locked stage. It asserts the rules of the rings, and it returns the counts. */
+  const tracesInPlace = (stage: Stage) => {
+    let traces = 0;
+    const rings: RingCounts = { withACondition: 0, rings: 0 };
+    for (const target of everyStage(stage.graph)) {
+      const locked = lockedOn(stage, target);
+      for (const route of stage.graph.index.routes) {
+        const trace = traceOf(stage.graph, route.id);
+        const steps = new Set(trace?.steps.map((item) => item.via));
+        const scene = deriveScene({ ...stage, state: step(locked, { kind: "traced", route: route.id }, stage) });
+        checkRings(
+          `${nameOfStage(target)}, route ${route.id} traced`,
+          lit(scene).map((cable) => ({ cable, far: "end", precedence: (steps.has(cable.key) ? 0 : 1000) + cable.order, conditional: stage.graph.relations.get(cable.key)?.conditional ?? false })),
+          rings,
+        );
+        traces += 1;
+      }
+    }
+    return { traces, rings };
+  };
 
-  it.effect("draws each relation of a picked node to a node on the stage in place: clear of each label, upright only in a gutter, with its word in one place or none", () =>
+  it.effect("draws each relation of a picked node to a node on the stage in place: clear of each label, upright only in a gutter, with one ring for each port", () =>
     Effect.gen(function* () {
       const stage = yield* liveStage;
-      const { picks, faults } = picksInPlace(stage);
-      assert.deepStrictEqual(boxFaultsOf(faults), NO_BOX_FAULTS, `over ${picks} picks`);
+      const { picks } = picksInPlace(stage);
       assert.isAtLeast(picks, stage.graph.index.nodes.length, "the rest map alone has one pick for each node");
     }),
     EACH_SELECTION_ON_EACH_STAGE_MS,
   );
 
-  it.effect("leaves the listed relations of the snapshot without a word, and no other", () =>
+  it.effect("gives the cables of each trace in place one ring for each port, on each stage", () =>
     Effect.gen(function* () {
-      const { cables, hiddenSomewhere, picks, faults, leftOff } = picksInPlace(yield* snapshotStage);
-      assert.deepStrictEqual(boxFaultsOf(faults), NO_BOX_FAULTS, `over ${picks} picks`);
-      assert.isAbove(cables, 3000, "the snapshot has many cables in place to check");
-      assert.isAbove(hiddenSomewhere, 200);
-      assert.isAbove(picks, 900);
-      assert.isAbove(faults.words, 2000, "most cables have a run with room for their word");
-      assert.isAbove(faults.wordsBeside, 1000, "a cable without room has its word beside the neighbour");
-      assert.isAbove(faults.gates, 100);
-      assert.deepStrictEqual(leftOff.byStage, WORDS_LEFT_OFF.picks, "the number of relations that show no word, for each locked stage. `npx tsx test/recount-words.ts --pin` writes the new numbers");
-      conditionsLeftOff += leftOff.withAConditionAndNoRing.length;
+      const stage = yield* liveStage;
+      const { traces } = tracesInPlace(stage);
+      assert.strictEqual(traces, everyStage(stage.graph).length * stage.graph.index.routes.length);
+    }),
+    EACH_SELECTION_ON_EACH_STAGE_MS,
+  );
+
+  it.effect("shows a ring for 992 of the 1,075 lit lines of the snapshot that have a condition, over each pick and each trace on each locked stage", () =>
+    Effect.gen(function* () {
+      const stage = yield* snapshotStage;
+      const ofPicks = picksInPlace(stage);
+      const ofTraces = tracesInPlace(stage);
+      assert.isAbove(ofPicks.cables, 3000, "the snapshot has many cables in place to check");
+      assert.isAbove(ofPicks.hiddenSomewhere, 200);
+      assert.isAbove(ofPicks.picks, 900);
+      assert.deepStrictEqual<unknown>(
+        { withACondition: ofPicks.rings.withACondition + ofTraces.rings.withACondition, rings: ofPicks.rings.rings + ofTraces.rings.rings },
+        { withACondition: 1075, rings: 992 },
+        "the README gives the difference as a known limit: these lines show no ring, because the part next to the other node is too short or is a part that other lit lines use, or because a second line at the port has the ring",
+      );
     }),
     EACH_SELECTION_ON_EACH_STAGE_MS,
   );
@@ -673,15 +638,14 @@ describe("what a locked stage lights", () => {
     const atRest = deriveScene({ ...stage, state: locked });
     const unfolded = new Map(atRest.nodes.map((node) => [node.id, node.chips.length]));
     const seen = { chips: 0, rowsFoldedForALine: 0, pointersOnARowWithASelection: 0, previewLines: 0, rowsFoldedForAPreview: 0, rowsWithChipsOverTheirOwnPreview: 0 };
-    const selections: (readonly [string, ViewEvent, NodeId | null])[] = [
-      ...stage.graph.index.nodes.map((node): readonly [string, ViewEvent, NodeId | null] => [`${node.id} picked`, { kind: "picked", id: node.id }, node.id]),
-      ...stage.graph.index.routes.map((route): readonly [string, ViewEvent, NodeId | null] => [`route ${route.id} traced`, { kind: "traced", route: route.id }, null]),
+    const selections: (readonly [string, ViewEvent])[] = [
+      ...stage.graph.index.nodes.map((node): readonly [string, ViewEvent] => [`${node.id} picked`, { kind: "picked", id: node.id }]),
+      ...stage.graph.index.routes.map((route): readonly [string, ViewEvent] => [`route ${route.id} traced`, { kind: "traced", route: route.id }]),
     ];
-    for (const [name, event, lead] of selections) {
+    for (const [name, event] of selections) {
       const label = `the rest map with the Tools lens, ${name}`;
       const scene = deriveScene({ ...stage, state: step(locked, event, stage) });
-      assert.deepStrictEqual(coveredByChips(scene, stage.placement), [], `${label}: a chip is drawn over each line, so it covers what is under it`);
-      checkWords(label, scene, stage, { kind: "rest" }, lead, nothingLeftOff());
+      assert.deepStrictEqual(coveredByChips(scene), [], `${label}: a chip is drawn over each line, so it covers what is under it`);
       for (const node of scene.nodes) {
         assert.isTrue(node.chips.length === 0 || node.chips.length === unfolded.get(node.id), `${label}: ${node.id} shows a part of its chips`);
         seen.chips += node.chips.length;
@@ -691,7 +655,7 @@ describe("what a locked stage lights", () => {
       for (const [row, chips] of unfolded) {
         if (chips === 0) continue;
         const pointed = deriveScene({ ...stage, state: run(stage, [event, { kind: "pointed", hover: { kind: "node", id: row } }], locked) });
-        assert.deepStrictEqual(coveredByChips(pointed, stage.placement), [], `${label}, the pointer on ${row}: a chip is drawn over a line of the selection`);
+        assert.deepStrictEqual(coveredByChips(pointed), [], `${label}, the pointer on ${row}: a chip is drawn over a line of the selection`);
         assert.deepStrictEqual(pointed.nodes.map((node) => node.chips.length), scene.nodes.map((node) => node.chips.length), `${label}, the pointer on ${row}: the pointer changed the chips of a row`);
         seen.pointersOnARowWithASelection += 1;
       }
@@ -701,21 +665,21 @@ describe("what a locked stage lights", () => {
       for (const under of stage.graph.index.nodes) {
         const label = `the rest map with the Tools lens, ${lock}, the pointer on ${under.id}`;
         const scene = deriveScene({ ...stage, state: step(state, { kind: "pointed", hover: { kind: "node", id: under.id } }, stage) });
-        const ownRow = rowOf(scene, under.id)?.id ?? null;
-        assert.deepStrictEqual(coveredByChips(scene, stage.placement, ownRow), [], `${label}: a chip of a different row is drawn over a line of the preview, so it covers what is under it`);
+        const ownRow = rowOf(scene, under.id);
+        assert.deepStrictEqual(coveredByChips(scene, ownRow), [], `${label}: a chip of a different row is drawn over a line of the preview, so it covers what is under it`);
         seen.previewLines += scene.cables.filter((cable) => cable.tone === "previewOut" || cable.tone === "previewIn").length;
         for (const node of scene.nodes) {
           assert.isTrue(node.chips.length === 0 || node.chips.length === unfolded.get(node.id), `${label}: ${node.id} shows a part of its chips`);
           if (node.id === ownRow) assert.strictEqual(node.chips.length, unfolded.get(node.id), `${label}: the row under the pointer lost its chips, and a person who points at a row reads its tools there`);
           if (node.chips.length === 0 && (unfolded.get(node.id) ?? 0) > 0) seen.rowsFoldedForAPreview += 1;
         }
-        if (coveredByChips(scene, stage.placement).length > 0) seen.rowsWithChipsOverTheirOwnPreview += 1;
+        if (coveredByChips(scene).length > 0) seen.rowsWithChipsOverTheirOwnPreview += 1;
       }
     }
     return seen;
   };
 
-  it.effect("keeps each tool chip of the Tools lens off each lit line, its arrowhead, its ring, and its word, and off each line of a preview but for the chips of the row under the pointer, which stay", () =>
+  it.effect("keeps each tool chip of the Tools lens off each lit line, its arrowhead, and its ring, and off each line of a preview but for the chips of the row under the pointer, which stay", () =>
     Effect.gen(function* () {
       chipsAndLitLines(yield* liveStage);
       const ofSnapshot = chipsAndLitLines(yield* snapshotStage);
@@ -729,41 +693,6 @@ describe("what a locked stage lights", () => {
     EACH_SELECTION_ON_EACH_STAGE_MS,
   );
 
-  it("shows each word of the snapshot in the view at two sizes of the window, with the reader open and closed, and at the same place for each", () => {
-    const graph = toGraph(snapshotIndex);
-    const placement = layout(graph);
-    const sizes = [
-      { width: 1440, height: 826, reader: 461 },
-      { width: 1920, height: 1000, reader: 600 },
-    ];
-    let words = 0;
-    for (const target of everyStage(graph)) {
-      const stages = sizes.map((viewport): Stage => ({ graph, placement, viewport }));
-      const [first] = stages;
-      if (first === undefined) continue;
-      const locked = lockedOn(first, target);
-      const selections: ViewEvent[] = [...onStage(deriveScene({ ...first, state: locked })).map((node): ViewEvent => ({ kind: "picked", id: node })), ...graph.index.routes.map((route): ViewEvent => ({ kind: "traced", route: route.id }))];
-      for (const event of selections) {
-        const placed: string[] = [];
-        for (const stage of stages) {
-          const open = step(lockedOn(stage, target), event, stage);
-          for (const state of [open, step(open, { kind: "readerClosed" }, stage)]) {
-            const scene = deriveScene({ ...stage, state });
-            const visible = visibleRectOf(scene, stage.viewport, state.reading.kind === "open");
-            const boxes = wordBoxesOf(scene);
-            for (const word of boxes) {
-              assert.isTrue(isInside(word.rect, visible), `${nameOfStage(target)}, ${JSON.stringify(event)}, ${stage.viewport.width} wide, reader ${state.reading.kind}: the word "${word.text}" of ${word.keys.join(" and ")} is not in the view`);
-            }
-            placed.push(JSON.stringify(boxes.map((word) => [word.keys, word.rect])));
-            words += boxes.length;
-          }
-        }
-        assert.strictEqual(new Set(placed).size, 1, `${nameOfStage(target)}, ${JSON.stringify(event)}: a word has a different place at a different size of the window`);
-      }
-    }
-    assert.isAbove(words, 20000, "the snapshot has many words to check");
-  }, EACH_SELECTION_ON_EACH_STAGE_MS);
-
   it("folds the chips of a row for a ring that reaches them, also when the line of the ring keeps its air from them", () => {
     const chips: Rect = { x: 100, y: 92, width: 60, height: 16 };
     const pastTheChips = chips.x + chips.width + CHIP.air + 1;
@@ -774,29 +703,6 @@ describe("what a locked stage lights", () => {
     assert.isFalse(isAtChips({ points: line, gate: { x: pastTheChips, y: 200 } }, chips), "the ring is on a part of the line that is far from the chips");
     assert.isTrue(isAtChips({ points: [{ x: chips.x + chips.width + CHIP.air, y: 0 }, { x: chips.x + chips.width + CHIP.air, y: 300 }], gate: null }, chips), "a line with less than the air of a chip is at the chips");
   });
-
-  it.effect("keeps a word in the middle of a line off a column title of the rest map", () =>
-    Effect.gen(function* () {
-      const stage = yield* snapshotStage;
-      const key = relationKey({ from: id("playbook:hillclimb"), to: id("skill:principle-separate-before-serializing-shared-state") });
-      const wordWith = (placement: Stage["placement"]): Rect | undefined =>
-        deriveScene({ ...stage, placement, state: run({ ...stage, placement }, [{ kind: "lockToggled" }, { kind: "picked", id: id("playbook:hillclimb") }]) }).beside.find((word) => word.keys.includes(key))?.box;
-
-      const usual = wordWith(stage.placement);
-      assert.isDefined(usual, "the snapshot no longer has this word in the middle of its line");
-      if (usual === undefined) return;
-
-      /** The same rest map with the title of one column directly below that word. The map draws the title where the placement has it. */
-      const title = { x: usual.x + 8, y: usual.y + usual.height / 2 + FRAME.pitch / 2 };
-      const moved = { ...stage.placement, columns: stage.placement.columns.map((column) => (column.id === "principles" ? { ...column, title } : column)) };
-      const beside = wordWith(moved);
-      const drawn: Rect = { x: title.x, y: title.y - FRAME.labelHeight / 2, width: captionWidth("principles", moved.columns.find((column) => column.id === "principles")?.count ?? 0), height: FRAME.labelHeight };
-
-      assert.isTrue(overlap(usual, drawn), "the title is where the word is with no title there");
-      assert.isDefined(beside, "the line has room for the word before the title");
-      if (beside !== undefined) assert.isFalse(overlap(beside, drawn), "the word is over the title of a column");
-    }),
-  );
 
   it.effect("lights nothing for a pick of a node that is not on the stage, opens it in the reader, and says so in the strip", () =>
     Effect.gen(function* () {
@@ -874,52 +780,7 @@ describe("what a locked stage lights", () => {
     }),
   );
 
-  /** Each route traced on each locked stage. It asserts each rule of the cables in place, and it returns the counts. */
-  const tracesInPlace = (stage: Stage) => {
-    let traces = 0;
-    const faults: WordFaults = { ...NO_FAULTS };
-    const leftOff = nothingLeftOff();
-    for (const target of everyStage(stage.graph)) {
-      const locked = lockedOn(stage, target);
-      for (const route of stage.graph.index.routes) {
-        const trace = traceOf(stage.graph, route.id);
-        const steps = new Set(trace?.steps.map((item) => item.via));
-        const scene = deriveScene({ ...stage, state: step(locked, { kind: "traced", route: route.id }, stage) });
-        checkMarks(
-          `${nameOfStage(target)}, route ${route.id} traced`,
-          lit(scene).map((cable) => ({ cable, far: "end", precedence: (steps.has(cable.key) ? 0 : 1000) + cable.order, conditional: stage.graph.relations.get(cable.key)?.conditional ?? false })),
-          faults,
-          scene,
-        );
-        checkWords(`${nameOfStage(target)}, route ${route.id} traced`, scene, stage, target, null, leftOff);
-        traces += 1;
-      }
-    }
-    return { traces, faults, leftOff };
-  };
-
-  it.effect("gives the cables of each trace in place one word and one gate for each port, clear of each other word and of each upright, on each stage", () =>
-    Effect.gen(function* () {
-      const stage = yield* liveStage;
-      const { traces, faults } = tracesInPlace(stage);
-      assert.strictEqual(traces, everyStage(stage.graph).length * stage.graph.index.routes.length);
-      assert.deepStrictEqual(boxFaultsOf(faults), NO_BOX_FAULTS, `over ${traces} traces`);
-    }),
-    EACH_SELECTION_ON_EACH_STAGE_MS,
-  );
-
-  it.effect("leaves the listed relations of the traces of the snapshot without a word, and no other", () =>
-    Effect.gen(function* () {
-      const { traces, faults, leftOff } = tracesInPlace(yield* snapshotStage);
-      assert.deepStrictEqual(boxFaultsOf(faults), NO_BOX_FAULTS, `over ${traces} traces`);
-      assert.isAbove(faults.words, 500, "a trace on a stage that has few of its steps has few words");
-      assert.deepStrictEqual(leftOff.byStage, WORDS_LEFT_OFF.traces, "the number of relations that show no word, for each locked stage");
-      assert.strictEqual(conditionsLeftOff + leftOff.withAConditionAndNoRing.length, WORDS_LEFT_OFF.withAConditionAndNoRing, "of the relations of the picks and of the traces that show no word, the ones that show no condition");
-    }),
-    EACH_SELECTION_ON_EACH_STAGE_MS,
-  );
-
-  it.effect("gives the two cables from `architect` to `codebase-design` and to its file one word, on the locked rest map", () =>
+  it.effect("gives the port of `codebase-design` one ring at the most, for the two cables from `architect` and the relation back, on the locked rest map", () =>
     Effect.gen(function* () {
       const stage = yield* snapshotStage;
       const architect = id("skill:architect");
@@ -929,56 +790,10 @@ describe("what a locked stage lights", () => {
 
       assert.strictEqual(toTheRow.length, 2, "the snapshot lost one of the two relations");
       assert.strictEqual(new Set(toTheRow.map((cable) => `${cable.end.x},${cable.end.y}`)).size, 1, "the file is on the row of its host, so the two cables end at one port");
-      assert.deepStrictEqual(toTheRow.map((cable) => cable.words?.text ?? null), ["requires", null], "the cable to the skill is first in the order of the stage, so it has the word");
       assert.strictEqual(back.length, 1, "the snapshot lost the relation back");
       assert.isTrue(stage.graph.relations.get(back[0]?.key ?? relationKey({ from: architect, to: architect }))?.conditional, "the relation back has a condition");
-      assert.deepStrictEqual<unknown>([back[0]?.words, back[0]?.gate], [null, null], "the relation back is on the path of the first cable, so it has no word and no gate there");
+      assert.isNull(back[0]?.gate, "the relation back is on the path of the first cable, so it has no gate there");
       assert.isTrue(toTheRow.every((cable) => cable.gate === null), "`architect` requires `codebase-design` without a condition");
-    }),
-  );
-
-  /** Gives one relation of each arrangement a long word, next to the trunk of the frame. It returns the number of arrangements that have such a relation. */
-  const longWordsBesideATrunk = (index: ExplorerIndex): number => {
-    const graph = toGraph(index);
-    let checked = 0;
-    for (const middle of index.nodes) {
-      const arrangement = arrangementOf(graph, { kind: "node", id: middle.id });
-      const centre = arrangement?.nodes.get(middle.id);
-      if (arrangement === null || centre?.kind !== "row") continue;
-      const onItsRow = (graph.out.get(middle.id) ?? []).find((relation) => {
-        const at = arrangement.nodes.get(relation.to);
-        return at?.kind === "row" && at.centre.y === centre.centre.y && !graph.relations.has(relationKey({ from: relation.to, to: middle.id }));
-      });
-      if (onItsRow === undefined || (graph.out.get(middle.id) ?? []).length < 2) continue;
-
-      // The neighbour keeps this one relation. A second lit line into its port would use the same run, and a run of two lines has no word.
-      const isOfTheNeighbourOnly = (relation: Relation): boolean => relation !== onItsRow && (relation.from === onItsRow.to || relation.to === onItsRow.to);
-      const withALongWord = toGraph({
-        ...index,
-        relations: index.relations.filter((relation) => !isOfTheNeighbourOnly(relation)).map((relation) => (relation === onItsRow ? { ...relation, kinds: ["artifact-path"] as const, conditional: false } : relation)),
-      });
-      const stage: Stage = { graph: withALongWord, placement: layout(withALongWord), viewport: { width: 1440, height: 826, reader: 460 } };
-      const scene = deriveScene({ ...stage, state: run(stage, [{ kind: "picked", id: middle.id }, { kind: "lockToggled" }, { kind: "picked", id: onItsRow.to }]) });
-      const cable = lit(scene).find((item) => item.key === relationKey(onItsRow));
-      const isWorded = cable !== undefined && cable.words !== null;
-      if (cable === undefined || cable.words === null) continue;
-      assert.deepStrictEqual<unknown>([isWorded, cable.words.text, cable.points.length], [true, "artifact path", 2], `${middle.id}: the cable to ${onItsRow.to} is a straight line`);
-      const box = boxOf(cable.words);
-      const uprights = scene.cables.filter((item) => item.tone === "frame").flatMap(uprightsOf).filter((upright) => upright.y <= box.y + box.height && upright.y + upright.height >= box.y);
-      assert.isAbove(uprights.length, 0, `${middle.id}: the trunk of the frame starts on the row of ${onItsRow.to}`);
-      for (const upright of uprights) {
-        const gap = Math.max(box.x - upright.x, upright.x - box.x - box.width);
-        assert.isAtLeast(gap, WORD_CLEAR.corner, `${middle.id}: the word of the cable to ${onItsRow.to} is ${gap.toFixed(1)} from an upright of the frame, on its rounded corner`);
-      }
-      checked += 1;
-    }
-    return checked;
-  };
-
-  it.effect("keeps a word on a cable clear of each upright of the frame, also a long word that has little room", () =>
-    Effect.gen(function* () {
-      longWordsBesideATrunk((yield* liveStage).graph.index);
-      assert.isAbove(longWordsBesideATrunk(snapshotIndex), 10, "the snapshot has many arrangements with a neighbour on the row of the middle node");
     }),
   );
 

@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Legend } from "../src/client/Legend";
 import { GLYPH_NAMES } from "../src/client/SkillMap";
 import { EdgeKind } from "../src/shared/model";
-import { CABLE_CLASSES, classOf, weightOf, wordOf, wordsOf } from "../src/shared/view/cable-class";
+import { CABLE_CLASSES, classOf, weightOf, wordOf } from "../src/shared/view/cable-class";
 import { GLYPHS } from "../src/shared/view/scene";
 
 const CLIENT = nodePath.resolve(import.meta.dirname, "..", "src", "client");
@@ -28,13 +28,12 @@ describe("solid lines only", () => {
     assert.deepStrictEqual(hits, []);
   });
 
-  it("gives each kind of relation a weight and a word, from the one list of kinds", () => {
+  it("gives each kind of relation a weight, and a name for the Key, from the one list of kinds", () => {
     const words = EdgeKind.literals.map(wordOf);
 
     assert.deepStrictEqual(new Set(words).size, EdgeKind.literals.length, "two kinds have the same word");
     assert.isTrue(words.every((word) => /^[a-z]+( [a-z]+)*$/.test(word)), words.join(", "));
     assert.deepStrictEqual([wordOf("applies-principle"), wordOf("see-also"), wordOf("runs")], ["applies", "see also", "runs"]);
-    assert.deepStrictEqual([wordsOf({ kinds: ["requires"], conditional: true }), wordsOf({ kinds: ["requires"], conditional: false })], ["requires if", "requires"]);
     assert.deepStrictEqual(
       EdgeKind.literals.filter((kind) => weightOf(classOf(kind)) === "strong"),
       ["route", "trigger", "runs", "requires", "handoff"],
@@ -64,6 +63,7 @@ describe("the Key", () => {
       switches.map((row) => row.split("</button>")[0]?.includes("legend-line bar")),
       CABLE_CLASSES.map((cls) => cls === "avoid"),
     );
-    assert.isTrue(html.includes("legend-line gate") && html.includes("with a condition: if"));
+    assert.isTrue(html.includes("legend-line gate") && html.includes("with a condition"));
+    assert.notMatch(html, /: if\b/, "the Key names no word of a line: the map draws none");
   });
 });

@@ -34,9 +34,8 @@ export type Weight = (typeof WEIGHTS)[number];
 
 export const weightOf = (cls: CableClass): Weight => (cls === "flow" ? "strong" : "light");
 
+/** The name of a kind in the Key. */
 export const wordOf = (kind: EdgeKind): string => kind.replace(/-principle$/, "").replaceAll("-", " ");
-
-export const wordsOf = (relation: Pick<Relation, "kinds" | "conditional">): string => `${wordOf(relation.kinds[0])}${relation.conditional ? " if" : ""}`;
 
 const drawnKinds: readonly EdgeKind[] = [
   ...MechanicalKind.literals,
