@@ -50,10 +50,13 @@ def to_lists(text):
     while i < len(lines):
         line = lines[i]
         fence = FENCE.match(line)
+        if fence and marker is None and fence[1][0] == "`" and "`" in fence[2]:
+            # This is prose, not a valid backtick fence opening.
+            fence = None
         if fence:
             if marker is None:
                 marker = fence[1]
-            elif fence[1][0] == marker[0] and len(fence[1]) >= len(marker) and not fence[2].strip():
+            elif fence[1][0] == marker[0] and len(fence[1]) >= len(marker) and not fence[2].strip(" \t\r\n"):
                 marker = None
         if marker or fence or line.startswith(("    ", "\t")):
             output.append(line)

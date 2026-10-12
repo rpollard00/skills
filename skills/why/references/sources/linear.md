@@ -1,4 +1,4 @@
-# Linear Tickets
+# Tickets and work items (Linear example)
 
 ## What this source contains
 
@@ -8,13 +8,13 @@
 - Comments on issues (clarifications, scope changes, "why we're doing this" rationale)
 - Labels (e.g., `compliance`, `customer-request`, `perf`) that signal the type of motivation
 - Status updates that explain scope changes
-- Attachments and linked GitHub PRs
+- Attachments and linked PRs in the active forge, including Azure DevOps Repos
 
 Linear is where the product/business context often lives: the "we're doing this because customer X asked" or "this is for the Q3 compliance initiative" layer.
 
 ## How to search it
 
-Use the Linear MCP.
+The commands below are a Linear MCP example. Use the team's actual tracker and available authenticated tools. For Azure DevOps Boards, follow linked work items, parent/child and related-item links, discussion and revision history, and relevant board, area, and iteration context. Preserve project-qualified IDs and links. Do not assume Linear tool names or fields exist in another provider.
 
 1. **Start with linked tickets.** If the seed commits or PRs reference ticket IDs (e.g., `ENG-1234`, `[BUG-567]`), fetch those first with `get_issue`. Read the full issue including comments.
 2. **List related issues by keyword.** Use `list_issues` with text search for the feature name, key symbol, or business term. Try multiple phrasings.

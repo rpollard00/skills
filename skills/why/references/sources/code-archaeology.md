@@ -3,7 +3,7 @@
 ## What this source contains
 
 - Commit history (messages, dates, authors, diffs)
-- PR descriptions, review comments, and discussion threads (via `gh`)
+- PR descriptions, review comments, and discussion threads (via the active forge's tools, including Azure DevOps Repos)
 - Inline code comments, TODOs, FIXMEs, deprecation notes
 - ADRs (architectural decision records) if the repo keeps them
 - Tests. Names and assertions often encode the edge cases that motivated a change
@@ -37,7 +37,9 @@ git show <hash>
 git log <old>..<new> -p -- <file>
 ```
 
-For each substantive commit, pull the PR context:
+For each substantive commit, pull the PR context from the repository's actual forge. The `gh` example below is GitHub-specific. For Azure DevOps Repos, use supported authenticated tools to retrieve the PR description, complete review threads, linked Boards work items, and relevant policy or Pipelines evidence. Follow pagination; report unavailable context rather than assuming an equivalent command or field exists.
+
+GitHub example:
 
 ```bash
 # Find the PR number from the merge commit or branch

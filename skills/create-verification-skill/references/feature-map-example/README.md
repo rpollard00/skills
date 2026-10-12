@@ -4,11 +4,12 @@ This directory is the maintained source for verifying the user-facing behavior o
 
 ## Baseline preconditions
 
-- Launch Notes at `http://127.0.0.1:4173` with a disposable data directory.
+- Start from an empty disposable data directory and follow the generated skill's exact bootstrap, migration, seed, and launch commands to serve Notes at `http://127.0.0.1:4173`.
 - Set `NOTES_DATA_DIR=/tmp/notes-verify-$RUN_ID` so concurrent runs do not share state.
-- Seed notes titled `Quarterly plan` and `Grocery list`.
+- Seed `Quarterly plan` with body `Draft budget`, and `Grocery list` with body `Milk and bread`.
 - Put `control-notes` and the `notes` CLI on `PATH`.
-- Run `control-notes doctor` and require the expected URL, data directory, and build revision.
+- Run `control-notes doctor` and require the expected URL, data directory, build revision, completed migrations, and both seeded notes readable through the user surface. An answering port alone is not readiness.
+- Missing fixtures block the intended recipe. Repair disposable setup or report the unmet precondition; never substitute an empty-state check for a required matching result.
 - Never drive an instance that was not started by this verification run.
 
 ## Driving conventions

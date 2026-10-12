@@ -19,6 +19,7 @@ There is no normal staging-area step and no detached collection of “uncommitte
 - Assume the repository uses the Git backend **and is colocated with Git**: `.jj/` and `.git/` share one working copy. This is the normal setup. If backend details matter, verify with `jj util backend name`; do not speculate about an exotic backend.
 - Do not confuse **Git-backed** with **colocated**. A non-colocated repository can still use the Git backend hidden under `.jj/`, but that is the less common path and should require an explicit reason. Check with `jj git colocation status` rather than inferring from backend type alone.
 - In a colocated workspace, prefer `jj` for mutations. Read-only Git tools are usually fine, but Git's index, in-progress rebase state, and conflict representation are not jj's model.
+- Give every completed or published change a meaningful description of its intent. Do not leave finished work with an empty description or a placeholder. An empty, unused working-copy commit may remain undescribed; snapshots during active work do not require a description.
 - Prefer stable **change IDs** when naming mutable work. Commit IDs change when a change is rewritten.
 - Preview a nontrivial revset with `jj log -r '<same expression>'` before using it in `rebase`, `abandon`, bulk rewrite, or bookmark movement.
 - Never push, move/delete a shared bookmark, abandon a range, or restore an old operation without the user's request or clear task authorization.
@@ -94,26 +95,26 @@ Do not erase, squash, describe, or build on unrelated existing work without firs
 2. Edit files directly. Do **not** stage them.
 3. Run the project's tests/checks.
 4. Inspect `jj diff` and `jj status` again.
-5. If asked to name the current change, use:
+5. Before treating the change as complete, handing it off, or publishing it, give it a meaningful description. Preserve an existing accurate description; update it when the intent changes. For example:
 
    ```bash
-   jj describe -m 'description'
+   jj describe -m 'fix(parser): reject malformed closing fences'
    ```
 
 `jj describe` rewrites `@`; it does not create a new child.
 
 ### Finish this change and start the next
 
-Use:
+First verify that the completed change has a meaningful description, using `jj describe` if needed. Then use:
 
 ```bash
 jj new
 ```
 
-This leaves the completed change at `@-` and creates a new empty working-copy commit at `@`. The convenience command:
+This leaves the described completed change at `@-` and creates a new empty working-copy commit at `@`. That unused empty child may remain undescribed. The convenience command:
 
 ```bash
-jj commit -m 'description'
+jj commit -m 'fix(parser): reject malformed closing fences'
 ```
 
 is approximately “describe the current change, then create a new one.” Do not run either command merely to save files—jj has already snapshotted them.

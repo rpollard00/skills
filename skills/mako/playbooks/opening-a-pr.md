@@ -26,7 +26,7 @@ For performance changes, include one primary before/after number with units. Lin
 
 ## Publish deliberately
 
-Resolve the forge from repository conventions and available tools. Use one consistent forge for create, edit, view, watch, and merge. Do not require a specific vendor stack tool.
+Resolve the forge from repository conventions and available tools, including Azure DevOps Repos when that is the team's forge. Preserve linked work items in the team's tracker, including Azure DevOps Boards. Use one consistent forge for create, edit, view, watch, and merge. Do not require a specific vendor stack tool.
 
 Follow the repository's draft/readiness policy. Verify actual PR state after creation. Publication does not authorize merging.
 
