@@ -4,10 +4,10 @@ The why skill spawns one investigator per available evidence category, each read
 
 - Source control history
   - Playbook: [`code-archaeology.md`](sources/code-archaeology.md)
-  - Example MCP it documents: git, `gh`
+  - Example tools it documents: git, `gh` for GitHub. Adapt to the active forge, including Azure DevOps Repos, using available authenticated tools.
 - Issue / ticket tracker
   - Playbook: [`linear.md`](sources/linear.md)
-  - Example MCP it documents: Linear (adapt for Jira, GitHub Issues, Plane, Shortcut)
+  - Example MCP it documents: Linear (adapt for Jira, GitHub Issues, Azure DevOps Boards, Plane, Shortcut)
 - Long-form documents
   - Playbook: [`notion.md`](sources/notion.md)
   - Example MCP it documents: Notion (adapt for Confluence, Google Docs, Coda)

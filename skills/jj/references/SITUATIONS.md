@@ -35,6 +35,8 @@ jj bookmark list
 jj log -r '@ | @- | bookmarks() | remote_bookmarks()'
 ```
 
+Inspect the entire outgoing stack, not just its tip. Every change being published must have a meaningful description; describe owned unfinished entries before publishing, and preserve unrelated work. Do not bypass a push rejection to publish undescribed changes. Recheck descriptions after splitting or squashing.
+
 Then deliberately create or move the intended bookmark and push it:
 
 ```bash

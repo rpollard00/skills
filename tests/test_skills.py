@@ -13,7 +13,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 from link_skills import InstallError, apply, plan
 from markdown_lists import markdown_files, to_lists
-from validate_skills import frontmatter, local_links, named_skill_dependencies, validate
+from validate_skills import frontmatter, local_links, named_skill_dependencies, prose, validate
 
 
 def make_skill(root, name="sample", *, category="", hidden=False):
@@ -144,6 +144,58 @@ class ValidationTests(unittest.TestCase):
             reference.write_text("Read `sample`. Not a skill: `value`.\n```\n`hidden`\n```\n")
             skills = {"sample": skill / "SKILL.md", "hidden": root / "hidden/SKILL.md"}
             self.assertEqual(list(named_skill_dependencies(reference, skills)), [skill / "SKILL.md"])
+
+
+class MarkdownFenceTests(unittest.TestCase):
+    table = "| Name | Value |\n| --- | --- |\n| x | y |\n"
+
+    def test_only_matching_bare_fences_close_examples(self):
+        cases = [
+            ("```markdown", "``` trailing text", "```"),
+            ("~~~markdown", "~~~~ trailing text", "~~~"),
+            ("````markdown", "```", "`````"),
+            ("~~~~markdown", "```", "~~~~"),
+            ("```markdown", "    ```", "   ``` \t"),
+            ("```markdown", "```\u00a0", "```"),
+            ("~~~info `with backticks`", "~~~ trailing text", "~~~"),
+        ]
+        for opening, false_close, closing in cases:
+            with self.subTest(opening=opening, false_close=false_close):
+                example = f"{opening}\n{false_close}\n{self.table}{closing}\n"
+                outside = "| Visible | Content |\n| --- | --- |\n| outside | prose |\n"
+                source = example + outside
+                with self.subTest(helper="prose"):
+                    self.assertEqual(list(prose(source)), outside.splitlines())
+                with self.subTest(helper="to_lists"):
+                    self.assertEqual(to_lists(source), example + "- outside: prose\n")
+
+    def test_backticks_in_opening_info_are_prose(self):
+        for opening in ("```invalid`info", "````markdown `example`", "   ``` `sample`"):
+            with self.subTest(opening=opening):
+                source = opening + "\n" + self.table
+                with self.subTest(helper="prose"):
+                    self.assertEqual(list(prose(source)), source.splitlines())
+                with self.subTest(helper="to_lists"):
+                    self.assertEqual(to_lists(source), opening + "\n- x: y\n")
+
+    def test_unclosed_fences_preserve_examples_to_end_of_file(self):
+        for opening in ("```markdown", "~~~markdown"):
+            source = opening + "\n" + self.table
+            self.assertEqual(list(prose(source)), [])
+            self.assertEqual(to_lists(source), source)
+
+    def test_dependency_scanners_share_fence_boundaries(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            path = root / "guide.md"
+            path.write_text(
+                "```markdown\n``` trailing text\n"
+                "[hidden](missing.md) `hidden`\n```\n"
+                "```invalid`info\n[visible](visible.md) `visible`\n"
+            )
+            skills = {name: root / name / "SKILL.md" for name in ("hidden", "visible")}
+            self.assertEqual(list(local_links(path)), [root / "visible.md"])
+            self.assertEqual(list(named_skill_dependencies(path, skills)), [skills["visible"]])
 
 
 class InstallerTests(unittest.TestCase):

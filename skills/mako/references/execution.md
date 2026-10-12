@@ -64,7 +64,9 @@ A Git worktree is not a verified jj workspace. Do not use automatic Git-worktree
 
 Keep one topology owner per stack. Owners can prepare changes in isolated locations; only the topology owner rebases, retargets, or publishes coordinated stack changes. Renew evidence after invalidating changes.
 
-Use Conventional Commits. Creating a local change, pushing it, opening a PR, merging, and deploying are distinct actions. Resolve the forge from repository conventions and available authenticated tools. Do not require a particular vendor CLI.
+Use Conventional Commits. In jj, every completed, handed-off, or published change needs a meaningful description. Verify the outgoing stack rather than only its tip. An unused empty working-copy child may remain undescribed. Creating a local change, pushing it, opening a PR, merging, and deploying are distinct actions.
+
+Resolve the forge from repository conventions and available authenticated tools. Supported forges include GitHub, GitLab, and Azure DevOps Repos. Use the active provider's actual review policies and CI, including Azure Pipelines. For tickets and boards, follow the team's tracker, including Azure DevOps Boards work items. Discover available authenticated capabilities. Do not assume another provider's CLI, states, or API fields have direct equivalents.
 
 ## Verification tools
 

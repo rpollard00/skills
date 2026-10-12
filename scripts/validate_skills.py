@@ -12,7 +12,7 @@ import yaml
 
 NAME = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 LINK = re.compile(r"\[[^\]\n]*\]\(([^\s)]+)(?:\s+\"[^\"]*\")?\)")
-FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
+FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 
 
 def frontmatter(path):
@@ -32,10 +32,13 @@ def prose(text):
         if match:
             fence = match[1]
             if marker is None:
-                marker = fence
-            elif fence[0] == marker[0] and len(fence) >= len(marker):
+                # Backticks are forbidden in a backtick fence's info string.
+                if fence[0] != "`" or "`" not in match[2]:
+                    marker = fence
+                    continue
+            elif fence[0] == marker[0] and len(fence) >= len(marker) and not match[2].strip(" \t"):
                 marker = None
-            continue
+                continue
         if marker is None:
             yield line
 

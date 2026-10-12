@@ -49,7 +49,7 @@ git log --oneline -20 -- <file>
 git log -1 --format=%B <commit>
 ```
 
-Pull PR bodies and discussion via `gh` for any substantive commits:
+Retrieve PR bodies and complete discussion for substantive commits through the active forge's authenticated tools. Include Azure DevOps Repos where used. The following command is a GitHub example:
 
 ```bash
 gh pr view <number> --json title,body,author,createdAt,mergedAt,labels,closingIssuesReferences,comments,reviews
@@ -96,9 +96,9 @@ Spawn one investigator per category that has a matching MCP. Each owns exactly o
 
 Each entry names the category and the kind of "why" it uniquely surfaces. Use it to know what to expect back, how to name a gap when a category returns empty, and (only in the rare provably-irrelevant case) to justify a skip.
 
-1. **Source control investigator**. Git history, `gh` for PRs, code comments, tests. Always inspect local history when available. Report missing repository or forge access explicitly rather than inventing provenance. Best at surfacing *implementation-time rationale captured during review*.
+1. **Source control investigator**. Git history, the active forge's PR and review tools (including Azure DevOps Repos), code comments, tests. Always inspect local history when available. Report missing repository or forge access explicitly rather than inventing provenance. Best at surfacing *implementation-time rationale captured during review*.
 
-2. **Issue / ticket tracker investigator** (e.g. Linear, Jira, GitHub Issues, Plane, Shortcut MCP). Best at surfacing *the product or business forcing function*. Strongest when the why is external to engineering.
+2. **Issue / ticket tracker investigator** (e.g. Linear, Jira, GitHub Issues, Azure DevOps Boards, Plane, Shortcut MCP). Best at surfacing *the product or business forcing function*. Strongest when the why is external to engineering.
 
 3. **Long-form documents investigator** (e.g. Notion, Confluence, Google Docs, Coda MCP). Best at surfacing *long-form design rationale*. Where the why is written out before it becomes code.
 
