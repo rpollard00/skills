@@ -57,6 +57,7 @@ Use the skill-name lookup and path fallback in [execution](references/execution.
 - Create executable project verification: `create-verification-skill`
 - Maintain verification and its feature map: `maintain-verification-skill`
 - Author or revise a skill: [Authoring a skill](playbooks/authoring-a-skill.md)
+- Set up automatic updates for this skills bundle: `setup-skills-sync`
 - Compare skill or prompt behavior: [Eval](playbooks/eval.md)
 - Resume a specific task: [Session pickup](playbooks/session-pickup.md)
 - Explicitly pause current work: [Pause safely](playbooks/pause-safely.md)
