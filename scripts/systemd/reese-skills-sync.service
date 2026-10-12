@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh installed Reese skills when behind origin/main
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/.local/bin/sync-reese-skills
+TimeoutStartSec=5min
+UMask=0077
+Environment=PATH=/usr/bin:/bin
+Environment=GIT_TERMINAL_PROMPT=0
+Environment="GIT_SSH_COMMAND=ssh -oBatchMode=yes -oConnectTimeout=15"

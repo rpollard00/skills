@@ -1,12 +1,12 @@
 # Skills
 
-The collection contains 54 skills. Each skill lives directly in `skills/<name>/`. Its references, scripts, metadata, and upstream notices stay beside it. Instructions refer to other skills by exact name. The shared [lookup rule](mako/references/execution.md#resolve-dependencies) uses harness discovery with a sibling-path fallback. Links below are navigation for readers.
+The collection contains 55 skills. Each skill lives directly in `skills/<name>/`. Its references, scripts, metadata, and upstream notices stay beside it. Instructions refer to other skills by exact name. The shared [lookup rule](mako/references/execution.md#resolve-dependencies) uses harness discovery with a sibling-path fallback. Links below are navigation for readers.
 
 [Mako](mako/SKILL.md) routes engineering tasks. Invoke it with a task; it stays active in that conversation until you opt out. Reusable skills also work independently.
 
 ## Discovery and ownership
 
-`codebase-design`, `domain-modeling`, `grilling`, `jj`, `writing`, `simple-technical-english`, and `unslop` support model-invoked discovery. The other skills are explicit-only or deliberately loaded dependencies.
+`codebase-design`, `domain-modeling`, `grilling`, `jj`, `setup-skills-sync`, `writing`, `simple-technical-english`, and `unslop` support model-invoked discovery. The other skills are explicit-only or deliberately loaded dependencies.
 
 Mako owns 19 [playbooks](mako/playbooks/). Bug fixing has one reusable skill, not a second playbook. `grill-me` includes documented grilling without a separate alias.
 
@@ -62,6 +62,7 @@ The 23 principle skills remain independent. Select them through [the trigger ind
 - [principle-type-system-discipline](principle-type-system-discipline/SKILL.md)
 - [refine-ui](refine-ui/SKILL.md)
 - [reflect](reflect/SKILL.md)
+- [setup-skills-sync](setup-skills-sync/SKILL.md)
 - [show-me-your-work](show-me-your-work/SKILL.md)
 - [simple-technical-english](simple-technical-english/SKILL.md)
 - [swarm](swarm/SKILL.md)

@@ -8,7 +8,7 @@ Agent skills for repeatable engineering, design, version-control, and writing wo
 
 It owns the goal through verified completion: make engineering decisions, investigate uncertainty, and proceed without routine permission questions. Explicit scope limits and dangerous-action boundaries remain binding. It reports progress, consequential choices, and evidence without narrating skill selection.
 
-The collection contains 54 skills: 25 engineering skills, 23 independent engineering principles, and six design, version-control, and writing skills. Mako also owns 19 task playbooks.
+The collection contains 55 skills: 25 engineering skills, 23 independent engineering principles, six design, version-control, and writing skills, and one setup utility. Mako also owns 19 task playbooks.
 
 ## Skills
 
@@ -74,6 +74,26 @@ The installer refuses foreign links, separately installed copies, duplicate name
 Use `--destination /path/to/skills` for a different discovery root. Common user roots are checked for collisions; project-local roots and custom configuration paths are not exhaustively audited. No harness configuration file is changed.
 
 Reload the harness after installation. Native entry points are `/skill:mako` in pi, `$mako` in Codex, the `@mako` skill completion in OpenCode 2, and `/mako` in Claude Code. Supply the task after selecting the skill. Interactive UI behavior remains separate from the discovery tests.
+
+### Automatic updates with systemd
+
+The user timer checks `origin/main` hourly. It updates the checkout behind `~/.agents/skills/reese` only when that checkout is clean and strictly behind. Then it runs `link-skills.sh --apply` to refresh Claude copies. Ahead or divergent history, local changes, untracked files, modified Claude copies, and replaced installation links prevent updates. An unused empty jj working commit counts as its parent. Descriptions, bookmarks, descendants, merges, and shared working commits prevent automatic rebases.
+
+Install the timer from the checkout that owns the installed bundle:
+
+```bash
+mkdir -p ~/.local/bin ~/.config/systemd/user
+ln -s "$PWD/scripts/sync_skills.py" ~/.local/bin/sync-reese-skills
+cp scripts/systemd/reese-skills-sync.{service,timer} ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now reese-skills-sync.timer
+systemctl --user start reese-skills-sync.service
+journalctl --user -u reese-skills-sync.service
+```
+
+The timer runs during the user session. `systemctl --user disable --now reese-skills-sync.timer` stops scheduled checks. Manual runs use `python3 scripts/sync_skills.py`.
+
+An interrupted adapter refresh keeps a pending record in `${XDG_STATE_HOME:-~/.local/state}/reese-skills-sync/pending.json`. A later run retries that revision, even at equality. Local baseline changes block the retry. The updater never resets the checkout after an error. Concurrent developer edits can still race with the final checks.
 
 ## Validate
 
