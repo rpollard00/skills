@@ -24,7 +24,7 @@ Run the repository's required pre-review checks against that revision. A hook or
 
 ## 4. Verify independently
 
-At each code-ready revision, apply `swarm` with these lanes:
+Run one full `swarm` at the code-ready head. Repeat the full swarm only for new behavior, a redesign, or a large new diff. Use these lanes:
 
 - Re-run required gates at the exact revision.
 - Exercise the load-bearing behavior on the real surface. This live lane is mandatory.
@@ -35,7 +35,9 @@ Every result records base, head, method, artifacts, and gaps. The coordinator in
 
 Send every proven finding to the owner in one fix round. For behavior defects, preserve a separate failing check before the fix through `bug-fix`. Inspect related sites without widening authority. Include the defect in the next review brief.
 
-A new patch starts a new round. Reuse evidence only under [Shipping's freshness rules](shipping.md).
+For a rebase, conflict resolution, or minor fix, assign one independent verifier at the new head. If the follow-up introduces new behavior, a redesign, or a large new diff, run the full swarm instead.
+
+Every new head needs current required checks and a refreshed verdict. The verifier reviews the changed diff, proves the load-bearing behavior live, and audits the evidence receipts. Reuse prior lane results only under [Shipping's freshness rules](shipping.md). The coordinator audits the merge-ready report before accepting it. A smaller verifier count does not waive CI, live proof, or the evidence audit.
 
 ## 5. Authorize landing
 
@@ -47,7 +49,7 @@ Operator-reserved items stop at merge-ready. The root's verdict does not bypass 
 
 At native lifecycle events and the selected driver's documented checkpoints, inspect owner progress, evidence, open gates, and active children. Count artifacts and side effects, not optimistic summaries.
 
-Investigate apparent stalls. Respect infrastructure-failure policy. Before replacing a writer, verify termination or remove its access to the resource. A timeout alone does not release ownership.
+Investigate apparent stalls from side effects and runtime evidence. A worker waiting on the coordinator or operator is not stuck. Replace a stuck writer immediately under execution's handoff rule. Send a best-effort stop request, but do not wait for stop confirmation or access revocation. Respect the host's infrastructure-failure policy.
 
 After batches merge, inspect post-merge findings and record lessons. Finish only when the queue and every delegated task are accounted for. An operator stop propagates immediately as a stop-writing instruction; verify the resulting safe state.
 

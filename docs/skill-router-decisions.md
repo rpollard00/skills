@@ -184,7 +184,7 @@ Adapt delegation to actual capabilities and authority. Compact summaries do not 
 - Orchestrate: Defer pstack's complete system. Explore an orchestrator backed by existing infrastructure separately.
 - Worktree/simulator cleanup: Exclude for now.
 
-Autopilot adaptations remove Cursor cloud requirements, sleeper chains, fixed publication/audit timings, and universal draft/squash policies. Confirm a worker no longer owns writable resources before replacement.
+Autopilot adaptations remove Cursor cloud requirements, sleeper chains, fixed publication/audit timings, and universal draft/squash policies. Replace stuck writers immediately with best-effort stop requests and an explicit assignment transfer. Do not wait for confirmed termination or access revocation. This throughput tradeoff accepts possible overlap and requires reconciliation before integration or publication.
 
 ## Harness integration
 

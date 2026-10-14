@@ -24,13 +24,17 @@ Before landing, compare the current patch, base, environment, and exercised beha
 
 An unchanged patch can retain its code-review verdict when the relevant assumptions still hold, but current checks and mergeability must run against the new head.
 
+After a rebase, conflict resolution, or minor fix, assign one independent verifier at the new head. Audit retained evidence and re-run affected live checks. For work under Autopilot-full or Autopilot-stack, repeat the full swarm only for new behavior, a redesign, or a large new diff. A new commit identity alone does not require a full swarm.
+
 For a tests/docs/lint-only patch change, build the artifact used by each lane twice at the verdict revision and once at the new head. Review every difference. Only demonstrated build noise or embedded revision identifiers can be discounted, with files and reasons recorded. Retain a lane only when its exercised artifact and assumptions remain equivalent. Review changed checks separately.
 
 Never reuse a dev-server lane through a build-equivalence claim; it has no such build proof. If equivalence is unproven, run the lane again. Commit messages and checks from older revisions do not establish freshness.
 
 ## 4. Prepare the bottom PR
 
-One topology owner fetches current trunk, performs authorized rebase/conflict repair when needed, publishes through the repository's version-control model, and retargets only the bottom PR. Apply freshness checks after the change. Do not arm or retarget descendants early.
+One topology owner fetches current trunk, performs authorized rebase/conflict repair when needed, publishes through the repository's version-control model, and retargets only the bottom PR. Apply execution's publication ownership rule and freshness checks after the change. Do not arm or retarget descendants early.
+
+During operator-led landing, that operator or their named landing owner owns topology. Other agents remain read-only until directed to repair. A mid-landing defect does not authorize an agent to resume writes.
 
 ## 5. Land one at a time
 
