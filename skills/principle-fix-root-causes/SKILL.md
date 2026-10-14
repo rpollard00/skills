@@ -19,6 +19,7 @@ When debugging, do not fix symptoms. Trace every problem to its root cause and f
 - If a workaround needs a paragraph-long comment to justify it, the code is wrong (fix the code, not the comment)
 - Check for the pattern, not just the instance. Repair instances within authorized scope and report the rest; investigation does not widen the repair fence.
 - When stuck, instrument. Don't guess (add logging, read the actual error)
+- If the deciding fact required deep investigation, propose the cheapest reliable always-on signal that would expose it at first inspection. Name the fact and where the signal belongs. The proposal does not expand the authorized repair scope.
 
 **Restart bugs: suspect state before code**
 

@@ -46,13 +46,13 @@ The parent owns coordination, design synthesis, evidence review, and acceptance.
 
 Every brief names the outcome, source revision, working location, scope, do-not-touch paths, required skills, verification, and output contract. Include explicit stop conditions and required engineering checks. Require concise findings, verification results, blockers, and artifact pointers rather than raw logs or full source dumps. A delegate does not inherit them by magic.
 
-Keep one writer per writable resource. Separate directories are insufficient when they still share a database, browser profile, branch, or port. Identify those resources before launch.
+Keep one assigned writer per writable resource. Separate directories are insufficient when they still share a database, browser profile, branch, or port. Identify those resources before launch. Stuck-writer replacement uses the immediate handoff rule that follows.
 
 Use fresh read-only reviewers for independent review. Give them source artifacts, not only an implementer's summary. Let a candidate produce one artifact; do not recursively launch its parent's design competition.
 
 Respect the harness's lifecycle and failure policy. An infrastructure failure is not a failed design candidate. Preserve the error, run identity, current revision, and partial diff. Do not silently change models, runners, or execution protocols.
 
-Before replacing a writer, verify termination or revoke access to the writable resource. A stop receipt or elapsed time does not prove ownership ended.
+Replace a stuck writer immediately. Send a best-effort stop request and transfer the assignment without waiting for stop confirmation, confirmed termination, or access revocation. Give the replacement the current revision, partial work, and ownership record. Prefer a separate writable location when available, but do not make isolation another replacement gate. Before integration or publication, reconcile any observed late writes or results. Do not wait for the previous writer to finish. This throughput tradeoff accepts possible overlap with the previous writer. It does not waive host restrictions or an operator stop.
 
 ## Repository operations
 
@@ -64,9 +64,17 @@ A Git worktree is not a verified jj workspace. Do not use automatic Git-worktree
 
 Keep one topology owner per stack. Owners can prepare changes in isolated locations; only the topology owner rebases, retargets, or publishes coordinated stack changes. Renew evidence after invalidating changes.
 
+When the operator begins landing a stack, transfer topology ownership to the operator or their named landing owner. Freeze other agent writes to its files, branches/bookmarks, and PR bases. Report mid-landing problems to the operator. Repairs wait for explicit direction. Only the landing owner performs authorized post-merge retargeting.
+
 Use Conventional Commits. In jj, every completed, handed-off, or published change needs a meaningful description. Verify the outgoing stack rather than only its tip. An unused empty working-copy child may remain undescribed. Creating a local change, pushing it, opening a PR, merging, and deploying are distinct actions.
 
 Resolve the forge from repository conventions and available authenticated tools. Supported forges include GitHub, GitLab, and Azure DevOps Repos. Use the active provider's actual review policies and CI, including Azure Pipelines. For tickets and boards, follow the team's tracker, including Azure DevOps Boards work items. Discover available authenticated capabilities. Do not assume another provider's CLI, states, or API fields have direct equivalents.
+
+### Publication ownership
+
+For each branch/bookmark, record the last remote revision its owner successfully pushed or explicitly took over. Before publication, compare the actual remote revision with that recorded revision. If they differ, stop publication and report the unexpected change to the coordinator or operator. Fetching does not authorize takeover or renew the recorded revision. For first publication, verify that the destination does not already exist.
+
+In Git, pin rewritten publication to that revision with `--force-with-lease=<ref>:<expected-sha>`. Do not use a bare lease based on a remote-tracking ref that a background fetch can move. In jj, use native bookmark conflict and push protections, together with the recorded-revision comparison. Do not bypass a rejected push or use Git to force it. After a successful push or explicit ownership transfer, record the accepted remote revision.
 
 ## Verification tools
 

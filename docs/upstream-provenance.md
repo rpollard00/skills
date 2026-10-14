@@ -61,3 +61,14 @@ The October 2026 review compared pstack at [df581122cde17e6e27686b5a448bde23e4ad
 - [TypeScript patterns](https://github.com/cursor/plugins/blob/df581122cde17e6e27686b5a448bde23e4ad4318/pstack/skills/typescript-best-practices/references/patterns.md): replace the incomplete validator-and-cast example with schema-owned parsing. Preserve the existing-library policy.
 
 The constraint, negative-type-test, duration, and premise fixes are local corrections. The premise skill uses a falsifiable hypothesis; actor census applies only to an imbalance hypothesis. Cursor model directives, fixed tool choices, and a second correction workflow remain excluded. Existing upstream license notices still apply.
+
+## October 14 throughput and ownership review
+
+This selective update reviewed pstack at [1e5c90a4](https://github.com/cursor/plugins/tree/1e5c90a4b6f249917bd21fe361b3a2a7deb741b8/pstack). The original import pins and license notices remain unchanged.
+
+- [Verification and ownership changes, ce649c03](https://github.com/cursor/plugins/commit/ce649c03ac3b75b6ae80cbd15b7e2c536caedb5a): run the full swarm at code-ready and after new behavior, redesign, or a large new diff. Rebases, conflict resolutions, and minor fixes get one independent verifier at the new head. Current checks, live proof, and evidence audits remain required.
+- [Autopilot-full](https://github.com/cursor/plugins/blob/1e5c90a4b6f249917bd21fe361b3a2a7deb741b8/pstack/skills/poteto-mode/playbooks/autopilot-full.md): replace stuck writers immediately, without confirmed-termination or access-revocation gates. Best-effort stop requests and ownership coordination remain. This deliberate throughput tradeoff accepts overlap risk. Pin publication to the last remote revision the owner pushed or explicitly took over. Stop on unexpected remote changes.
+- [Autopilot-stack](https://github.com/cursor/plugins/blob/1e5c90a4b6f249917bd21fe361b3a2a7deb741b8/pstack/skills/poteto-mode/playbooks/autopilot-stack.md): freeze agent writes when operator landing starts. Transfer topology ownership to the landing owner. Mid-landing repairs wait for operator direction.
+- [Root-cause signal, 36cecbf2](https://github.com/cursor/plugins/commit/36cecbf2b5089b275254d59cb4612d6f96f00fbd): after deep debugging, propose the cheapest reliable always-on signal for the deciding fact. A proposal does not widen repair authority.
+
+These rules retain harness-neutral routing, jj-native publication protections, meaningful change descriptions, and the active forge's policies, including Azure DevOps. No model slugs, editor requirements, ketchup skill, multi-phase template, or unrelated upstream changes were imported.
