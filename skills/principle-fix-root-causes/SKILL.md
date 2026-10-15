@@ -1,6 +1,6 @@
 ---
 name: principle-fix-root-causes
-description: "Apply when debugging. Trace each symptom to its root cause and fix it there; reproduce first, ask why until you reach it, resist nil-check guards that silence crashes."
+description: "Apply when debugging. Trace each symptom to its root cause and fix it there; reproduce first, distinguish legitimate contract states from broken internal invariants."
 disable-model-invocation: true
 metadata:
   opencode/autoinvoke: "false"
@@ -15,7 +15,8 @@ When debugging, do not fix symptoms. Trace every problem to its root cause and f
 **Pattern:**
 - Reproduce first
 - Ask "why" until you hit the root cause
-- Do not add guards (adding a nil check to silence a crash is a symptom fix)
+- Check the contract. Handle states it legitimately allows where the responsible code failed to handle them. For an impossible internal state, find and fix the producer instead of masking the failure where it surfaced.
+- Keep boundary validation and containment where needed. Preserve evidence of the underlying failure; a guard, retry, fallback, or swallowed error that hides it is not a root-cause repair.
 - If a workaround needs a paragraph-long comment to justify it, the code is wrong (fix the code, not the comment)
 - Check for the pattern, not just the instance. Repair instances within authorized scope and report the rest; investigation does not widen the repair fence.
 - When stuck, instrument. Don't guess (add logging, read the actual error)
@@ -23,4 +24,4 @@ When debugging, do not fix symptoms. Trace every problem to its root cause and f
 
 **Restart bugs: suspect state before code**
 
-When something "fails after restart," suspect stale persistent state first: config files, caches, lock files, serialized state. If clearing a state file restores behavior, prioritize state validation as the fix.
+When something "fails after restart," suspect stale persistent state first: config files, caches, lock files, serialized state. If clearing a state file restores behavior, investigate why that state was produced or not handled; clearing it alone does not establish the fix.
