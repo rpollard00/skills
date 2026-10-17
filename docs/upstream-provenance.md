@@ -72,3 +72,10 @@ This selective update reviewed pstack at [1e5c90a4](https://github.com/cursor/pl
 - [Root-cause signal, 36cecbf2](https://github.com/cursor/plugins/commit/36cecbf2b5089b275254d59cb4612d6f96f00fbd): after deep debugging, propose the cheapest reliable always-on signal for the deciding fact. A proposal does not widen repair authority.
 
 These rules retain harness-neutral routing, jj-native publication protections, meaningful change descriptions, and the active forge's policies, including Azure DevOps. No model slugs, editor requirements, ketchup skill, multi-phase template, or unrelated upstream changes were imported.
+
+## October 15 principle review
+
+These two selective adaptations reviewed pstack at [e5136d82](https://github.com/cursor/plugins/tree/e5136d82418d2db3165ea1050d17577cd618cc05/pstack). The original import pins and license notices remain unchanged.
+
+- [Fix root causes](https://github.com/cursor/plugins/blob/e5136d82418d2db3165ea1050d17577cd618cc05/pstack/skills/principle-fix-root-causes/SKILL.md): distinguish legitimate contract states from impossible internal states. Preserve boundary validation, containment, failure evidence, and the authorized repair scope.
+- [Make operations idempotent](https://github.com/cursor/plugins/blob/e5136d82418d2db3165ea1050d17577cd618cc05/pstack/skills/principle-make-operations-idempotent/SKILL.md): reconcile observed and desired state, replacing mandatory PID checks with environment-appropriate ownership and staleness evidence. Preserve valid, live, or uncertain work and require atomicity and deduplication where concurrency calls for them.
