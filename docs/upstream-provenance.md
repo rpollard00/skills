@@ -79,3 +79,12 @@ These two selective adaptations reviewed pstack at [e5136d82](https://github.com
 
 - [Fix root causes](https://github.com/cursor/plugins/blob/e5136d82418d2db3165ea1050d17577cd618cc05/pstack/skills/principle-fix-root-causes/SKILL.md): distinguish legitimate contract states from impossible internal states. Preserve boundary validation, containment, failure evidence, and the authorized repair scope.
 - [Make operations idempotent](https://github.com/cursor/plugins/blob/e5136d82418d2db3165ea1050d17577cd618cc05/pstack/skills/principle-make-operations-idempotent/SKILL.md): reconcile observed and desired state, replacing mandatory PID checks with environment-appropriate ownership and staleness evidence. Preserve valid, live, or uncertain work and require atomicity and deduplication where concurrency calls for them.
+
+## October 18 formal verification and catch-up
+
+These are selective additions. Existing source pins and prior adaptation records remain unchanged. The manifest records each new source revision and its original bytes. Both skills retain the pstack MIT notice.
+
+- [Create formal verification skill, 4382e687](https://github.com/cursor/plugins/blob/4382e687a50b8d2c5ce4d141d001186589cff8d5/pstack/skills/create-formal-verification-skill/SKILL.md): retain property-driven tooling and reproducible project-local verification. Add explicit effort limits, source/model mapping, assumptions, exclusions, and drift review. Replace the unconditional source-mutation claim with evidence appropriate to code-level checks or handwritten models. Negative controls establish sensitivity, not proof by themselves. Preserve findings and isolated scratch work.
+- [Ketchup, bc144379](https://github.com/cursor/plugins/blob/bc1443790cc980d0ea857663260a831299884508/pstack/skills/ketchup/SKILL.md): adopt the current-conversation, read-only catch-up and complete decision brief. Include the earlier catch-up scope, current-state checks, alternatives, and missing-history disclosure. Remove the earlier 150-word cap and later fixed recap/item targets. Preserve every pending item and its decision evidence. Replace the mandatory bro voice, fixed visualization tools, and geometry rules with the existing writing guidance and available channel capabilities.
+
+Both skills are explicit-only, with portable OpenCode and Codex metadata. Mako routes to them only for their requested workflows. The formal route does not alter the live-app verification or maintenance contracts. No other upstream changes are included.

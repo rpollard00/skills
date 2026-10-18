@@ -408,8 +408,21 @@ interface RingCounts {
   rings: number;
 }
 
-const isUnderARingAt = (centre: Point, [first, second]: [Point, Point]): boolean =>
-  rectsMeet({ x: centre.x - GATE.radius, y: centre.y - GATE.radius, width: GATE.radius * 2, height: GATE.radius * 2 }, { x: Math.min(first.x, second.x), y: Math.min(first.y, second.y), width: Math.abs(first.x - second.x), height: Math.abs(first.y - second.y) });
+const segmentMeetsSquare = (centre: Point, [first, second]: [Point, Point], reach: number): boolean =>
+  rectsMeet({ x: centre.x - reach, y: centre.y - reach, width: reach * 2, height: reach * 2 }, { x: Math.min(first.x, second.x), y: Math.min(first.y, second.y), width: Math.abs(first.x - second.x), height: Math.abs(first.y - second.y) });
+
+const isUnderARingAt = (centre: Point, segment: [Point, Point]): boolean => segmentMeetsSquare(centre, segment, GATE.radius);
+
+const isWithinGateClearance = (centre: Point, segment: [Point, Point]): boolean => segmentMeetsSquare(centre, segment, GATE.radius + 1);
+
+it("distinguishes ring contact from the reserved clearance at a foreign polyline", () => {
+  const centre = { x: 15, y: 0 };
+  const onBoundary: [Point, Point] = [{ x: 15, y: 4 }, { x: 30, y: 4 }];
+  const beyondBoundary: [Point, Point] = [{ x: 15, y: 4.01 }, { x: 30, y: 4.01 }];
+  assert.isFalse(isUnderARingAt(centre, onBoundary));
+  assert.isTrue(isWithinGateClearance(centre, onBoundary));
+  assert.isFalse(isWithinGateClearance(centre, beyondBoundary));
+});
 
 /**
  * The rules of the rings on the cables of one selection. A ring is the sign of a condition.
@@ -434,7 +447,7 @@ const checkRings = (label: string, marked: readonly Marked[], counts: RingCounts
     const onTheBendOfAShortRun = gate.x === corner.x && Math.abs(gate.y - corner.y) <= FRAME.corner + GATE.radius + 2;
     assert.isTrue(onTheRun || onTheBendOfAShortRun, `${label}: the gate of ${item.cable.key} is ${distance(gate, port)} from the other node`);
     assert.isTrue(segmentsOf(item.cable.points).some((segment) => isUnderARingAt(gate, segment)), `${label}: the gate of ${item.cable.key} is not on its own cable`);
-    const strangers = marked.filter((other) => portOf(other) !== portOf(item) && segmentsOf(other.cable.points).some((segment) => isUnderARingAt(gate, segment)));
+    const strangers = marked.filter((other) => portOf(other) !== portOf(item) && segmentsOf(other.cable.points).some((segment) => isWithinGateClearance(gate, segment)));
     assert.deepStrictEqual(strangers.map((other) => other.cable.key), [], `${label}: the gate of ${item.cable.key} is on a run that it shares with a cable to a different port, so it reads as the condition of that cable`);
     counts.rings += 1;
   }
@@ -446,7 +459,7 @@ const checkRings = (label: string, marked: readonly Marked[], counts: RingCounts
     const hasRoomOnItsRun = distance(port, corner) >= GATE.setBack + GATE.radius + FRAME.corner;
     if (!speaker.conditional) assert.isNull(speaker.cable.gate, `${label}: ${speaker.cable.key} has no condition, so it has no gate`);
     else if (speaker.cable.gate === null) {
-      const strangersOnItsRun = marked.filter((other) => portOf(other) !== portOf(speaker) && segmentsOf(other.cable.points).some((segment) => isUnderARingAt({ x: port.x + Math.sign(corner.x - port.x) * GATE.setBack, y: port.y }, segment)));
+      const strangersOnItsRun = marked.filter((other) => portOf(other) !== portOf(speaker) && segmentsOf(other.cable.points).some((segment) => isWithinGateClearance({ x: port.x + Math.sign(corner.x - port.x) * GATE.setBack, y: port.y }, segment)));
       assert.isTrue(!hasRoomOnItsRun || strangersOnItsRun.length > 0, `${label}: ${speaker.cable.key} is the first cable at its port, it has a condition, and its run has room, so it has a gate`);
     }
     for (const { cable } of silent) assert.isNull(cable.gate, `${label}: ${cable.key} shares its last run with ${speaker.cable.key}, and one run has one gate`);

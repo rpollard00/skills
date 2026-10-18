@@ -55,10 +55,12 @@ Use the skill-name lookup and path fallback in [execution](references/execution.
 - Assess downstream change impact: `blast-radius`
 - Challenge a design or review a diff: `interrogate`
 - Create executable project verification: `create-verification-skill`
+- Explicitly create formal verification of a stated property: `create-formal-verification-skill` (optional, separate from live-app verification)
 - Maintain verification and its feature map: `maintain-verification-skill`
 - Author or revise a skill: [Authoring a skill](playbooks/authoring-a-skill.md)
 - Set up automatic updates for this skills bundle: `setup-skills-sync`
 - Compare skill or prompt behavior: [Eval](playbooks/eval.md)
+- Catch up on this conversation without continuing work: `ketchup`
 - Resume a specific task: [Session pickup](playbooks/session-pickup.md)
 - Explicitly pause current work: [Pause safely](playbooks/pause-safely.md)
 - Check PR status, address threads, or reach merge-ready: [Babysit](playbooks/babysit.md), without merging

@@ -1,6 +1,6 @@
 # Skills
 
-The collection contains 55 skills. Each skill lives directly in `skills/<name>/`. Its references, scripts, metadata, and upstream notices stay beside it. Instructions refer to other skills by exact name. The shared [lookup rule](mako/references/execution.md#resolve-dependencies) uses harness discovery with a sibling-path fallback. Links below are navigation for readers.
+The collection contains 57 skills. Each skill lives directly in `skills/<name>/`. Its references, scripts, metadata, and upstream notices stay beside it. Instructions refer to other skills by exact name. The shared [lookup rule](mako/references/execution.md#resolve-dependencies) uses harness discovery with a sibling-path fallback. Links below are navigation for readers.
 
 [Mako](mako/SKILL.md) routes engineering tasks. Invoke it with a task; it stays active in that conversation until you opt out. Reusable skills also work independently.
 
@@ -24,6 +24,7 @@ The 23 principle skills remain independent. Select them through [the trigger ind
 - [bro](bro/SKILL.md)
 - [bug-fix](bug-fix/SKILL.md)
 - [codebase-design](codebase-design/SKILL.md)
+- [create-formal-verification-skill](create-formal-verification-skill/SKILL.md)
 - [create-verification-skill](create-verification-skill/SKILL.md)
 - [deslop](deslop/SKILL.md)
 - [domain-modeling](domain-modeling/SKILL.md)
@@ -34,6 +35,7 @@ The 23 principle skills remain independent. Select them through [the trigger ind
 - [improve-codebase-architecture](improve-codebase-architecture/SKILL.md)
 - [interrogate](interrogate/SKILL.md)
 - [jj](jj/SKILL.md)
+- [ketchup](ketchup/SKILL.md)
 - [maintain-verification-skill](maintain-verification-skill/SKILL.md)
 - [mako](mako/SKILL.md)
 - [no-comments](no-comments/SKILL.md)
