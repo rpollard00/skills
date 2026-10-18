@@ -117,7 +117,7 @@ class ValidationTests(unittest.TestCase):
     def test_ui_design_extraction_wiring(self):
         root = REPO / "skills"
         skills = {p.parent.name: p for p in root.glob("*/SKILL.md")}
-        self.assertEqual(len(skills), 55)
+        self.assertEqual(len(skills), 57)
         shared = skills["ui-design"]
         for caller in (skills["mako"], root / "mako/playbooks/feature.md", skills["refine-ui"]):
             with self.subTest(caller=caller):

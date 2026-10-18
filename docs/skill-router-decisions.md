@@ -229,3 +229,12 @@ Mako loads this discipline before applicable UI planning or implementation, incl
 `refine-ui` retains scope selection, grilling, its two-to-four alternatives default, consolidated readiness, empty-frontier requirement, provisional memory, and all three human gates. Explicit rendered acceptance establishes decisions; only the user's rollout decision permits broader migration.
 
 User-visible strings are writing even in source code. Existing quoted labels remain exact; new labels require clarity and consistent terminology. Factual copy uses STE and persuasive copy uses unslop. Static wiring and discovery checks are evidence of bundle structure, not model compliance.
+
+## October 18 formal verification and catch-up
+
+Add two explicit-only Mako routes. This selection does not import other upstream changes.
+
+- `create-formal-verification-skill`: Generate a reproducible, property-driven formal verification skill. Keep the claim tied to source revision, mapping, assumptions, bounds, exclusions, and evidence. Distinguish model results from implementation results. Fault injection tests sensitivity, not the definition of proof. Preserve counterexamples and user work. Keep resource limits and drift review in the generated formal skill, separate from live-app feature-map maintenance.
+- `ketchup`: Give a read-only catch-up for the current conversation. Verify available current states and disclose missing history. Include every unresolved user decision with its own identifiable reference, impact, evidence, risk, and recommendation. Keep real alternatives and shared decisions without fixed word limits or mandatory visual geometry. Do not continue work or treat the catch-up request as approval.
+
+Both routes preserve portable tool discovery and the existing invocation metadata. Formal verification remains optional and does not become a gate for ordinary feature or bug-fix work.
