@@ -26,7 +26,7 @@ If no task is supplied, ask for one. After compaction, continue from the recorde
 
 ## Start
 
-1. When `.jj` exists, use `jj`.
+1. Use Git and the assigned worktree; follow [execution](references/execution.md#repository-operations).
 2. Select the playbook that best fits the task. Drive the requested outcome to completion, while respecting explicit scope limits.
 3. Read that playbook and its required dependencies. Record its ordered steps in native tracking or a checklist.
 4. Retain skipped steps with specific reasons. A skip note cannot waive required verification or an explicit stop condition.

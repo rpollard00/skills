@@ -17,7 +17,7 @@ The deliverable is a synthesized verdict. Do NOT auto-apply changes. Read [execu
 Identify what to review from context:
 
 - If the user points at specific files or a diff, use that
-- Inspect the full changeset against the actual base, including working-copy changes. Use the jj skill when `.jj` exists; otherwise use repository-aware Git commands.
+- Inspect the full changeset against the actual base, including working-copy changes. Use repository-aware Git commands in the assigned worktree.
 - If the user's message references recent work, gather the relevant files
 
 Package the diff (or file contents) plus any surrounding context files the reviewers need to understand the code. For UI-affecting changes, include current rendered evidence, capture conditions, and relevant interaction results alongside the diff. Identify unavailable evidence explicitly. Give visual reviewers access to the actual images, not only a summary.

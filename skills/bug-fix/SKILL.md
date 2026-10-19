@@ -24,7 +24,7 @@ Before changing production code, isolate the smallest meaningful check of the re
 
 Run it against the unfixed revision. Verify that the failure represents this bug, not missing setup, compilation errors, or an unrelated dependency. Capture the failing output.
 
-Record the test or reproduction in a separate commit/change before the fix. In jj, follow the `jj`. Keep user work separate. The failing revision need not merge independently.
+Record the test or reproduction in a separate commit/change before the fix. Use scoped Git commits in the assigned worktree. Keep user work separate. The failing revision need not merge independently.
 
 If no reliable failing check can be constructed, report the blocker instead of substituting passing-only evidence. This discipline applies to bug fixes, not all new features.
 

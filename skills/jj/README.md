@@ -1,6 +1,6 @@
 # Jujutsu skill
 
-A model-invoked skill for bootstrapping and working safely in normal, colocated Git/Jujutsu repositories.
+An explicit-only skill for bootstrapping and working safely in normal, colocated Git/Jujutsu repositories.
 
 It corrects the two mistakes models most often make:
 
@@ -22,7 +22,7 @@ jj/
 
 `SKILL.md` contains the mental model, safety rules, orientation steps, and normal editing loop. References are loaded only for the relevant advanced operation or conflict.
 
-Conflict handling remains part of this skill rather than a second overlapping skill. The main description activates `jj` for conflict tasks, while `SKILL.md` requires the dedicated conflict reference to be loaded immediately. This keeps one discovery interface and one source of truth while preserving a small default context.
+Conflict handling remains part of this skill rather than a second overlapping skill. An explicit Jujutsu request activates `jj` for conflict tasks, while `SKILL.md` requires the dedicated conflict reference to be loaded immediately. This keeps one discovery interface and one source of truth while preserving a small default context.
 
 ## Assumptions
 
@@ -37,4 +37,4 @@ Conflict handling remains part of this skill rather than a second overlapping sk
 pi --skill /absolute/path/to/skills/skills/jj
 ```
 
-The skill permits implicit invocation, so a model should load it whenever `.jj/` exists or the task mentions Jujutsu, revsets, bookmarks, jj conflicts, or jj recovery.
+Then explicitly invoke `/skill:jj` for the requested Jujutsu task. Implicit invocation is disabled. The presence of `.jj/` or an incidental mention of Jujutsu does not activate it.

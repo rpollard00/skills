@@ -6,7 +6,7 @@ The collection contains 58 skills. Each skill lives directly in `skills/<name>/`
 
 ## Discovery and ownership
 
-`codebase-design`, `domain-modeling`, `grilling`, `jj`, `setup-skills-sync`, `writing`, `simple-technical-english`, and `unslop` support model-invoked discovery. The other skills are explicit-only or deliberately loaded dependencies.
+`codebase-design`, `domain-modeling`, `grilling`, `setup-skills-sync`, `writing`, `simple-technical-english`, and `unslop` support model-invoked discovery. The other skills are explicit-only or deliberately loaded dependencies.
 
 Mako owns 19 [playbooks](mako/playbooks/). Bug fixing has one reusable skill, not a second playbook. `grill-me` includes documented grilling without a separate alias.
 
@@ -14,7 +14,7 @@ The 23 principle skills remain independent. Select them through [the trigger ind
 
 [Execution](mako/references/execution.md) supplies shared capability, isolation, repository, continuation, and completion rules. Reading that reference does not activate Mako.
 
-[ui-design](ui-design/SKILL.md) owns shared UI discipline. [refine-ui](refine-ui/SKILL.md) retains interactive exploration and visual approval gates, [jj](jj/SKILL.md) owns Jujutsu, and [writing](writing/SKILL.md) routes prose, including user-visible strings in code.
+[ui-design](ui-design/SKILL.md) owns shared UI discipline. [refine-ui](refine-ui/SKILL.md) retains interactive exploration and visual approval gates, [jj](jj/SKILL.md) is available only for explicitly requested Jujutsu work, and [writing](writing/SKILL.md) routes prose, including user-visible strings in code.
 
 [create-formal-verification-skill](create-formal-verification-skill/SKILL.md) and [maintain-formal-verification-skill](maintain-formal-verification-skill/SKILL.md) are explicit-only formal-verification workflows. They share a [claim and evidence contract](create-formal-verification-skill/references/formal-contract.md), including the distinction between formal results and real-code property/fuzz testing. Live-app verification and feature-map maintenance remain separate.
 

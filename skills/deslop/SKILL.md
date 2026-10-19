@@ -8,7 +8,7 @@ metadata:
 
 # Remove AI code slop
 
-Check the scoped diff against the actual base and remove AI-generated slop introduced by the task. Include working-copy changes. Read [execution](../mako/references/execution.md) for repository mechanics; use jj when `.jj` exists. Preserve unrelated user work.
+Check the scoped diff against the actual base and remove AI-generated slop introduced by the task. Include working-copy changes. Read [execution](../mako/references/execution.md) for repository mechanics; use Git in the assigned worktree. Preserve unrelated user work.
 
 ## Focus Areas
 

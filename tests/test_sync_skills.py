@@ -13,22 +13,19 @@ REPO = Path(__file__).resolve().parents[1]
 
 
 class CheckoutFixture:
-    def __init__(self, directory, use_jj=False):
+    def __init__(self, directory, native_worktree=False):
         self.root = Path(directory)
         self.home = self.root / "home"
         self.home.mkdir()
         self.env = os.environ | {
             "HOME": str(self.home), "XDG_CONFIG_HOME": str(self.home / ".config"),
             "XDG_STATE_HOME": str(self.home / ".local/state"), "GIT_CONFIG_NOSYSTEM": "1",
-            "JJ_CONFIG": str(self.home / "jj.toml"),
             "GIT_AUTHOR_NAME": "Fixture", "GIT_COMMITTER_NAME": "Fixture",
             "GIT_AUTHOR_EMAIL": "fixture@example.com", "GIT_COMMITTER_EMAIL": "fixture@example.com",
         }
-        (self.home / "jj.toml").write_text('[user]\nname = "Fixture"\nemail = "fixture@example.com"\n')
         self.remote = self.root / "remote.git"
         self.seed = self.root / "seed"
         self.repo = self.root / "checkout"
-        self.use_jj = use_jj
         self.run(self.root, "git", "init", "--bare", str(self.remote))
         self.run(self.root, "git", "init", "-b", "main", str(self.seed))
         (self.seed / "scripts").mkdir()
@@ -50,10 +47,13 @@ class CheckoutFixture:
         self.run(self.seed, "git", "remote", "add", "origin", str(self.remote))
         self.run(self.seed, "git", "push", "-u", "origin", "main")
         self.run(self.remote, "git", "symbolic-ref", "HEAD", "refs/heads/main")
-        if use_jj:
-            self.run(self.root, "jj", "git", "clone", str(self.remote), str(self.repo))
-        else:
-            self.run(self.root, "git", "clone", str(self.remote), str(self.repo))
+        self.run(self.root, "git", "clone", str(self.remote), str(self.repo))
+        if native_worktree:
+            primary = self.repo
+            self.run(primary, "git", "switch", "-c", "development")
+            # Include whitespace to exercise NUL-delimited worktree ownership.
+            self.repo = self.root / "installed worktree\nwith newline"
+            self.run(primary, "git", "worktree", "add", str(self.repo), "main")
         self.run(self.repo, str(self.repo / "scripts/link-skills.sh"), "--apply")
         self.invocations.unlink()
         executable = self.home / ".local/bin/sync-reese-skills"
@@ -80,6 +80,10 @@ class CheckoutFixture:
     def adapter(self):
         return self.home / ".claude/skills/.reese-adapter"
 
+    def git_path(self, name):
+        path = self.run(self.repo, "git", "rev-parse", "--git-path", name).stdout.strip()
+        return self.repo / path
+
     def sync(self):
         return self.run(self.root, sys.executable, str(self.executable), check=False)
 
@@ -94,17 +98,11 @@ class CheckoutFixture:
     def local_commit(self):
         path = self.repo / "skills/sample/SKILL.md"
         path.write_text(path.read_text() + "\nLocal testing.\n")
-        if self.use_jj:
-            self.run(self.repo, "jj", "commit", "-m", "Local test")
-        else:
-            self.run(self.repo, "git", "add", ".")
-            self.run(self.repo, "git", "commit", "-m", "Local test")
+        self.run(self.repo, "git", "add", ".")
+        self.run(self.repo, "git", "commit", "-m", "Local test")
 
     def state(self):
-        if self.use_jj:
-            revision = self.run(self.repo, "jj", "log", "--no-graph", "-r", "@", "-T", "commit_id").stdout
-        else:
-            revision = self.run(self.repo, "git", "rev-parse", "HEAD").stdout
+        revision = self.run(self.repo, "git", "rev-parse", "HEAD").stdout
         files = {str(p.relative_to(self.repo / "skills")): p.read_bytes()
                  for p in (self.repo / "skills").rglob("*") if p.is_file()}
         adapter = {str(p.relative_to(self.adapter)): p.read_bytes()
@@ -113,12 +111,12 @@ class CheckoutFixture:
 
 
 class GitSyncTests(unittest.TestCase):
-    use_jj = False
+    native_worktree = False
 
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
-        self.fixture = CheckoutFixture(self.directory.name, self.use_jj)
+        self.fixture = CheckoutFixture(self.directory.name, self.native_worktree)
 
     def assert_skipped_unchanged(self, reason):
         fixture = self.fixture
@@ -140,11 +138,7 @@ class GitSyncTests(unittest.TestCase):
         self.assertEqual((fixture.adapter / "skills/sample/SKILL.md").read_bytes(),
                          (fixture.repo / "skills/sample/SKILL.md").read_bytes())
         self.assertFalse(fixture.pending.exists())
-        if self.use_jj:
-            parent = fixture.run(fixture.repo, "jj", "log", "--no-graph", "-r", "@-", "-T", "commit_id").stdout
-            self.assertEqual(parent, target)
-        else:
-            self.assertEqual(fixture.state()[0].strip(), target)
+        self.assertEqual(fixture.state()[0].strip(), target)
 
     def test_equal_does_not_apply(self):
         self.assert_skipped_unchanged("equal")
@@ -166,7 +160,7 @@ class GitSyncTests(unittest.TestCase):
     def test_untracked_does_not_apply(self):
         self.fixture.upstream()
         (self.fixture.repo / "private.txt").write_text("local experiment")
-        self.assert_skipped_unchanged("local" if self.use_jj else "untracked")
+        self.assert_skipped_unchanged("untracked")
         self.assertEqual((self.fixture.repo / "private.txt").read_text(), "local experiment")
 
     def test_modified_adapter_prevents_advancement(self):
@@ -188,10 +182,7 @@ class GitSyncTests(unittest.TestCase):
 
     def test_failed_fetch_preserves_checkout_and_has_no_traceback(self):
         fixture = self.fixture
-        if self.use_jj:
-            fixture.run(fixture.repo, "jj", "git", "remote", "set-url", "origin", str(fixture.root / "missing.git"))
-        else:
-            fixture.run(fixture.repo, "git", "remote", "set-url", "origin", str(fixture.root / "missing.git"))
+        fixture.run(fixture.repo, "git", "remote", "set-url", "origin", str(fixture.root / "missing.git"))
         before = fixture.state()
         result = fixture.sync()
         self.assertEqual(result.returncode, 1)
@@ -291,8 +282,6 @@ class GitSyncTests(unittest.TestCase):
         self.assertEqual(fixture.state(), before)
 
     def test_git_merge_conflict_is_preserved(self):
-        if self.use_jj:
-            self.skipTest("jj conflicts have a separate fixture")
         fixture = self.fixture
         fixture.local_commit()
         fixture.upstream()
@@ -302,73 +291,174 @@ class GitSyncTests(unittest.TestCase):
         self.assert_skipped_unchanged("local changes")
 
     def test_git_operation_with_clean_files_is_preserved(self):
-        if self.use_jj:
-            self.skipTest("Git operation marker")
         fixture = self.fixture
         fixture.upstream()
-        revision = fixture.state()[0].strip()
-        (fixture.repo / ".git/CHERRY_PICK_HEAD").write_text(revision + "\n")
-        self.assert_skipped_unchanged("operation is in progress")
+        for name in ("MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "rebase-merge", "rebase-apply",
+                     "sequencer", "BISECT_START", "index.lock", "HEAD.lock"):
+            with self.subTest(marker=name):
+                path = fixture.git_path(name)
+                if name in ("rebase-merge", "rebase-apply", "sequencer"):
+                    path.mkdir()
+                else:
+                    path.write_text(fixture.state()[0].strip() + "\n")
+                self.assert_skipped_unchanged("operation is in progress")
+                if path.is_dir():
+                    path.rmdir()
+                else:
+                    path.unlink()
 
-
-@unittest.skipUnless(shutil.which("jj"), "jj is required for real jj integration")
-class JjSyncTests(GitSyncTests):
-    use_jj = True
-
-    def test_immutable_remote_revision_advances_with_new_working_child(self):
+    def test_staged_change_is_preserved(self):
         fixture = self.fixture
-        fixture.run(fixture.repo, "jj", "--ignore-immutable", "edit", "main@origin")
+        fixture.upstream()
+        (fixture.repo / "skills/sample/SKILL.md").write_text(fixture.skill + "Staged edit.\n")
+        fixture.run(fixture.repo, "git", "add", "skills/sample/SKILL.md")
+        before_index = fixture.run(fixture.repo, "git", "diff", "--cached").stdout
+        self.assert_skipped_unchanged("local changes")
+        self.assertEqual(fixture.run(fixture.repo, "git", "diff", "--cached").stdout, before_index)
+
+    def test_detached_head_is_preserved(self):
+        fixture = self.fixture
+        fixture.upstream()
+        fixture.run(fixture.repo, "git", "switch", "--detach")
+        self.assert_skipped_unchanged("detached HEAD")
+
+    def test_feature_and_experiment_branches_are_preserved_before_fetch(self):
+        fixture = self.fixture
+        fixture.upstream()
+        remote_before = fixture.run(fixture.repo, "git", "rev-parse", "origin/main").stdout
+        for branch in ("feature/new-skill", "experiment/git-first-workflows"):
+            with self.subTest(branch=branch):
+                fixture.run(fixture.repo, "git", "switch", "-c", branch, "--track", "origin/main")
+                self.assert_skipped_unchanged("requires the main branch")
+                self.assertEqual(fixture.run(fixture.repo, "git", "branch", "--show-current").stdout.strip(),
+                                 branch)
+                self.assertEqual(fixture.run(fixture.repo, "git", "rev-parse", "origin/main").stdout,
+                                 remote_before)
+                self.assertFalse(fixture.invocations.exists())
+                self.assertFalse(fixture.pending.exists())
+
+    def test_main_requires_origin_main_tracking(self):
+        fixture = self.fixture
+        fixture.upstream()
+        fixture.run(fixture.repo, "git", "branch", "--unset-upstream")
+        self.assert_skipped_unchanged("main must track origin/main")
+        for remote, branch in (("fork", "refs/heads/main"), ("origin", "refs/heads/experiment")):
+            with self.subTest(remote=remote, branch=branch):
+                fixture.run(fixture.repo, "git", "config", "branch.main.remote", remote)
+                fixture.run(fixture.repo, "git", "config", "branch.main.merge", branch)
+                self.assert_skipped_unchanged("main must track origin/main")
+
+    def test_main_with_multiple_merge_targets_is_preserved(self):
+        fixture = self.fixture
+        fixture.upstream()
+        fixture.run(fixture.repo, "git", "config", "--add", "branch.main.merge", "refs/heads/experiment")
+        self.assert_skipped_unchanged("main must track origin/main")
+
+    def test_worktree_config_cannot_redirect_tracking(self):
+        fixture = self.fixture
+        fixture.upstream()
+        fixture.run(fixture.repo, "git", "config", "extensions.worktreeConfig", "true")
+        fixture.run(fixture.repo, "git", "config", "--worktree", "branch.main.remote", "fork")
+        self.assert_skipped_unchanged("main must track origin/main")
+
+    def test_main_shared_with_another_worktree_is_preserved(self):
+        fixture = self.fixture
+        fixture.upstream()
+        other = fixture.root / "duplicate main worktree"
+        fixture.run(fixture.repo, "git", "worktree", "add", "--force", str(other), "main")
+        before_other = fixture.run(other, "git", "status", "--porcelain").stdout
+        before_files = (other / "skills/sample/SKILL.md").read_bytes()
+        self.assert_skipped_unchanged("shared with or owned by another Git worktree")
+        self.assertEqual(fixture.run(other, "git", "status", "--porcelain").stdout, before_other)
+        self.assertEqual((other / "skills/sample/SKILL.md").read_bytes(), before_files)
+        self.assertFalse(fixture.pending.exists())
+
+    def test_other_feature_worktree_is_unchanged_by_main_update(self):
+        fixture = self.fixture
+        other = fixture.root / "feature worktree"
+        fixture.run(fixture.repo, "git", "worktree", "add", "-b", "experiment/parallel", str(other))
+        (other / "skills/sample/SKILL.md").write_text("Uncommitted parallel work\n")
+        before = fixture.run(other, "git", "rev-parse", "HEAD").stdout
         target = fixture.upstream()
         result = fixture.sync()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(target, result.stdout)
-        parent = fixture.run(fixture.repo, "jj", "log", "--no-graph", "-r", "@-", "-T", "commit_id").stdout
-        self.assertEqual(parent, target)
-        self.assertEqual((fixture.adapter / "skills/sample/SKILL.md").read_bytes(),
-                         (fixture.repo / "skills/sample/SKILL.md").read_bytes())
+        self.assertEqual(fixture.run(other, "git", "rev-parse", "HEAD").stdout, before)
+        self.assertEqual((other / "skills/sample/SKILL.md").read_text(), "Uncommitted parallel work\n")
 
-    def test_untracked_file_excluded_from_snapshot_is_preserved(self):
+    def test_pending_retry_cannot_advance_an_experiment_branch(self):
         fixture = self.fixture
         fixture.upstream()
-        fixture.run(fixture.repo, "jj", "config", "set", "--repo", "snapshot.auto-track", "none()")
-        (fixture.repo / "private.txt").write_text("untracked experiment")
-        self.assert_skipped_unchanged("untracked")
+        (fixture.home / "fail-apply").touch()
+        self.assertEqual(fixture.sync().returncode, 1)
+        fixture.invocations.unlink()
+        fixture.run(fixture.repo, "git", "switch", "-c", "experiment/preserve-pending")
+        pending = fixture.pending.read_bytes()
+        self.assert_skipped_unchanged("requires the main branch")
+        self.assertEqual(fixture.pending.read_bytes(), pending)
+        self.assertFalse(fixture.invocations.exists())
 
-    def test_described_empty_commit_is_preserved(self):
+    def test_jj_metadata_is_preserved_without_invoking_jj(self):
         fixture = self.fixture
         fixture.upstream()
-        fixture.run(fixture.repo, "jj", "describe", "-m", "Planned work")
-        self.assert_skipped_unchanged("local work or intent")
+        metadata = fixture.repo / ".jj"
+        metadata.mkdir()
+        (metadata / "sentinel").write_text("Existing jj work\n")
+        with fixture.git_path("info/exclude").open("a") as exclude:
+            exclude.write("\n.jj/\n")
+        self.assert_skipped_unchanged("jj-managed checkout requires a manual update")
+        self.assertEqual((metadata / "sentinel").read_text(), "Existing jj work\n")
+        self.assertFalse(fixture.invocations.exists())
 
-    def test_bookmarked_empty_commit_is_preserved(self):
+    def test_fetch_preserves_existing_fetch_head(self):
+        fixture = self.fixture
+        fixture.run(fixture.repo, "git", "fetch", "origin")
+        path = fixture.git_path("FETCH_HEAD")
+        before = path.read_bytes()
+        fixture.upstream()
+        result = fixture.sync()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_ignored_file_collision_is_preserved(self):
+        fixture = self.fixture
+        with fixture.git_path("info/exclude").open("a") as exclude:
+            exclude.write("\nlocal-notes.txt\n")
+        local = fixture.repo / "local-notes.txt"
+        local.write_text("Private local notes\n")
+        (fixture.seed / "local-notes.txt").write_text("New upstream file\n")
+        target = fixture.upstream()
+        before = fixture.state()
+        result = fixture.sync()
+        self.assertEqual(result.returncode, 1)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertEqual(fixture.state(), before)
+        self.assertEqual(local.read_text(), "Private local notes\n")
+        self.assertNotIn("--apply", fixture.invocations.read_text())
+        self.assertEqual(json.loads(fixture.pending.read_text())["target"], target)
+
+    def test_dirty_submodule_is_preserved_even_when_config_hides_it(self):
+        fixture = self.fixture
+        fixture.run(fixture.repo, "git", "-c", "protocol.file.allow=always", "submodule", "add",
+                    str(fixture.remote), "dependency")
+        fixture.run(fixture.repo, "git", "commit", "-am", "Add dependency")
+        fixture.run(fixture.repo, "git", "config", "submodule.dependency.ignore", "all")
+        path = fixture.repo / "dependency/skills/sample/SKILL.md"
+        path.write_text("Local dependency work\n")
+        self.assertEqual(fixture.run(fixture.repo, "git", "status", "--porcelain").stdout, "")
+        self.assert_skipped_unchanged("local changes")
+        self.assertEqual(path.read_text(), "Local dependency work\n")
+
+
+class GitWorktreeSyncTests(GitSyncTests):
+    native_worktree = True
+
+    def test_jj_in_primary_checkout_is_preserved(self):
         fixture = self.fixture
         fixture.upstream()
-        fixture.run(fixture.repo, "jj", "bookmark", "create", "experiment", "-r", "@")
-        self.assert_skipped_unchanged("local work or intent")
-
-    def test_working_commit_with_child_is_preserved(self):
-        fixture = self.fixture
-        fixture.upstream()
-        current = fixture.state()[0]
-        fixture.run(fixture.repo, "jj", "new")
-        fixture.run(fixture.repo, "jj", "describe", "-m", "Child experiment")
-        fixture.run(fixture.repo, "jj", "edit", current)
-        self.assert_skipped_unchanged("local work or intent")
-
-    def test_shared_working_commit_is_preserved(self):
-        fixture = self.fixture
-        fixture.upstream()
-        current = fixture.state()[0]
-        other = fixture.root / "other-workspace"
-        fixture.run(fixture.repo, "jj", "workspace", "add", "--no-colocate", str(other))
-        fixture.run(other, "jj", "edit", current)
-        self.assert_skipped_unchanged("shared with another workspace")
-
-    def test_merge_working_commit_is_preserved(self):
-        fixture = self.fixture
-        fixture.local_commit()
-        local = fixture.run(fixture.repo, "jj", "log", "--no-graph", "-r", "@-", "-T", "commit_id").stdout
-        fixture.upstream()
-        fixture.run(fixture.repo, "jj", "git", "fetch", "--remote", "origin")
-        fixture.run(fixture.repo, "jj", "new", local, "main@origin")
-        self.assert_skipped_unchanged("conflicts")
+        metadata = fixture.root / "checkout/.jj"
+        metadata.mkdir()
+        (metadata / "sentinel").write_text("Shared jj state\n")
+        self.assert_skipped_unchanged("jj-managed checkout requires a manual update")
+        self.assertEqual((metadata / "sentinel").read_text(), "Shared jj state\n")
+        self.assertFalse(fixture.invocations.exists())

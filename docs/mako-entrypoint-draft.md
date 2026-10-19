@@ -33,7 +33,7 @@ After compaction, continue from the recorded active workflow and evidence when a
 ## Start the task
 
 1. Establish the requested outcome, scope, current repository state, and delivery target from the prompt and available project evidence.
-2. Load applicable project instructions and version-control guidance. When `.jj` exists, use `jj` for repository operations.
+2. Load applicable project instructions and version-control guidance. Use Git and the assigned native worktree; `.jj` does not select a different workflow.
 3. Select the primary route. A named workflow takes precedence when it fits the request. Preserve narrower requests such as investigation, status-only, or design-only.
 4. Load the selected workflow and its required dependencies. Record its ordered steps in native task tracking or a checklist before execution.
 5. Retain skipped steps with a specific reason. Required approval gates and verification cannot become optional through a skip note.
@@ -177,7 +177,7 @@ The calling workflow's approval gates remain in force. Architect can return only
 
 Update a referenced ticket through an available MCP or CLI when the task calls for it. Agents can file actionable shared-skill repair requests or prepare focused PRs in the skill's source repository. Keep merging those repairs and replacing installed skills separate.
 
-Resolve conflicts and rebase inside the assigned change or stack when authorized. In jj repositories, the `jj` skill owns the mechanics. Renew verification after changes invalidate its evidence.
+Resolve conflicts and rebase inside the assigned change or stack when authorized. Use Git in the assigned worktree and preserve user work. Renew verification after changes invalidate its evidence.
 
 Opening a PR, making it merge-ready, merging, and deploying are different actions. Determine the delivery target from the request and repository process. Use Conventional Commits. Preserve existing user work and use repository-aware publication and recovery rules.
 

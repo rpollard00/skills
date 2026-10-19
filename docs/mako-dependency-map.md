@@ -103,7 +103,7 @@ Adapt references to these excluded or harness-specific components:
 - Upstream `technical-writing` and `unslop` routing where it conflicts with the existing writing router.
 - General `tdd` calls, replacing them with the selected bug-fix behavior when applicable.
 - Deferred `recall`, Orchestrate, multi-phase planning, and cleanup routes.
-- Git-only worktree, commit, reset, and stack operations when jj is present.
+- Destructive reset shortcuts and concurrent ownership of a branch or worktree.
 
 `deslop` is selected from cursor-team-kit. That does not imply importing the rest of that plugin.
 

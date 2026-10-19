@@ -4,7 +4,7 @@ Use this delivery step when the task, repository, remote, and playbook warrant a
 
 ## Prepare the change
 
-Read [execution](../references/execution.md). Use `jj` when `.jj` exists. Preserve user work and inspect the actual base. Do not reset or recreate a dirty checkout as a shortcut.
+Read [execution](../references/execution.md). Use Git in the assigned worktree. Preserve user work and inspect the actual base. Do not reset or recreate a dirty checkout as a shortcut.
 
 Keep logical changes small and ordered. Amend or split only within the task's authority. Preserve a separate failing-check change before a bug fix; that failing change need not merge independently.
 
@@ -30,7 +30,7 @@ Resolve the forge from repository conventions and available tools, including Azu
 
 Follow the repository's draft/readiness policy. Verify actual PR state after creation. Publication does not authorize merging.
 
-For a stack, the root targets trunk and each child targets its intended parent's branch/bookmark and exact revision. Keep one topology owner. Use repository-aware publication and verify the base chain afterward.
+For a stack, the root targets trunk and each child targets its intended parent's branch and exact revision. Keep one topology owner. Use repository-aware publication and verify the base chain afterward.
 
 ## Hand off
 

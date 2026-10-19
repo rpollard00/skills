@@ -29,10 +29,10 @@ The index is behind after skills are added, removed, renamed, or edited. This sk
 Do not use a path relative to this file to find `explorer/`. An installed skill can be a generated copy outside the repository. Find the repository root from the working directory:
 
 ```bash
-jj root || git rev-parse --show-toplevel
+git rev-parse --show-toplevel
 ```
 
-If the two commands fail, stop. Tell the user that the working directory is not in a repository.
+If this command fails, stop. Tell the user that the working directory is not in a repository.
 
 Make sure that this root passes these three tests:
 

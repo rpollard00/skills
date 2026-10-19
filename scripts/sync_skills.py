@@ -28,8 +28,7 @@ class InstalledCheckout:
 class CleanBaseline:
     installation: InstalledCheckout
     revision: str
-    working_commit: str | None = None
-    branch: str | None = None
+    branch: str
 
 
 class Relation(Enum):
@@ -82,15 +81,6 @@ def command(root, *args, check=True):
     return result
 
 
-def jj(root, *args):
-    return command(root, "jj", "--no-pager", "--color=never", *args).stdout.strip()
-
-
-def jj_revisions(root, expression):
-    return jj(root, "log", "--no-graph", "-r", expression,
-              "-T", 'commit_id ++ "\\n"').splitlines()
-
-
 def installed_checkout(root, home):
     bundle = home / ".agents/skills/reese"
     if not bundle.is_symlink():
@@ -110,52 +100,60 @@ def installed_checkout(root, home):
 
 def clean_baseline(installation):
     root = installation.root
-    if (root / ".jj").exists():
-        jj(root, "status")
-        current = jj_revisions(root, "@")[0]
-        if jj_revisions(root, "@ & conflicts()"):
-            raise Skip("jj working copy has conflicts")
-        if command(root, "git", "ls-files", "--others", "--exclude-standard").stdout:
-            raise Skip("checkout has untracked files")
-        workspaces = jj(root, "workspace", "list", "-T", 'target.commit_id() ++ "\\n"').splitlines()
-        if workspaces.count(current) != 1:
-            raise Skip("jj working commit is shared with another workspace")
-        if jj(root, "log", "--no-graph", "-r", "@", "-T", "immutable") == "true":
-            return CleanBaseline(installation, current, current)
-        parents = jj_revisions(root, "@-")
-        empty = jj(root, "log", "--no-graph", "-r", "@", "-T", "empty") == "true"
-        description = jj(root, "log", "--no-graph", "-r", "@", "-T", "description")
-        if (not empty or description or len(parents) != 1
-                or jj_revisions(root, "@ & bookmarks()") or jj_revisions(root, "@+")):
-            raise Skip("jj working commit contains local work or intent")
-        return CleanBaseline(installation, parents[0], current)
-    if command(root, "git", "status", "--porcelain", "--untracked-files=all").stdout:
+    legacy_reason = "jj-managed checkout requires a manual update; automatic sync uses native Git"
+    if os.path.lexists(root / ".jj"):
+        raise Skip(legacy_reason)
+    common = command(root, "git", "rev-parse", "--git-common-dir").stdout.strip()
+    common = (root / common).resolve()
+    if os.path.lexists(common.parent / ".jj"):
+        raise Skip(legacy_reason)
+    if command(root, "git", "status", "--porcelain", "--untracked-files=all",
+               "--ignore-submodules=none").stdout:
         raise Skip("checkout has local changes or untracked files")
-    for name in ("MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "rebase-merge", "rebase-apply"):
+    for name in ("MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "rebase-merge", "rebase-apply",
+                 "sequencer", "BISECT_START", "index.lock", "HEAD.lock"):
         path = command(root, "git", "rev-parse", "--git-path", name).stdout.strip()
         if (root / path).exists():
             raise Skip("Git operation is in progress")
     branch = command(root, "git", "symbolic-ref", "--quiet", "HEAD", check=False)
     if branch.returncode:
         raise Skip("Git checkout has a detached HEAD")
+    branch = branch.stdout.strip()
+    if branch != "refs/heads/main":
+        raise Skip("automatic sync requires the main branch; preserving feature or experiment branch")
+    remote = command(root, "git", "config", "--get-all", "branch.main.remote", check=False)
+    merge = command(root, "git", "config", "--get-all", "branch.main.merge", check=False)
+    if (remote.returncode or merge.returncode
+            or remote.stdout.strip() != "origin" or merge.stdout.strip() != "refs/heads/main"):
+        raise Skip("main must track origin/main for automatic sync")
+    # --git-path and worktree's porcelain output also work when .git is a file.
+    # Refuse even a forced duplicate checkout of main: advancing its shared ref
+    # would leave the other worktree's files and index at the previous revision.
+    worktrees = command(root, "git", "worktree", "list", "--porcelain", "-z").stdout
+    owners = []
+    for record in worktrees.split("\0\0"):
+        fields = record.split("\0")
+        if "branch " + branch in fields:
+            owners.extend(Path(field.removeprefix("worktree ")).resolve()
+                          for field in fields if field.startswith("worktree "))
+    if owners != [root.resolve()]:
+        raise Skip("main branch is shared with or owned by another Git worktree")
     revision = command(root, "git", "rev-parse", "HEAD").stdout.strip()
-    return CleanBaseline(installation, revision, branch=branch.stdout.strip())
+    return CleanBaseline(installation, revision, branch)
 
 
 def compare_ancestry(root, local, remote):
     if local == remote:
         return Relation.EQUAL
-    if (root / ".jj").exists():
-        local_ancestor = bool(jj_revisions(root, f"{local} & ::{remote}"))
-        remote_ancestor = bool(jj_revisions(root, f"{remote} & ::{local}"))
-    else:
-        def ancestor(first, second):
-            result = command(root, "git", "merge-base", "--is-ancestor", first, second, check=False)
-            if result.returncode not in (0, 1):
-                raise SyncError(result.stderr.strip())
-            return result.returncode == 0
-        local_ancestor = ancestor(local, remote)
-        remote_ancestor = ancestor(remote, local)
+
+    def ancestor(first, second):
+        result = command(root, "git", "merge-base", "--is-ancestor", first, second, check=False)
+        if result.returncode not in (0, 1):
+            raise SyncError(result.stderr.strip())
+        return result.returncode == 0
+
+    local_ancestor = ancestor(local, remote)
+    remote_ancestor = ancestor(remote, local)
     if local_ancestor:
         return Relation.BEHIND
     if remote_ancestor:
@@ -171,14 +169,8 @@ def preflight(root):
 
 def advance_baseline(baseline, target):
     root = baseline.installation.root
-    if baseline.working_commit:
-        if baseline.working_commit == baseline.revision:
-            jj(root, "new", target)
-        else:
-            jj_revisions(root, baseline.working_commit)
-            jj(root, "rebase", "-r", baseline.working_commit, "-o", target)
-    else:
-        command(root, "git", "-c", "merge.autoStash=false", "merge", "--ff-only", target)
+    command(root, "git", "-c", "merge.autoStash=false", "merge", "--ff-only",
+            "--no-overwrite-ignore", target)
 
 
 def sync_installed_skills(root, home, pending_path):
@@ -189,21 +181,9 @@ def sync_installed_skills(root, home, pending_path):
                     or baseline.revision not in (pending.before, pending.target)):
         raise Skip("pending apply belongs to a different checkout or baseline")
     preflight(root)
-    if (root / ".jj").exists():
-        jj(root, "--config", "git.abandon-unreachable-commits=false", "git", "fetch",
-           "--remote", "origin", "--branch", "main")
-        targets = jj_revisions(root, "main@origin")
-        if len(targets) != 1:
-            raise SyncError("origin/main does not resolve to one commit")
-        target = targets[0]
-        if baseline.working_commit == baseline.revision:
-            fetched_baseline = clean_baseline(installation)
-            if fetched_baseline.revision == baseline.revision:
-                baseline = fetched_baseline
-    else:
-        command(root, "git", "fetch", "--no-tags", "origin",
-                "+refs/heads/main:refs/remotes/origin/main")
-        target = command(root, "git", "rev-parse", "refs/remotes/origin/main^{commit}").stdout.strip()
+    command(root, "git", "fetch", "--no-tags", "--no-recurse-submodules", "--no-write-fetch-head",
+            "origin", "+refs/heads/main:refs/remotes/origin/main")
+    target = command(root, "git", "rev-parse", "refs/remotes/origin/main^{commit}").stdout.strip()
     relation = compare_ancestry(root, baseline.revision, target)
     if pending:
         if compare_ancestry(root, pending.target, target) not in (Relation.EQUAL, Relation.BEHIND):

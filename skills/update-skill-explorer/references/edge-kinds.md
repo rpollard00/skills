@@ -26,14 +26,7 @@ skills/mako/playbooks/eval.md
 
 This text is in the same file, and it applies the rules of that skill. The answer for the pair is `requires`.
 
-Some skills have the name of a command. If the text tells the reader to use that command, the text refers to the skill. The skill gives the rules for the command. The answer is not `none`.
-
-```text
-skills/mako/playbooks/hillclimb.md
-Preserve user work; use jj when present.
-```
-
-The target of this ticket is the skill with the name of that command. The answer is `requires` with `--conditional`.
+A command name alone does not imply a dependency on a skill that does not exist. For example, “use Git in the assigned worktree” does not create a skill edge: this bundle has no skill named Git. An explicit instruction to load an existing skill does create an edge, with `--conditional` when its activation has a condition.
 
 ## 2. `boundary`
 

@@ -42,7 +42,7 @@ The user will continue to develop `refine-ui`. It owns visual direction explorat
 
 The existing writing router owns prose policy. Do not import competing upstream writing routers or technical-writing standards.
 
-When `.jj` is present, the `jj` skill owns version-control mechanics, including conflicts, rebases, bookmarks, publication, and recovery.
+Git is the default for version-control mechanics, including native worktrees, conflicts, rebases, branches, publication, and recovery. The `jj` skill is retained for explicit Jujutsu requests only; `.jj` is not an activation signal.
 
 ## Matt Pocock selection
 
@@ -172,14 +172,14 @@ Adapt delegation to actual capabilities and authority. Compact summaries do not 
 - Visual parity: Keep separate from UI improvement. Establish reproducible capture conditions and any tolerance before comparison. Do not weaken the baseline after a failure.
 - Authoring a skill: Keep portable authoring and validation. Replace Cursor's built-in dependency; apply existing writing policy.
 - Eval: Keep isolated realistic tasks, blinded assessment, and execution evidence. Adapt model and transcript access.
-- Babysit: Keep distinct status-only, review-thread, and merge-readiness modes. Allow authorized conflict resolution and rebasing through `jj` when present. One topology owner per stack.
+- Babysit: Keep distinct status-only, review-thread, and merge-readiness modes. Allow authorized conflict resolution and rebasing through Git in the assigned worktree. One topology owner per stack.
 - Shipping: Keep independent behavioral verification, revision-specific evidence, dependency-order landing, and explicit merge authority. Shipping here means merging, not deploying.
-- Opening a PR: Keep Conventional Commits and concise evidence-backed descriptions. Use `jj` when present. Follow repository delivery conventions, including draft status. Do not import destructive reset shortcuts.
+- Opening a PR: Keep Conventional Commits and concise evidence-backed descriptions. Use Git in the assigned worktree. Follow repository delivery conventions, including draft status. Do not import destructive reset shortcuts.
 - Session pickup: Keep targeted continuation, distinct from broad recall. Preserve prior decisions, inspect current state, and renew missing or stale evidence.
-- Pause safely: Keep coordinated safe stopping and a compact durable handoff. Adapt WIP handling to jj and avoid competing state documents.
+- Pause safely: Keep coordinated safe stopping and a compact durable handoff. Use scoped Git checkpoints and avoid competing state documents.
 - Autonomous run: Keep checkable completion, bounded verified increments, decision records, and explicit blockers. Adapt shared-skill repair policy and continuation mechanics.
 - Autopilot-full: Keep owner-per-PR lifecycle, independent coordinator verdicts, and authorized merging of independent work.
-- Autopilot-stack: Keep verified stack delivery without merging. One topology owner; use jj guidance and re-verify after invalidating changes.
+- Autopilot-stack: Keep verified stack delivery without merging. One topology owner; use the shared Git execution contract and re-verify after invalidating changes.
 - Multi-phase plan: Exclude for now. Revisit with its verification and execution system; do not import a reduced template yet.
 - Orchestrate: Defer pstack's complete system. Explore an orchestrator backed by existing infrastructure separately.
 - Worktree/simulator cleanup: Exclude for now.
@@ -203,7 +203,7 @@ Possible mission outcomes need distinct evidence:
 - Budget exhausted: incomplete checkpoint, not success.
 - Cancelled: explicit operator stop.
 
-The plugin's managed isolation is documented as Git worktrees, not jj workspaces. Verify jj isolation and integration before relying on automatic worktree behavior.
+The plugin's managed isolation is documented as Git worktrees. Reuse those worktrees for Git tasks; explicit Jujutsu tasks still require separate workspace integration.
 
 Respect each harness's lifecycle and failure policy. Do not silently change runners or models after infrastructure failure. Do not treat a stop-message receipt as proof that a writer stopped.
 
@@ -217,7 +217,7 @@ Remaining work:
 
 1. Use Mako on real tasks and refine instructions where observed behavior warrants it.
 2. Verify interactive invocation in each harness.
-3. Resolve runtime mission-completion enforcement and jj isolation integration.
+3. Resolve runtime mission-completion enforcement; verify workspace integration separately for explicit Jujutsu tasks.
 The full bundle is now installed through `~/.agents/skills/reese`. The user authorized deleting the four older architecture copies without comparison or backup. The installer migrated owned aliases and preserved unrelated skills.
 
 ## Superseding decision: shared UI discipline

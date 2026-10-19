@@ -12,7 +12,7 @@ Read [execution](../references/execution.md). Select one continuation owner and 
 
 Each PR owner receives the full lifecycle: design and build under the selected task route, verification, `deslop`, `no-comments`, publication through [Opening a PR](opening-a-pr.md), skeptical [review triage](../references/bugbot-triage.md), and [Babysit](babysit.md) to merge-ready.
 
-Give each owner an isolated writable workspace and branch/bookmark. Keep self-contained work independent. Serialize overlapping writes. Genuinely dependent work follows explicit dependency order rather than pretending to be independent.
+Give each owner an isolated writable workspace and branch. Keep self-contained work independent. Serialize overlapping writes. Genuinely dependent work follows explicit dependency order rather than pretending to be independent.
 
 Begin `show-me-your-work` early. Use native run records for child identity, lifecycle, and ownership; do not invent duplicate bookkeeping files. Follow repository conventions for first publication and draft status.
 

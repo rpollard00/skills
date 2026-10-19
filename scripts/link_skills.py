@@ -80,7 +80,7 @@ class ClaudeAdapter:
                 shutil.copytree(entry.parent, staged / "skills" / entry.parent.name,
                                 ignore=shutil.ignore_patterns(".artifacts", "__pycache__"))
             for entry in (staged / "skills").glob("*/SKILL.md"):
-                if entry.parent.name == "mako":
+                if entry.parent.name in {"mako", "jj"}:
                     continue
                 text = entry.read_text(encoding="utf-8")
                 header, body = text[4:].split("\n---\n", 1)

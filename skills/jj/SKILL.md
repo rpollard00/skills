@@ -1,6 +1,9 @@
 ---
 name: jj
-description: Work safely in Jujutsu (jj) repositories using the working-copy commit model and the normal colocated Git workflow. Use whenever a repository contains .jj, the user mentions jj/Jujutsu, or the task involves jj setup, status, history, revsets, bookmarks, rebasing, conflicts, undo, fetch, or push.
+description: Explicitly requested Jujutsu operations, including its working-copy model, bookmarks, conflicts, and recovery. Load only when the user asks to use jj; repository metadata alone is not an activation signal.
+disable-model-invocation: true
+metadata:
+  opencode/autoinvoke: "false"
 ---
 
 # Jujutsu
@@ -15,7 +18,7 @@ There is no normal staging-area step and no detached collection of “uncommitte
 
 ## Non-negotiables
 
-- If `.jj/` exists, use `jj` for status, diff, history mutation, recovery, fetch, and push. Do not substitute `git status`, `git add`, `git commit`, `git checkout`, `git reset`, `git rebase`, or Git's conflict workflow.
+- Only within an explicitly requested Jujutsu workflow, use `jj` for status, diff, history mutation, recovery, fetch, and push. Do not substitute `git status`, `git add`, `git commit`, `git checkout`, `git reset`, `git rebase`, or Git's conflict workflow.
 - Assume the repository uses the Git backend **and is colocated with Git**: `.jj/` and `.git/` share one working copy. This is the normal setup. If backend details matter, verify with `jj util backend name`; do not speculate about an exotic backend.
 - Do not confuse **Git-backed** with **colocated**. A non-colocated repository can still use the Git backend hidden under `.jj/`, but that is the less common path and should require an explicit reason. Check with `jj git colocation status` rather than inferring from backend type alone.
 - In a colocated workspace, prefer `jj` for mutations. Read-only Git tools are usually fine, but Git's index, in-progress rebase state, and conflict representation are not jj's model.
