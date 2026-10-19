@@ -55,7 +55,8 @@ Use the skill-name lookup and path fallback in [execution](references/execution.
 - Assess downstream change impact: `blast-radius`
 - Challenge a design or review a diff: `interrogate`
 - Create executable project verification: `create-verification-skill`
-- Explicitly create formal verification of a stated property: `create-formal-verification-skill` (optional, separate from live-app verification)
+- Explicitly create formal verification of a stated property: `create-formal-verification-skill` (optional, separate from live-app verification; real-code property/fuzz fallback is testing evidence)
+- Explicitly maintain existing formal verification after code changes: `maintain-formal-verification-skill` (optional; audit mapping freshness and check results separately)
 - Maintain verification and its feature map: `maintain-verification-skill`
 - Author or revise a skill: [Authoring a skill](playbooks/authoring-a-skill.md)
 - Set up automatic updates for this skills bundle: `setup-skills-sync`

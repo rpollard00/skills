@@ -10,11 +10,15 @@
     },
     "cursor-create-formal-verification-skill": {
       "repository": "https://github.com/cursor/plugins",
-      "revision": "4382e687a50b8d2c5ce4d141d001186589cff8d5"
+      "revision": "6b78e9f4e46c75d1697d837e51f07c2692e60b24"
     },
     "cursor-ketchup": {
       "repository": "https://github.com/cursor/plugins",
       "revision": "bc1443790cc980d0ea857663260a831299884508"
+    },
+    "cursor-maintain-formal-verification-skill": {
+      "repository": "https://github.com/cursor/plugins",
+      "revision": "7b353f78f6ec193bdbe48ed8059444eb09b6878e"
     }
   },
   "files": [
@@ -952,7 +956,7 @@
     {
       "source": "pstack/skills/create-formal-verification-skill/SKILL.md",
       "destination": "skills/create-formal-verification-skill/SKILL.md",
-      "sha256": "5f5c08d6f5787ce18ffc9f018113e9cc6e7ddcc7878aa7ae94ef56978978497b",
+      "sha256": "279054d76e0c28e4c9127000f89dc2f55ba2bee3f1adb8a76396425945faab9b",
       "upstream": "cursor-create-formal-verification-skill"
     },
     {
@@ -972,6 +976,18 @@
       "destination": "skills/ketchup/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor-ketchup"
+    },
+    {
+      "source": "pstack/skills/maintain-formal-verification-skill/SKILL.md",
+      "destination": "skills/maintain-formal-verification-skill/SKILL.md",
+      "sha256": "0c96f54293542d3818b68754562b338073958781a9684454611dca37592e2d2c",
+      "upstream": "cursor-maintain-formal-verification-skill"
+    },
+    {
+      "source": "pstack/LICENSE",
+      "destination": "skills/maintain-formal-verification-skill/LICENSE",
+      "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
+      "upstream": "cursor-maintain-formal-verification-skill"
     }
   ]
 }

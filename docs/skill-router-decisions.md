@@ -238,3 +238,17 @@ Add two explicit-only Mako routes. This selection does not import other upstream
 - `ketchup`: Give a read-only catch-up for the current conversation. Verify available current states and disclose missing history. Include every unresolved user decision with its own identifiable reference, impact, evidence, risk, and recommendation. Keep real alternatives and shared decisions without fixed word limits or mandatory visual geometry. Do not continue work or treat the catch-up request as approval.
 
 Both routes preserve portable tool discovery and the existing invocation metadata. Formal verification remains optional and does not become a gate for ordinary feature or bug-fix work.
+
+## October 19 formal maintenance and unsupported-language fallback
+
+Add explicit-only `maintain-formal-verification-skill` for an existing project-local formal-verification skill after merges, edits, or refactors bypassed its own drift procedure. This route can repair verification artifacts within the caller's scope; it does not authorize product-code fixes or add a gate to ordinary engineering work. Keep live-app feature-map maintenance separate.
+
+- Discover checks by their behavior and covered code, without assuming a fixed skill name, tool, or harness. Use the shared [formal claim and evidence contract](../skills/create-formal-verification-skill/references/formal-contract.md) for creation and maintenance.
+- Track source/model mapping freshness separately from check results. An updated mapping can reveal a bug; an old passing check cannot establish current implementation correctness. Preserve an unknown baseline rather than calling the last verification-file edit a confirmed sync.
+- Review relevant history, working changes, moved or renamed code, and new writers to guarded state. Update models or harnesses from current code, preserving atomicity and coverage. Change a property only when evidence establishes an intentional contract change, recording old and new claims.
+- Keep runs and history investigation bounded. Preserve counterexamples, tool failures, timeouts, and incomplete coverage. Name an introduction commit only when evidence supports it; otherwise leave it unknown or give the evidenced range.
+- Distinguish implementation negative controls from handwritten-model sensitivity checks. A model mutation does not establish source/model correspondence. Confirm a model counterexample against real implementation behavior before calling it an implementation bug. Keep verification maintenance separate from an authorized product fix.
+
+Selectively adapt the unsupported-language fallback in `create-formal-verification-skill`: if no suitable verifier supports the implementation language, exercise the real implementation with generated property-test inputs or fuzzing. Report this as testing evidence, never formal proof or exhaustive coverage. Record the actual campaign's limits and reproducibility details. Do not substitute a handwritten copy of the function for implementation verification.
+
+Retain the least-cost supported tool that answers the question. A small model checker can still suit design-ordering questions, and an unbounded claim can still need a proof assistant. Do not import a blanket TLA+ default, mandatory tools, harness-specific orchestration, or unrelated upstream changes.

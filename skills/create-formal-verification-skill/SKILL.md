@@ -10,7 +10,7 @@ metadata:
 
 Verify one consequential property and leave a project-local skill that another agent can rerun after a relevant change. A result covers its stated model, bounds, and assumptions. It does not establish correctness of the whole system.
 
-This is an optional route for an explicit formal-verification task. It does not replace tests or the live-app workflow in `create-verification-skill`. Read [execution](../mako/references/execution.md) for repository operations, isolation, and permissions.
+This is an optional route for an explicit formal-verification task. It does not replace tests or the live-app workflow in `create-verification-skill`. Read the shared [formal contract](references/formal-contract.md) and [execution](../mako/references/execution.md) before proceeding.
 
 ## Choose the property and effort
 
@@ -30,21 +30,17 @@ Use the least costly tool that answers the question. Prefer tools the project al
 
 Record why the tool fits and what it cannot establish. Discover available tools and supported installation paths. No language, editor, model provider, or named verifier is mandatory. Follow host permissions before installation or external actions.
 
+## When no suitable verifier supports the language
+
+Check the available tools against the requested property and implementation language before declaring a limitation. If no suitable verifier can analyze the implementation within the agreed scope, say so. Offer property-based or fuzz testing that executes the real code with generated inputs, not a handwritten substitute for the function. Keep the original budget and stopping condition; ask before a material scope change.
+
+Label this as testing evidence, not a proof. Never silently satisfy an explicit proof request with the fallback: state that the proof request remains unmet and let the user decide whether the testing deliverable is useful. If proceeding within authorized scope, record the actual entry point, property/oracle, input generators, seeds or replay corpus, case count or duration, tested ranges, exclusions, minimized failures, and rerun command. Report the tested scope and remaining proof gap even when all generated cases pass. Unsupported execution or exhausted resources remain explicit limitations.
+
+Carry this testing label and evidence into the generated skill and handoff. Do not label a sampled pass as exhaustive verification or assume model checking removes the implementation proof gap.
+
 ## Ground the verification
 
-Map each property, model action, and state variable to source symbols at the recorded revision. Explain abstractions and excluded behavior. An atomic model action must match an atomic implementation step or carry an explicit, justified assumption.
-
-Record input and state bounds, environment assumptions, fairness or scheduling assumptions, and trusted components. Check that the initial states and assumptions permit the behavior of interest. An unreachable assertion or impossible precondition is not useful evidence.
-
-Distinguish these results:
-
-- **Model result:** the property holds for the model under its stated assumptions and exploration bounds.
-- **Implementation result:** the tool analyzes the code, or a demonstrated bridge connects the analyzed artifact to the code.
-- **Incomplete result:** timeout, resource exhaustion, unsupported behavior, or unfinished proof obligations prevent a conclusion.
-
-A handwritten model does not automatically detect a source mutation. Describe the source-to-model bridge when one exists. Otherwise, require a mapping review and corresponding model updates after relevant source changes. Never describe a model pass as proof of unchanged implementation behavior.
-
-When the current code violates the property, preserve the counterexample and explain its steps in the code's terms. Distinguish a product defect from a modeling error with evidence. Do not weaken a property, bound, or assumption merely to obtain a pass. Record justified corrections and their effect on the claim. Keep unresolved findings visible. Product repairs require separate authority unless the task already includes them.
+Apply the shared [formal contract](references/formal-contract.md): tie each claim to source symbols and analyzed artifacts, justify abstractions, preserve findings, and distinguish model, implementation, and incomplete results.
 
 ## Generate the project-local skill
 
@@ -56,22 +52,14 @@ The generated skill must contain:
 - **Mapping:** source symbols, model elements, abstractions, assumptions, bounds, exclusions, and the source-to-model bridge or its absence.
 - **Run:** pinned tool versions, prerequisites, setup, one reproducible command, resource limits, and expected result meanings.
 - **Evidence:** commands, exit status, tool output, explored scope or proof obligations, counterexamples, findings, and durable artifact paths.
-- **Rerun and drift:** affected paths and symbols, how to detect relevant changes, and when the mapping, model, or proof needs review.
+- **Rerun and drift:** per-check covered paths and symbols, the last confirmed mapping revision (or unknown), a separate verification-result record, how to inspect subsequent history and working-copy changes, and when the mapping, model, or proof needs review. Follow the shared contract for advancing either record.
 - **Cleanup:** owned scratch files and processes to remove, with evidence and existing user work preserved.
 
-A changed source revision invalidates an implementation claim until relevant changes are reviewed and required checks rerun. Record justified reuse for unrelated changes. The formal skill owns this drift procedure. The live-app feature-map contract in `maintain-verification-skill` is separate.
+A changed source revision invalidates an implementation claim until relevant changes are reviewed and required checks rerun. Record justified reuse for unrelated changes. The formal skill owns this drift procedure; use `maintain-formal-verification-skill` for an explicitly requested audit after changes that skipped it. The live-app feature-map contract in `maintain-verification-skill` is separate.
 
 ## Exercise the generated instructions
 
-Run the generated skill from its documented starting state. Record the baseline result, including existing failures. Verify that the next agent can reproduce the result from the skill alone.
-
-Use isolated scratch copies for fault injection. For a code-level check, introduce a relevant implementation defect and run the check. For a handwritten model, mutate the corresponding model behavior and record that this tests the model's sensitivity. Claim source-mutation detection only when a demonstrated bridge actually detects that mutation.
-
-Choose a meaningful negative control for each delivered property when feasible. A setup or compilation error does not demonstrate detection of a property violation. A detected violation increases confidence in the check's sensitivity. It is not the definition of a proof or evidence that every defect will be detected. If a negative control is infeasible or misses the intended violation, disclose that gap and investigate the mapping or check. Do not alter the mutation merely to manufacture a successful demonstration.
-
-Remove only this run's scratch mutations. Rerun the original verification and compare it with the recorded baseline. Preserve earlier counterexamples, logs, and findings after cleanup. Never reset a dirty checkout or discard user changes.
-
-An unexecuted skill remains a draft. A reproducible skill can be delivered with a reported counterexample. A timeout or unfinished proof remains inconclusive, even when the setup works.
+Follow the shared [formal contract](references/formal-contract.md) for baseline execution, isolated negative controls, restoration, and result classification. Exercise the generated skill from its documented starting state. An unexecuted skill remains a draft; a timeout or unfinished proof remains inconclusive.
 
 ## Hand off
 
