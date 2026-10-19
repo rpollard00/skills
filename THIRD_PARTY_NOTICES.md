@@ -14,6 +14,11 @@ Revision: `12d587dfb20741cafc376c42c696c5f6e2a64487`.
 
 Applies to the imported pstack skills, all 23 engineering principles, Comment Sicko, and the pstack-derived portions of Mako and bug-fix.
 
+Additional formal-verification sources use the same notice:
+
+- [Create formal verification skill](https://github.com/cursor/plugins/blob/6b78e9f4e46c75d1697d837e51f07c2692e60b24/pstack/skills/create-formal-verification-skill/SKILL.md), revision `6b78e9f4e46c75d1697d837e51f07c2692e60b24`, selectively adapted from the earlier import at `4382e687a50b8d2c5ce4d141d001186589cff8d5`.
+- [Maintain formal verification skill](https://github.com/cursor/plugins/blob/7b353f78f6ec193bdbe48ed8059444eb09b6878e/pstack/skills/maintain-formal-verification-skill/SKILL.md), revision `7b353f78f6ec193bdbe48ed8059444eb09b6878e`.
+
 ```text
 MIT License
 

@@ -117,7 +117,7 @@ class ValidationTests(unittest.TestCase):
     def test_ui_design_extraction_wiring(self):
         root = REPO / "skills"
         skills = {p.parent.name: p for p in root.glob("*/SKILL.md")}
-        self.assertEqual(len(skills), 57)
+        self.assertEqual(len(skills), 58)
         shared = skills["ui-design"]
         for caller in (skills["mako"], root / "mako/playbooks/feature.md", skills["refine-ui"]):
             with self.subTest(caller=caller):
@@ -134,6 +134,21 @@ class ValidationTests(unittest.TestCase):
         self.assertIn("refine-ui/.artifacts/pdf/", pdf_reference)
         self.assertIn("UI_DESIGN_ARTIFACTS_DIR", pdf_reference)
         self.assertIn("REFINE_UI_ARTIFACTS_DIR", pdf_reference)
+
+    def test_formal_workflows_share_contract_and_remain_explicit(self):
+        root = REPO / "skills"
+        contract = root / "create-formal-verification-skill/references/formal-contract.md"
+        execution = root / "mako/references/execution.md"
+        self.assertTrue(contract.is_file())
+        self.assertIn(execution.resolve(), {p.resolve() for p in local_links(contract)})
+        for name in ("create-formal-verification-skill", "maintain-formal-verification-skill"):
+            with self.subTest(skill=name):
+                skill = root / name / "SKILL.md"
+                self.assertIn(contract.resolve(), {p.resolve() for p in local_links(skill)})
+                self.assertTrue(frontmatter(skill)["disable-model-invocation"])
+                self.assertEqual(frontmatter(skill)["metadata"]["opencode/autoinvoke"], "false")
+                policy = (root / name / "agents/openai.yaml").read_text()
+                self.assertIn("allow_implicit_invocation: false", policy)
 
     def test_named_dependencies_use_inventory_and_ignore_fenced_examples(self):
         with tempfile.TemporaryDirectory() as temp:

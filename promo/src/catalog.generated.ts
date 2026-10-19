@@ -19,6 +19,7 @@ export const SKILLS = [
   "interrogate",
   "jj",
   "ketchup",
+  "maintain-formal-verification-skill",
   "maintain-verification-skill",
   "mako",
   "no-comments",
