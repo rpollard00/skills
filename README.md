@@ -77,7 +77,7 @@ Reload the harness after installation. Native entry points are `/skill:mako` in 
 
 ### Automatic updates with systemd
 
-The user timer checks `origin/main` hourly. It updates the checkout behind `~/.agents/skills/reese` only when it is on `main` tracking `origin/main`, clean, and strictly behind. Experimental and other feature branches are skipped. Then it runs `link-skills.sh --apply` to refresh Claude copies. Ahead or divergent history, local changes, untracked files, modified Claude copies, and replaced installation links prevent updates. The updater uses Git only and never rebases or resets local work. Unsupported workspace metadata prevents automatic updates. Detached HEADs and in-progress Git operations prevent updates.
+The user timer checks `origin/main` hourly. It updates the checkout behind `~/.agents/skills/reese` only when that checkout is clean and strictly behind. Then it runs `link-skills.sh --apply` to refresh Claude copies. Ahead or divergent history, local changes, untracked files, modified Claude copies, and replaced installation links prevent updates. An unused empty jj working commit counts as its parent. Descriptions, bookmarks, descendants, merges, and shared working commits prevent automatic rebases.
 
 Install the timer from the checkout that owns the installed bundle:
 
