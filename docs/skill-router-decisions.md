@@ -42,7 +42,7 @@ The user will continue to develop `refine-ui`. It owns visual direction explorat
 
 The existing writing router owns prose policy. Do not import competing upstream writing routers or technical-writing standards.
 
-Git is the default for version-control mechanics, including native worktrees, conflicts, rebases, branches, publication, and recovery. The `jj` skill is retained for explicit Jujutsu requests only; `.jj` is not an activation signal.
+Repository workflows use scoped commits, isolated worktrees, and verified publication. The execution contract preserves dirty work and topology ownership.
 
 ## Matt Pocock selection
 
@@ -203,7 +203,7 @@ Possible mission outcomes need distinct evidence:
 - Budget exhausted: incomplete checkpoint, not success.
 - Cancelled: explicit operator stop.
 
-The plugin's managed isolation is documented as Git worktrees. Reuse those worktrees for Git tasks; explicit Jujutsu tasks still require separate workspace integration.
+The plugin's managed isolation is documented as Git worktrees. Reuse the assigned worktree for the task.
 
 Respect each harness's lifecycle and failure policy. Do not silently change runners or models after infrastructure failure. Do not treat a stop-message receipt as proof that a writer stopped.
 
@@ -217,7 +217,7 @@ Remaining work:
 
 1. Use Mako on real tasks and refine instructions where observed behavior warrants it.
 2. Verify interactive invocation in each harness.
-3. Resolve runtime mission-completion enforcement; verify workspace integration separately for explicit Jujutsu tasks.
+3. Resolve runtime mission-completion enforcement.
 The full bundle is now installed through `~/.agents/skills/reese`. The user authorized deleting the four older architecture copies without comparison or backup. The installer migrated owned aliases and preserved unrelated skills.
 
 ## Superseding decision: shared UI discipline

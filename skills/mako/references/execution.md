@@ -56,13 +56,11 @@ Replace a stuck writer immediately. Send a best-effort stop request and transfer
 
 ## Repository operations
 
-Use Git by default, including in repositories that also contain `.jj`. The presence of `.jj` does not select a workflow or authorize running jj. Honor explicit user or project instructions; if those conflict with the assigned Git workflow, resolve that conflict before mutation. Use the optional `jj` skill only when the user explicitly requests Jujutsu operations. Never delete or migrate `.jj` metadata merely to use Git.
-
 Before mutation inspect `git status --short --branch`, staged and unstaged diffs, untracked files, `git rev-parse --show-toplevel`, `git branch --show-current`, and `git worktree list --porcelain`. A native linked worktree can have a `.git` file, not a directory; use Git's discovery commands instead of directory checks. Verify the actual base and assigned branch. Do not switch a harness-owned worktree to another task's branch. A detached worktree is valid: preserve its assigned revision and create a task branch only when the harness workflow and delivery scope require it.
 
 Preserve user work. Stage only task-owned paths or hunks and inspect the staged diff before committing. Do not hard-reset, clean, stash, recreate, or remove a dirty checkout to simplify a task. Do not absorb pre-existing staged changes. If ownership cannot be separated safely, pause the affected edits and report the conflict.
 
-Reuse the isolated worktree supplied by Codex, T3, or another harness. If more isolation is needed, create a native Git worktree with a unique task branch from a verified base (`git worktree add -b <task-branch> <new-path> <base>`), after checking branch/path availability. Never force a branch already checked out elsewhere or let multiple writers share one branch/index. For an explicitly requested Jujutsu task, do not treat Git worktrees as jj workspaces or mix concurrent Git and jj mutations.
+Reuse the isolated worktree supplied by Codex, T3, or another harness. If more isolation is needed, create a native Git worktree with a unique task branch from a verified base (`git worktree add -b <task-branch> <new-path> <base>`), after checking branch/path availability. Never force a branch already checked out elsewhere or let multiple writers share one branch/index.
 
 Before an authorized rebase, record the original HEAD and branch, require a clean task-owned worktree, and confirm topology ownership. Resolve only understood conflicts, stage reviewed resolutions, and continue; if the operation cannot be completed safely, use its matching abort command and report the preserved state. For recovery inspect `git reflog` and recorded revisions first; preserve recoverable commits with a new recovery branch rather than resetting user work. Remove only task-owned worktrees after checking their status and preserving unmerged work; never force cleanup.
 

@@ -110,7 +110,7 @@ This answer also fits these two cases:
 
 When the source uses the target only in a stated case, add `--conditional`. The explorer permits the flag only with `runs`, `requires`, and `handoff`.
 
-Words such as "if", "when", "unless", and "only when" state a case. A phrase such as "in a jj repository" also states a case. A phrase such as "For UI work," before the instruction also states a case. A heading or a lead-in sentence can state the case for the text that it introduces.
+Words such as "if", "when", "unless", and "only when" state a case. A phrase such as "For UI work," before the instruction also states a case. A heading or a lead-in sentence can state the case for the text that it introduces.
 
 ```text
 skills/bug-fix/SKILL.md

@@ -1,6 +1,6 @@
 ---
 name: jj
-description: Explicitly requested Jujutsu operations, including its working-copy model, bookmarks, conflicts, and recovery. Load only when the user asks to use jj; repository metadata alone is not an activation signal.
+description: Explicitly requested Jujutsu operations, including its working-copy model, bookmarks, conflicts, and recovery. Load only when the user asks to use jj.
 disable-model-invocation: true
 metadata:
   opencode/autoinvoke: "false"

@@ -8,7 +8,7 @@ Apply the shared [delegation default](execution.md#discover-capabilities) throug
 
 Discover the installed pi-subagents tools and read their current skill and guides. Use the governed workflow, native notifications, and documented evidence/output routing. Do not reproduce a version-specific tool schema here.
 
-The inspected pi-subagents implementation does not enforce mission-wide acceptance when closing a mission. Mako requires evidence reconciliation, but does not claim runtime enforcement. Its automatic Git-worktree isolation is also not a verified jj integration.
+The inspected pi-subagents implementation does not enforce mission-wide acceptance when closing a mission. Mako requires evidence reconciliation, but does not claim runtime enforcement.
 
 If a Relentless run is active, keep it as the continuation owner. Delegate bounded tasks through pi-subagents only under its documented contract; do not arm a second goal driver. Neither framework is required to use Mako.
 
@@ -20,7 +20,7 @@ Explicit-only skills include `agents/openai.yaml` with `policy.allow_implicit_in
 
 Invoke Mako with `/mako`. Claude Code blocks agent invocation and subagent preloading of skills with `disable-model-invocation: true`. Mako's dependencies must be loadable by the agent.
 
-Use the bundle installer's Claude adapter. It keeps Mako and the optional jj skill explicit-only and removes that flag from generated dependency entrypoints. Shared source metadata stays unchanged for Pi, Codex, and OpenCode. Refresh generated entrypoints through the installer after source changes. Do not edit generated copies.
+Use the bundle installer's Claude adapter. It keeps Mako explicit-only and removes that flag from generated dependency entrypoints. Shared source metadata stays unchanged for Pi, Codex, and OpenCode. Refresh generated entrypoints through the installer after source changes. Do not edit generated copies.
 
 Respect skill permission denials. A denied invocation is not permission to load the same instructions through the file fallback. See [Claude Code's skill controls](https://code.claude.com/docs/en/skills#control-who-invokes-a-skill).
 

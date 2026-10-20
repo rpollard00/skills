@@ -94,7 +94,7 @@ class ValidationTests(unittest.TestCase):
             seen.add(path)
             pending.extend(local_links(path))
             pending.extend(named_skill_dependencies(path, skills))
-        selected = set(root.glob("*/SKILL.md"))
+        selected = set(root.glob("*/SKILL.md")) - {skills["jj"]}
         self.assertEqual({p.resolve() for p in selected} - seen, set())
         self.assertEqual(len(list(root.glob("principle-*/SKILL.md"))), 23)
 

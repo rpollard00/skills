@@ -103,7 +103,6 @@
     {"from":"skill:maintain-verification-skill","to":"skill:create-verification-skill","kind":"handoff","conditional":true,"evidenceHash":"103d45ad7595334a7ae6e00010196332edae2eba8ab86423dd63245b9296ad03"},
     {"from":"skill:mako","to":"playbook:opening-a-pr","kind":"runs","conditional":true,"evidenceHash":"02e6ed47cd5337cc7905384d201f26321c42ecc6fe83fab98d5d853176892d8f"},
     {"from":"skill:mako","to":"skill:grilling","kind":"runs","conditional":true,"evidenceHash":"02e6ed47cd5337cc7905384d201f26321c42ecc6fe83fab98d5d853176892d8f"},
-    {"from":"skill:mako","to":"skill:jj","kind":"requires","conditional":true,"evidenceHash":"774c1171907ddf8a416c992863aacaa945966e48fff2d0e87025fc64713ff879"},
     {"from":"skill:no-comments","to":"skill:architect","kind":"runs","conditional":true,"evidenceHash":"11215ca8e2dd62d1f1407a57a53821daa2ed11c44c229dd10a27f64096ea101a"},
     {"from":"skill:no-comments","to":"skill:how","kind":"runs","conditional":true,"evidenceHash":"82570ac284f9bf2f2046a72f1c555f5598bbfb0d1975cb7d202f176c2a83f296"},
     {"from":"skill:no-comments","to":"skill:why","kind":"runs","conditional":true,"evidenceHash":"82570ac284f9bf2f2046a72f1c555f5598bbfb0d1975cb7d202f176c2a83f296"},

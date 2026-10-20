@@ -37,4 +37,4 @@ Conflict handling remains part of this skill rather than a second overlapping sk
 pi --skill /absolute/path/to/skills/skills/jj
 ```
 
-Then explicitly invoke `/skill:jj` for the requested Jujutsu task. Implicit invocation is disabled. The presence of `.jj/` or an incidental mention of Jujutsu does not activate it.
+Then explicitly invoke `/skill:jj` for the requested Jujutsu task. Implicit invocation is disabled.

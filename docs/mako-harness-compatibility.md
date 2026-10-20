@@ -93,7 +93,6 @@ Codex documentation: [Agent skills](https://developers.openai.com/codex/skills).
 - Model compliance with routing, approval gates, or selective dependency loading.
 - Full delegated feature, review, or autonomous workflows.
 - Runtime enforcement of mission-wide completion evidence.
-- pi-subagents automatic Git-worktree isolation in a jj repository.
 
 Tune instructions through actual use. Passing metadata and path checks does not establish model compliance; no standing behavioral test suite is maintained.
 

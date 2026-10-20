@@ -18,7 +18,6 @@ Every skill has its own directory directly under `skills/`, without categories. 
 - [Formal verification](skills/create-formal-verification-skill/SKILL.md): explicit creation and [maintenance](skills/maintain-formal-verification-skill/SKILL.md), separate from live-app checks. Unsupported implementation languages can use real-code property tests or fuzzing with testing-only claims.
 - [ui-design](skills/ui-design/SKILL.md): shared UI judgment and rendered evidence under the caller's scope.
 - [refine-ui](skills/refine-ui/SKILL.md): interactive visual exploration and approval gates, using ui-design.
-- [jj](skills/jj/SKILL.md): optional reference for explicitly requested Jujutsu work; never selected just because `.jj` exists.
 - [writing](skills/writing/SKILL.md): the existing router for simple-technical-english and unslop.
 
 ## Try Mako without installation
@@ -54,7 +53,7 @@ The default target is:
 ~/.agents/skills/reese -> <checkout>/skills
 ```
 
-Claude Code gets a generated bundle at `~/.claude/skills/.reese-adapter/skills/`, with individual discovery links at `~/.claude/skills/<name>`. The adapter keeps Mako and the optional jj skill explicit-only and permits agent loading of its dependencies. The shared source flags remain unchanged for Pi, Codex, and OpenCode.
+Claude Code gets a generated bundle at `~/.claude/skills/.reese-adapter/skills/`, with individual discovery links at `~/.claude/skills/<name>`. The adapter keeps Mako explicit-only and permits agent loading of its dependencies. The shared source flags remain unchanged for Pi, Codex, and OpenCode.
 
 Run the installer again after source changes to refresh the Claude copies. It refuses modified generated files rather than overwriting local work. Existing links to this checkout migrate to the adapter on `--apply`. Use `--claude-destination /path` to change that root or `--no-claude` to skip it.
 
@@ -78,7 +77,7 @@ Reload the harness after installation. Native entry points are `/skill:mako` in 
 
 ### Automatic updates with systemd
 
-The user timer checks `origin/main` hourly. It updates the checkout behind `~/.agents/skills/reese` only when it is on `main` tracking `origin/main`, clean, and strictly behind. Experimental and other feature branches are skipped. Then it runs `link-skills.sh --apply` to refresh Claude copies. Ahead or divergent history, local changes, untracked files, modified Claude copies, and replaced installation links prevent updates. The updater uses Git only and never rebases or resets local work. A checkout containing `.jj` is skipped to avoid silently changing a Jujutsu workspace; use a separate Git checkout for automatic updates. Detached HEADs and in-progress Git operations prevent updates.
+The user timer checks `origin/main` hourly. It updates the checkout behind `~/.agents/skills/reese` only when it is on `main` tracking `origin/main`, clean, and strictly behind. Experimental and other feature branches are skipped. Then it runs `link-skills.sh --apply` to refresh Claude copies. Ahead or divergent history, local changes, untracked files, modified Claude copies, and replaced installation links prevent updates. The updater uses Git only and never rebases or resets local work. Unsupported workspace metadata prevents automatic updates. Detached HEADs and in-progress Git operations prevent updates.
 
 Install the timer from the checkout that owns the installed bundle:
 
@@ -114,7 +113,7 @@ Use `--tsc /path/to/tsc` or `--node /path/to/node` for tools outside `PATH`. Mis
 
 [Harness compatibility](docs/mako-harness-compatibility.md) records tested versions and commands. The Python checks cover metadata, dependency reachability, logging, and safe installation. Separate harness checks cover discovery and invocation metadata. These checks do not enforce byte-for-byte preservation of upstream prose. These checks do not establish model compliance. Instruction tuning follows actual use, not a separate behavioral test suite.
 
-Mako requires completion evidence, but it does not add runtime mission enforcement. Native Git worktrees supplied by the harness are reused for task isolation. Explicit Jujutsu tasks still require their own workspace integration. The [execution contract](skills/mako/references/execution.md) states these limits.
+Mako requires completion evidence, but it does not add runtime mission enforcement. Native Git worktrees supplied by the harness are reused for task isolation. The [execution contract](skills/mako/references/execution.md) states these limits.
 
 ## Structure and provenance
 

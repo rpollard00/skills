@@ -14,7 +14,7 @@ The 23 principle skills remain independent. Select them through [the trigger ind
 
 [Execution](mako/references/execution.md) supplies shared capability, isolation, repository, continuation, and completion rules. Reading that reference does not activate Mako.
 
-[ui-design](ui-design/SKILL.md) owns shared UI discipline. [refine-ui](refine-ui/SKILL.md) retains interactive exploration and visual approval gates, [jj](jj/SKILL.md) is available only for explicitly requested Jujutsu work, and [writing](writing/SKILL.md) routes prose, including user-visible strings in code.
+[ui-design](ui-design/SKILL.md) owns shared UI discipline. [refine-ui](refine-ui/SKILL.md) retains interactive exploration and visual approval gates and [writing](writing/SKILL.md) routes prose, including user-visible strings in code.
 
 [create-formal-verification-skill](create-formal-verification-skill/SKILL.md) and [maintain-formal-verification-skill](maintain-formal-verification-skill/SKILL.md) are explicit-only formal-verification workflows. They share a [claim and evidence contract](create-formal-verification-skill/references/formal-contract.md), including the distinction between formal results and real-code property/fuzz testing. Live-app verification and feature-map maintenance remain separate.
 
@@ -36,7 +36,6 @@ The 23 principle skills remain independent. Select them through [the trigger ind
 - [how](how/SKILL.md)
 - [improve-codebase-architecture](improve-codebase-architecture/SKILL.md)
 - [interrogate](interrogate/SKILL.md)
-- [jj](jj/SKILL.md)
 - [ketchup](ketchup/SKILL.md)
 - [maintain-formal-verification-skill](maintain-formal-verification-skill/SKILL.md)
 - [maintain-verification-skill](maintain-verification-skill/SKILL.md)
