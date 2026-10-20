@@ -44,7 +44,7 @@ The authoritative selection is [skill-router-decisions.md](skill-router-decision
 - Correct the test-matcher blacklist. Preserve meaningful absence, public-contract, relational, and compile-time tests.
 - Restore Poteto's autonomy-first posture: make routine engineering decisions and use evidence-backed defaults without extra approval rounds. Preserve explicit task limits, dangerous-action boundaries, and the checkpoints of deliberately invoked interactive skills.
 - Separate harness integration notes from the shared execution rules. Delegate investigation and implementation whenever capable subagents are available, and use independent reviewers where supported; disclose direct or sequential fallback rather than blocking merely because a harness lacks delegation.
-- Use jj when present; remove destructive Git reset shortcuts and blanket rebases.
+- The original adaptation selected jj when present; the VCS experiment below supersedes that routing. Destructive Git reset shortcuts and blanket rebases remain excluded.
 - Retain real measurement and queryable forensics without mandating SQLite or an arbitrary attempt count.
 - Keep readiness separate from landing, and stack delivery separate from merge authority.
 - Preserve Pstack's independent PR readiness lifecycle before stack admission. Transfer monitoring to one stack babysitter after admission. The pinned upstream assigns owner-level babysitting and one babysitter per stack, but leaves this handoff implicit. This adaptation makes the phase boundary explicit.
@@ -71,7 +71,7 @@ This selective update reviewed pstack at [1e5c90a4](https://github.com/cursor/pl
 - [Autopilot-stack](https://github.com/cursor/plugins/blob/1e5c90a4b6f249917bd21fe361b3a2a7deb741b8/pstack/skills/poteto-mode/playbooks/autopilot-stack.md): freeze agent writes when operator landing starts. Transfer topology ownership to the landing owner. Mid-landing repairs wait for operator direction.
 - [Root-cause signal, 36cecbf2](https://github.com/cursor/plugins/commit/36cecbf2b5089b275254d59cb4612d6f96f00fbd): after deep debugging, propose the cheapest reliable always-on signal for the deciding fact. A proposal does not widen repair authority.
 
-These rules retain harness-neutral routing, jj-native publication protections, meaningful change descriptions, and the active forge's policies, including Azure DevOps. No model slugs, editor requirements, ketchup skill, multi-phase template, or unrelated upstream changes were imported.
+That update retained harness-neutral routing, jj-native publication protections (superseded by the VCS experiment below), meaningful change descriptions, and the active forge's policies, including Azure DevOps. No model slugs, editor requirements, ketchup skill, multi-phase template, or unrelated upstream changes were imported.
 
 ## October 15 principle review
 
@@ -97,3 +97,11 @@ These are selective adaptations, not a full upstream upgrade. The creation-speci
 - [Create formal verification skill fallback, 6b78e9f4](https://github.com/cursor/plugins/blob/6b78e9f4e46c75d1697d837e51f07c2692e60b24/pstack/skills/create-formal-verification-skill/SKILL.md): adopt generated-input property testing or fuzzing against the real implementation when no suitable verifier supports its language. State that this is testing evidence, not formal proof or exhaustive coverage. Preserve least-cost, property-driven tool choice and the prior adaptation's bounds, evidence, and mutation-safety rules. Do not import the upstream blanket TLA+ default or unconditional source-mutation requirement.
 
 The shared [formal claim and evidence contract](../skills/create-formal-verification-skill/references/formal-contract.md) is a local adaptation used by both routes. The manifest hashes identify the newly reviewed upstream bytes before adaptation. Both skills retain the pstack MIT notice and portable explicit-only discovery metadata. Live-app verification, feature-map maintenance, and ordinary feature or bug-fix gates are unchanged.
+
+## VCS experiment (October 2026)
+
+The experiment mirrors pstack's ordinary Git commands and worktree workflows without adding a version-control selection policy. The standalone Jujutsu skill remains available for explicit user invocation. Other workflow instructions do not mention or route to it. Earlier references above record the historical adaptations, not current routing.
+
+Source inspected: [`cursor/plugins` at `88d47514b82e7c44f00f2b2a72ff6dd12158038c`](https://github.com/cursor/plugins/tree/88d47514b82e7c44f00f2b2a72ff6dd12158038c/pstack). Relevant guidance lives in `pstack/skills/poteto-mode/playbooks/opening-a-pr.md`, `playbooks/hillclimb.md`, `playbooks/session-pickup.md`, `pstack/skills/arena/SKILL.md`, and `pstack/skills/why/references/sources/code-archaeology.md`. The inspected package contains no Jujutsu guidance.
+
+The adaptation retains scoped staging, dirty-work protection, topology ownership, exact publication leases, verification, and recovery. Destructive upstream reset and cleanup shortcuts remain excluded. The updater retains its existing Git and Jujutsu support; this experiment changes agent guidance, not updater backend support.

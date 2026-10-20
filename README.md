@@ -18,7 +18,6 @@ Every skill has its own directory directly under `skills/`, without categories. 
 - [Formal verification](skills/create-formal-verification-skill/SKILL.md): explicit creation and [maintenance](skills/maintain-formal-verification-skill/SKILL.md), separate from live-app checks. Unsupported implementation languages can use real-code property tests or fuzzing with testing-only claims.
 - [ui-design](skills/ui-design/SKILL.md): shared UI judgment and rendered evidence under the caller's scope.
 - [refine-ui](skills/refine-ui/SKILL.md): interactive visual exploration and approval gates, using ui-design.
-- [jj](skills/jj/SKILL.md): repository operations when `.jj` exists.
 - [writing](skills/writing/SKILL.md): the existing router for simple-technical-english and unslop.
 
 ## Try Mako without installation
@@ -114,7 +113,7 @@ Use `--tsc /path/to/tsc` or `--node /path/to/node` for tools outside `PATH`. Mis
 
 [Harness compatibility](docs/mako-harness-compatibility.md) records tested versions and commands. The Python checks cover metadata, dependency reachability, logging, and safe installation. Separate harness checks cover discovery and invocation metadata. These checks do not enforce byte-for-byte preservation of upstream prose. These checks do not establish model compliance. Instruction tuning follows actual use, not a separate behavioral test suite.
 
-Mako requires completion evidence, but it does not add runtime mission enforcement. pi-subagents' automatic Git-worktree isolation is not a verified jj integration. The [execution contract](skills/mako/references/execution.md) states these limits.
+Mako requires completion evidence, but it does not add runtime mission enforcement. Native Git worktrees supplied by the harness are reused for task isolation. The [execution contract](skills/mako/references/execution.md) states these limits.
 
 ## Structure and provenance
 

@@ -56,25 +56,27 @@ Replace a stuck writer immediately. Send a best-effort stop request and transfer
 
 ## Repository operations
 
-When `.jj` exists, read and apply `jj`. It owns status, history, workspace isolation, conflicts, rebases, publication, and recovery. Do not substitute Git staging or reset instructions.
+Before mutation inspect `git status --short --branch`, staged and unstaged diffs, untracked files, `git rev-parse --show-toplevel`, `git branch --show-current`, and `git worktree list --porcelain`. A native linked worktree can have a `.git` file, not a directory; use Git's discovery commands instead of directory checks. Verify the actual base and assigned branch. Do not switch a harness-owned worktree to another task's branch. A detached worktree is valid: preserve its assigned revision and create a task branch only when the harness workflow and delivery scope require it.
 
-Otherwise inspect the repository's current state and instructions before choosing Git operations. Preserve user work. Do not hard-reset or recreate a dirty checkout to simplify a task.
+Preserve user work. Stage only task-owned paths or hunks and inspect the staged diff before committing. Do not hard-reset, clean, stash, recreate, or remove a dirty checkout to simplify a task. Do not absorb pre-existing staged changes. If ownership cannot be separated safely, pause the affected edits and report the conflict.
 
-A Git worktree is not a verified jj workspace. Do not use automatic Git-worktree isolation in a jj repository without a proven integration. Use documented jj workspaces, isolated scratch artifacts, or serialized ownership as appropriate.
+Reuse the isolated worktree supplied by Codex, T3, or another harness. If more isolation is needed, create a native Git worktree with a unique task branch from a verified base (`git worktree add -b <task-branch> <new-path> <base>`), after checking branch/path availability. Never force a branch already checked out elsewhere or let multiple writers share one branch/index.
+
+Before an authorized rebase, record the original HEAD and branch, require a clean task-owned worktree, and confirm topology ownership. Resolve only understood conflicts, stage reviewed resolutions, and continue; if the operation cannot be completed safely, use its matching abort command and report the preserved state. For recovery inspect `git reflog` and recorded revisions first; preserve recoverable commits with a new recovery branch rather than resetting user work. Remove only task-owned worktrees after checking their status and preserving unmerged work; never force cleanup.
 
 Keep one topology owner per stack. Owners can prepare changes in isolated locations; only the topology owner rebases, retargets, or publishes coordinated stack changes. Renew evidence after invalidating changes.
 
-When the operator begins landing a stack, transfer topology ownership to the operator or their named landing owner. Freeze other agent writes to its files, branches/bookmarks, and PR bases. Report mid-landing problems to the operator. Repairs wait for explicit direction. Only the landing owner performs authorized post-merge retargeting.
+When the operator begins landing a stack, transfer topology ownership to the operator or their named landing owner. Freeze other agent writes to its files, branches, and PR bases. Report mid-landing problems to the operator. Repairs wait for explicit direction. Only the landing owner performs authorized post-merge retargeting.
 
-Use Conventional Commits. In jj, every completed, handed-off, or published change needs a meaningful description. Verify the outgoing stack rather than only its tip. An unused empty working-copy child may remain undescribed. Creating a local change, pushing it, opening a PR, merging, and deploying are distinct actions.
+Use Conventional Commits with meaningful descriptions for completed, handed-off, or published changes. Verify the outgoing stack rather than only its tip. Creating a local change, pushing it, opening a PR, merging, and deploying are distinct actions.
 
 Resolve the forge from repository conventions and available authenticated tools. Supported forges include GitHub, GitLab, and Azure DevOps Repos. Use the active provider's actual review policies and CI, including Azure Pipelines. For tickets and boards, follow the team's tracker, including Azure DevOps Boards work items. Discover available authenticated capabilities. Do not assume another provider's CLI, states, or API fields have direct equivalents.
 
 ### Publication ownership
 
-For each branch/bookmark, record the last remote revision its owner successfully pushed or explicitly took over. Before publication, compare the actual remote revision with that recorded revision. If they differ, stop publication and report the unexpected change to the coordinator or operator. Fetching does not authorize takeover or renew the recorded revision. For first publication, verify that the destination does not already exist.
+For each branch, record the last remote revision its owner successfully pushed or explicitly took over. Before publication, compare the actual remote revision with that recorded revision. If they differ, stop publication and report the unexpected change to the coordinator or operator. Fetching does not authorize takeover or renew the recorded revision. For first publication, verify that the destination does not already exist.
 
-In Git, pin rewritten publication to that revision with `--force-with-lease=<ref>:<expected-sha>`. Do not use a bare lease based on a remote-tracking ref that a background fetch can move. In jj, use native bookmark conflict and push protections, together with the recorded-revision comparison. Do not bypass a rejected push or use Git to force it. After a successful push or explicit ownership transfer, record the accepted remote revision.
+In Git, pin rewritten publication to that revision with `--force-with-lease=<ref>:<expected-sha>`. Do not use a bare lease based on a remote-tracking ref that a background fetch can move. Do not bypass a rejected push. After a successful push or explicit ownership transfer, record the accepted remote revision.
 
 ## Verification tools
 

@@ -26,14 +26,7 @@ skills/mako/playbooks/eval.md
 
 This text is in the same file, and it applies the rules of that skill. The answer for the pair is `requires`.
 
-Some skills have the name of a command. If the text tells the reader to use that command, the text refers to the skill. The skill gives the rules for the command. The answer is not `none`.
-
-```text
-skills/mako/playbooks/hillclimb.md
-Preserve user work; use jj when present.
-```
-
-The target of this ticket is the skill with the name of that command. The answer is `requires` with `--conditional`.
+A command name alone does not imply a dependency on a skill that does not exist. For example, “use Git in the assigned worktree” does not create a skill edge: this bundle has no skill named Git. An explicit instruction to load an existing skill does create an edge, with `--conditional` when its activation has a condition.
 
 ## 2. `boundary`
 
@@ -117,7 +110,7 @@ This answer also fits these two cases:
 
 When the source uses the target only in a stated case, add `--conditional`. The explorer permits the flag only with `runs`, `requires`, and `handoff`.
 
-Words such as "if", "when", "unless", and "only when" state a case. A phrase such as "in a jj repository" also states a case. A phrase such as "For UI work," before the instruction also states a case. A heading or a lead-in sentence can state the case for the text that it introduces.
+Words such as "if", "when", "unless", and "only when" state a case. A phrase such as "For UI work," before the instruction also states a case. A heading or a lead-in sentence can state the case for the text that it introduces.
 
 ```text
 skills/bug-fix/SKILL.md

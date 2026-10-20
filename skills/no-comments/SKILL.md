@@ -14,7 +14,7 @@ Defer to Comment Sicko's fresh perspective.
 
 ## Scope
 
-Use the caller's files or diff. Otherwise use the current diff against the repository's base, including working-copy changes. Read [execution](../mako/references/execution.md) for delegation and repository mechanics. Use the jj skill when `.jj` exists.
+Use the caller's files or diff. Otherwise use the current diff against the repository's base, including working-copy changes. Read [execution](../mako/references/execution.md) for delegation and repository mechanics. Use Git in the assigned worktree.
 
 ## Steps
 

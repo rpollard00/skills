@@ -18,7 +18,7 @@ Walk from the lowest unmerged PR through the contiguous passing run. Stop at the
 
 ## 3. Check evidence freshness
 
-Record a stable patch identity for each base-to-head diff alongside revisions. In a Git-backed repository, read-only `git patch-id --stable` can aid comparison; use jj for repository state and mutations when present.
+Record a stable patch identity for each base-to-head diff alongside revisions. In a Git-backed repository, read-only `git patch-id --stable` can aid comparison; use Git for repository state and mutations.
 
 Before landing, compare the current patch, base, environment, and exercised behavior with the recorded evidence. Matching patch identity is not proof that changed dependencies or base behavior are harmless. Re-run affected lanes whenever their assumptions changed.
 

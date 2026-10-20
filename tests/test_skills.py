@@ -94,7 +94,7 @@ class ValidationTests(unittest.TestCase):
             seen.add(path)
             pending.extend(local_links(path))
             pending.extend(named_skill_dependencies(path, skills))
-        selected = set(root.glob("*/SKILL.md"))
+        selected = set(root.glob("*/SKILL.md")) - {skills["jj"]}
         self.assertEqual({p.resolve() for p in selected} - seen, set())
         self.assertEqual(len(list(root.glob("principle-*/SKILL.md"))), 23)
 
@@ -109,7 +109,7 @@ class ValidationTests(unittest.TestCase):
             for source, content in before.items():
                 self.assertEqual(source.read_bytes(), content)
                 installed = claude / source.parent.name / "SKILL.md"
-                expected = source.parent.name == "mako"
+                expected = source.parent.name in {"mako", "jj"}
                 self.assertEqual(bool(frontmatter(installed).get("disable-model-invocation")), expected)
                 for reference in local_links(installed):
                     self.assertTrue(reference.exists(), reference)
