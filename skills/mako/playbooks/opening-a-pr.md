@@ -8,7 +8,7 @@ Read [execution](../references/execution.md). Use Git in the assigned worktree. 
 
 Keep logical changes small and ordered. Amend or split only within the task's authority. Preserve a separate failing-check change before a bug fix; that failing change need not merge independently.
 
-Run `deslop` before commits and `no-comments` before review. Review the final diff and run the relevant checks on the revision that will be published.
+For code changes, run `deslop` before commits and `no-comments` before review under the [cleanup contract](../references/execution.md#code-cleanup-checkpoints). Review the final diff and run the relevant checks on the revision that will be published.
 
 ## Write the briefing
 

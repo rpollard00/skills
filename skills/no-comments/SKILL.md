@@ -12,6 +12,8 @@ Spawn Comment Sicko. Act on accepted findings.
 
 Defer to Comment Sicko's fresh perspective.
 
+When invoked directly or required by a workflow, run the reviewer even in a comment-heavy repository. Follow the [cleanup contract](../mako/references/execution.md#code-cleanup-checkpoints). Deference requires the review, not automatic acceptance of deletions. Apply the exceptions and acceptance checks below. A completed review with no accepted changes is a valid result.
+
 ## Scope
 
 Use the caller's files or diff. Otherwise use the current diff against the repository's base, including working-copy changes. Read [execution](../mako/references/execution.md) for delegation and repository mechanics. Use Git in the assigned worktree.

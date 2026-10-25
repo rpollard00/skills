@@ -29,7 +29,7 @@ If no task is supplied, ask for one. After compaction, continue from the recorde
 1. Inspect the assigned branch and worktree; follow [execution](references/execution.md#repository-operations).
 2. Select the playbook that best fits the task. Drive the requested outcome to completion, while respecting explicit scope limits.
 3. Read that playbook and its required dependencies. Record its ordered steps in native tracking or a checklist.
-4. Retain skipped steps with specific reasons. A skip note cannot waive required verification or an explicit stop condition.
+4. Retain skipped steps with specific reasons. A skip note cannot waive required cleanup, verification, or an explicit stop condition.
 
 Use the skill-name lookup and path fallback in [execution](references/execution.md). Read it before loading dependencies, delegation, repository mutation, external delivery, or autonomous continuation. Load only current dependencies, not every playbook.
 
@@ -88,11 +88,13 @@ Read a dependency before the action it governs. Reuse instructions already prese
 - Contested design before delivery: `interrogate`
 - Read or edit TypeScript: `typescript-best-practices`
 - Produce prose: Existing `writing` guidance
-- Before a commit: `deslop` within the task's scope
-- Before review: `no-comments`
+- Before a code-change commit: Run `deslop` within the task's scope
+- Before code review: Run `no-comments`, which spawns Comment Sicko
 - Long, autonomous, or multi-phase execution: `show-me-your-work`
 - User asks to reflect: `reflect`
 - User invokes bro: `bro`
+
+These cleanup passes are required at their checkpoints. Follow the [cleanup contract](references/execution.md#code-cleanup-checkpoints), including no-op results and blocked dependencies.
 
 Consult the compact [principle index](references/principles.md) for additional triggers. Read a selected principle's full instructions before relying on it. Do not load all 23 for every task.
 
