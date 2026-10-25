@@ -15,6 +15,10 @@ Use `drive` for an explicit babysit request unless the user narrows it. Use `che
 
 Read [execution](../references/execution.md). Keep one babysitter and one topology owner per stack. Work the lowest unmerged PR first; batch upper-stack threads without restarting the frontier's checks unnecessarily.
 
+Resolve PRs and stack links by repository identity (including forge host) plus branch name. Verify both head and base repositories and branches. For branch-based discovery, select the sole open matching PR over closed or merged history. If multiple open PRs match, stop branch-based selection and resolve the ambiguity before continuing. Do not choose by result order or silently close candidates.
+
+If none is open, use history only to establish prior state or merged ancestry. Do not treat a historical PR as active work.
+
 Independent PRs can have separate babysitters before stack admission. End those independent loops when ownership transfers to the stack babysitter. PR owners then handle assigned fixes and self-proof under that coordination.
 
 A babysitter can resolve conflicts and rebase within assigned authority. If another owner controls topology, coordinate the operation rather than mutate concurrently. Use Git and the assigned worktree; follow [execution](../references/execution.md#repository-operations). Once operator landing starts, freeze repair and topology writes under execution's handoff rule. Report new problems and wait for explicit direction.
@@ -41,7 +45,7 @@ Dismiss disproven claims with concrete evidence. Do not churn code to quiet a bo
 
 ## 5. Watch the actual frontier
 
-Use supported forge status and watch commands. Re-read head, base, required checks, mergeability, review requirements, and unresolved blocking threads after an event or push. Read all review-thread pages again when the revision or review state changes. A list of green checks is not the forge's complete readiness verdict. For Azure DevOps, include applicable Repos branch policies and required Azure Pipelines results; do not translate GitHub-specific status fields by guesswork.
+Use supported forge status and watch commands. After an event or push, re-read head and base repositories, branches, and revisions. Re-read required checks, mergeability, review requirements, and unresolved blocking threads. Read all review-thread pages again when the revision or review state changes. A list of green checks is not the forge's complete readiness verdict. For Azure DevOps, include applicable Repos branch policies and required Azure Pipelines results; do not translate GitHub-specific status fields by guesswork.
 
 For drive/background, use the existing continuation owner's event mechanism. Do not add a competing sleep loop. If durable watching is unavailable, report that limitation rather than claim unattended monitoring.
 
