@@ -20,6 +20,16 @@ The file fallback covers unavailable name lookup, not denied invocation. Honor h
 
 A missing dependency is a bundle defect. Report its exact path. Do not silently replace it with remembered guidance or an excluded upstream skill.
 
+## Code cleanup checkpoints
+
+When the selected workflow requires `deslop` or `no-comments`, run the pass at its stated checkpoint. `no-comments` runs the Comment Sicko reviewer. Existing repository style, comment density, and an expected no-op result do not waive execution. Repository conventions guide compatible edits, not whether the pass runs.
+
+Keep each pass within the task's code scope. Apply its guardrails and verified exceptions when accepting findings. A completed pass can make no changes. Do not delete justified comments or force rewrites to prove execution. Preserve required verification after accepted edits.
+
+Record the outcome in the existing task record: completed with changes, completed with no changes, or blocked. If a required skill or reviewer is unavailable or denied, report the exact dependency and blocker. Keep the checkpoint incomplete. Do not claim that the pass ran or bypass host restrictions.
+
+Honor an explicit user instruction to skip or narrow a pass, and record that exception. Do not infer an exception from repository style. These checkpoints do not add code cleanup to unrelated non-code tasks.
+
 ## UI dependency
 
 For UI-affecting work, load `ui-design` before planning, design, implementation, delegation, or review. This applies to direct skill entry points as well as Mako routes. Pass applicable references and rendered evidence to UI delegates.
