@@ -67,8 +67,8 @@ Use the skill-name lookup and path fallback in [execution](references/execution.
 - Check PR status, address threads, or reach merge-ready: [Babysit](playbooks/babysit.md), without merging
 - Merge authorized changes: [Shipping](playbooks/shipping.md)
 - Drive one objective without routine intervention: [Autonomous run](playbooks/autonomous-run.md)
-- Deliver independent PRs with merge authority: [Autopilot-full](playbooks/autopilot-full.md)
-- Build and verify a stack for operator landing: [Autopilot-stack](playbooks/autopilot-stack.md), without merging
+- Deliver PRs with merge authority: [Autopilot-full](playbooks/autopilot-full.md), keeping independent work independent
+- Build and verify PRs for operator landing: [Autopilot-stack](playbooks/autopilot-stack.md), stacking only actual dependencies, without merging
 - No existing playbook fits: `figure-it-out`
 
 Autonomy is the default, not exclusive to autonomous playbooks. Those playbooks add continuation and coordination for long runs; they do not waive design, review, or verification. Use interactive skills such as grilling and refine-ui when the user requests that collaboration. 

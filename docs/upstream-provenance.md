@@ -98,6 +98,16 @@ These are selective adaptations, not a full upstream upgrade. The creation-speci
 
 The shared [formal claim and evidence contract](../skills/create-formal-verification-skill/references/formal-contract.md) is a local adaptation used by both routes. The manifest hashes identify the newly reviewed upstream bytes before adaptation. Both skills retain the pstack MIT notice and portable explicit-only discovery metadata. Live-app verification, feature-map maintenance, and ordinary feature or bug-fix gates are unchanged.
 
+## October 28 workflow review
+
+These selective adaptations reviewed pstack at [ab1f702c](https://github.com/cursor/plugins/commit/ab1f702ce8e8b6557edb56b09f52cde8bfb83f17). Original import pins and license notices remain unchanged.
+
+- Autopilot-stack keeps independent PRs outside dependency stacks. Landing authority selects the autopilot route independently of dependency topology. Existing topology ownership, publication leases, operator handoff, and evidence freshness rules remain.
+- Arena compares and records a cross-judge verdict only when a judge ran. Otherwise it labels self-review and records unavailable independence. Configured routing and explicit independent-review requirements remain.
+- Eval freezes promotion evidence, representative repetitions, uncertainty handling, and resource limits before confirmatory trials. A bounded pilot remains exploratory. The existing Hillclimb measurement guidance governs validity, and inconclusive results remain possible.
+
+Broader review or verification reductions, the run-only Interrogate rewrite, automatic publication cadence, and model-family fallbacks remain excluded. Eval does not adopt the automatic stop rule for spread exceeding effect.
+
 ## VCS experiment (October 2026)
 
 The experiment mirrors pstack's ordinary Git commands and worktree workflows without adding a version-control selection policy. The standalone Jujutsu skill remains available for explicit user invocation. Other workflow instructions do not mention or route to it. Earlier references above record the historical adaptations, not current routing.

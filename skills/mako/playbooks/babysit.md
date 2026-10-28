@@ -19,7 +19,7 @@ Resolve PRs and stack links by repository identity (including forge host) plus b
 
 If none is open, use history only to establish prior state or merged ancestry. Do not treat a historical PR as active work.
 
-Independent PRs can have separate babysitters before stack admission. End those independent loops when ownership transfers to the stack babysitter. PR owners then handle assigned fixes and self-proof under that coordination.
+Independent PRs retain separate babysitters. When a PR joins a stack because of an actual dependency, transfer its monitoring to the stack babysitter. End its separate loop. PR owners then handle assigned fixes and self-proof under that coordination.
 
 A babysitter can resolve conflicts and rebase within assigned authority. If another owner controls topology, coordinate the operation rather than mutate concurrently. Use Git and the assigned worktree; follow [execution](../references/execution.md#repository-operations). Once operator landing starts, freeze repair and topology writes under execution's handoff rule. Report new problems and wait for explicit direction.
 

@@ -48,11 +48,11 @@ After all Phase B candidates stop writing, use a fresh read-only judge when avai
 
 Read every candidate end to end before picking.
 
-Score each candidate against the rubric criterion by criterion, not on holistic feel. Compare against the cross-judge. Agreement on the base confirms the pick. Disagreement means one of you is biased or the rubric was ambiguous. Read both rationales before deciding.
+Score each candidate against the rubric criterion by criterion, not on holistic feel. If Phase C ran a cross-judge, compare its verdict with your scores. Agreement on the base confirms the pick. Disagreement means one of you is biased or the rubric was ambiguous. Read both rationales before deciding. If Phase C used self-review, make the pick from your rubric scores and label the review as self-review. Preserve unmet explicit independent-review gates.
 
 Pick the base on which candidate a future maintainer can extend most easily without breaking invariants. Prefer the cleaner boundary or smaller API when two feel tied, per the Laziness Protocol.
 
-Record the pick and the reason in a short synthesis note alongside the base artifact, including the cross-judge's verdict.
+Record the pick and the reason in a short synthesis note alongside the base artifact. If a cross-judge ran, include its verdict. Otherwise record why it was unavailable and label the self-review. Record any unmet explicit review requirement.
 
 ## Phase E: Graft
 
@@ -72,4 +72,4 @@ If verification surfaces a problem the arena did not catch, either Phase A was w
 
 ## Outputs
 
-One synthesized artifact. One short synthesis note alongside, naming the base, the grafts (with source candidate), the rejections, the dropouts if any, and the verification result.
+One synthesized artifact. One short synthesis note alongside, naming the base, the grafts (with source candidate), the rejections, the dropouts if any, and the verification result. Include the cross-judge verdict or labeled self-review, its availability limitation, and any unmet explicit review requirement.
