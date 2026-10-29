@@ -44,7 +44,7 @@ Discover supported agents, models, context isolation, writable locations, notifi
 
 ## Agent and model routing
 
-Use the configured agent for the role and preserve its model routing. Operator-directed routing changes remain subject to host restrictions. Model availability does not authorize a routing override. Do not select another agent or override its model solely to obtain diversity. If no role routing exists, use the harness's default routing rather than inventing a model override.
+Use the configured agent for the role and preserve its model routing. Operator routing recorded in the [harness notes](harnesses.md) is configured routing for that host. Operator-directed routing changes remain subject to host restrictions. Model availability does not authorize a routing override. Do not select another agent or override its model solely to obtain diversity. If no role routing exists, use the harness's default routing rather than inventing a model override.
 
 Prefer model diversity only within an explicitly configured or operator-approved pool for that role. A catalog of available models is not an approved pool. These rules take precedence over model preferences in dependent skills. If the tool supports configured routing, omit model overrides unless the selected pool entry or operator instruction requires one.
 
@@ -128,4 +128,4 @@ An ended turn is not completion. A successful mission-close API response does no
 
 ## Transcript access
 
-Use the current session's documented transcript path or export. Do not search other projects or unrelated conversations. If access is unavailable, use a clearly labeled digest and report the evidence limitation. Never fabricate a transcript or tool-use receipt.
+Use the current session's documented transcript path or export. Do not search other projects or unrelated conversations. The explicitly invoked `recall` skill can search prior conversations of the same repository within its stated scope. If access is unavailable, use a clearly labeled digest and report the evidence limitation. Never fabricate a transcript or tool-use receipt.

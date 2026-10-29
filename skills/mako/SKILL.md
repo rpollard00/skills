@@ -62,6 +62,7 @@ Use the skill-name lookup and path fallback in [execution](references/execution.
 - Set up automatic updates for this skills bundle: `setup-skills-sync`
 - Compare skill or prompt behavior: [Eval](playbooks/eval.md)
 - Catch up on this conversation without continuing work: `ketchup`
+- Rebuild recent context on a topic from prior conversations: `recall`
 - Resume a specific task: [Session pickup](playbooks/session-pickup.md)
 - Explicitly pause current work: [Pause safely](playbooks/pause-safely.md)
 - Check PR status, address threads, or reach merge-ready: [Babysit](playbooks/babysit.md), without merging
