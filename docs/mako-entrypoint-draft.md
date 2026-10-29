@@ -122,12 +122,12 @@ Use `figure-it-out` when no route fits or the work requires a bespoke sequence. 
 - Drive one objective without routine intervention
   - Route: Autonomous run
   - Deliverable or stop boundary: Verified completion or a concrete incomplete outcome
-- Deliver independent PRs with merge authority
+- Deliver PRs with merge authority, keeping independent work independent
   - Route: Autopilot-full
   - Deliverable or stop boundary: Independently verified PRs merged; operator-reserved items wait
-- Build and verify a stack for operator landing
+- Build and verify PRs for operator landing
   - Route: Autopilot-stack
-  - Deliverable or stop boundary: Verified stack; no merge or auto-merge
+  - Deliverable or stop boundary: Verified independent PRs and actual dependency stacks; no merge or auto-merge
 
 Autonomous run and the autopilots compose task routes; they do not replace their design, review, or verification requirements. Opening a PR is a delivery step, not the default outcome of every route.
 

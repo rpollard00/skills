@@ -15,11 +15,20 @@
 **Steps:**
 
 1. **Frame.** State what variant is under test and what behavior counts as success. Write the rubric (3-6 concrete criteria) for the judge only. Hold it back from candidates.
+
+   Before confirmatory trials, freeze the decision contract:
+
+   - Name the evidence that changes the promotion decision, including required gains and unacceptable regressions.
+   - Predeclare representative tasks and repetitions, uncertainty handling, and the rubric. Reuse [Hillclimb's measurement validity](hillclimb.md#measurement-validity) for completed work, fair conditions, sample counts, variability, and end-to-end relevance.
+   - Set a resource budget for candidates, judging, and verification. Declare a stopping rule within that budget. Permit an inconclusive outcome when the evidence cannot support a promotion decision.
+
+   A pilot with a declared resource limit can refine the design before this freeze. Label pilot evidence as exploratory and exclude it from confirmatory evidence. If the frozen contract changes later, label prior trials exploratory and restart confirmation within the remaining budget.
+
 2. **Set up sanitized environments.** Per-candidate working dir with the variant in place. Plant any context an organic task would have: a project skeleton, the skills the candidate would naturally read.
 3. **Author one organic prompt.** What a user would type. No leakage of what's being measured.
 4. **Spawn N isolated candidates** through [execution](../references/execution.md) and arena's candidate contract. Apply [execution's routing contract](../references/execution.md#agent-and-model-routing) to candidates and the judge. Each works in its own sanitized directory with the same organic prompt.
 5. **Spawn one fresh blinded judge** per arena's judge contract, preserving configured judge routing. Judge sees outputs by sanitized label and rubric, never model identity. Record unavailable independence or unmet explicit multi-model requirements.
 6. **Verify the chain from transcripts, not self-report.** Read only the candidate's documented transcript or export from this run. Do not search unrelated sessions. If transcript evidence is unavailable, mark chain-following unverified. Look at which files each candidate actually opened. Grade chain-following from the files it really read plus the shape of the code, never from the candidate's own claims.
-7. **Read every candidate output yourself** end to end. Compare to the judge's verdict. Disagreement means a model is biased or the rubric is ambiguous. Synthesize.
+7. **Read every candidate output yourself** end to end. Compare to the judge's verdict. Disagreement means a model is biased or the rubric is ambiguous. Synthesize against the frozen criteria. Report attempted and completed repetitions, failures, uncertainty, and resource use. If the evidence remains inconclusive within the budget, report it as inconclusive. Do not treat it as proof of equivalence or promotion.
 
-**Reply:** variant under test, rubric, per-candidate notes, judge's verdict, your synthesis, and a recommendation for whether to promote the variant.
+**Reply:** variant under test, frozen decision criteria and rubric, workload and repetitions, uncertainty, resource budget and use, per-candidate notes, judge's verdict, your synthesis, and a promotion, rejection, or inconclusive recommendation. Distinguish exploratory evidence from confirmatory results.
