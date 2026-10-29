@@ -33,7 +33,7 @@ class VcsGuidanceTests(unittest.TestCase):
             for root in (discovery, claude):
                 names = {frontmatter(p)['name'] for p in installed_skills(root, set())}
                 self.assertIn('jj', names)
-                self.assertEqual(len(names), 58)
+                self.assertEqual(len(names), 59)
             for root in (ROOT / 'skills', claude / '.reese-adapter/skills'):
                 metadata = frontmatter(root / 'jj/SKILL.md')
                 self.assertTrue(metadata['disable-model-invocation'])

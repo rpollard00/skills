@@ -19,6 +19,10 @@
     "cursor-maintain-formal-verification-skill": {
       "repository": "https://github.com/cursor/plugins",
       "revision": "7b353f78f6ec193bdbe48ed8059444eb09b6878e"
+    },
+    "cursor-recall": {
+      "repository": "https://github.com/cursor/plugins",
+      "revision": "ce649c03ac3b75b6ae80cbd15b7e2c536caedb5a"
     }
   },
   "files": [
@@ -988,6 +992,18 @@
       "destination": "skills/maintain-formal-verification-skill/LICENSE",
       "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
       "upstream": "cursor-maintain-formal-verification-skill"
+    },
+    {
+      "source": "pstack/skills/recall/SKILL.md",
+      "destination": "skills/recall/SKILL.md",
+      "sha256": "b0ceb996259c3404532f61e4b010df4e3d80d7ddbed85b3c302895723eb62a89",
+      "upstream": "cursor-recall"
+    },
+    {
+      "source": "pstack/LICENSE",
+      "destination": "skills/recall/LICENSE",
+      "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
+      "upstream": "cursor-recall"
     }
   ]
 }

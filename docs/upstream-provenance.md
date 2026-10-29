@@ -108,6 +108,10 @@ These selective adaptations reviewed pstack at [ab1f702c](https://github.com/cur
 
 Broader review or verification reductions, the run-only Interrogate rewrite, automatic publication cadence, and model-family fallbacks remain excluded. Eval does not adopt the automatic stop rule for spread exceeding effect.
 
+## October 28 recall
+
+- [Recall, ce649c03](https://github.com/cursor/plugins/blob/ce649c03ac3b75b6ae80cbd15b7e2c536caedb5a/pstack/skills/recall/SKILL.md): add the explicit-only route the original selection deferred. Retain scope locking, parallel conversation search, the `why` shared-record sweep, live-state checks, and the brief contract. Replace Cursor transcript paths with discovered harness stores and repository-wide worktree scope. Remove `automate-me`, model and speed directives, and the mandatory `unslop` voice. The skill retains the pstack MIT notice.
+
 ## VCS experiment (October 2026)
 
 The experiment mirrors pstack's ordinary Git commands and worktree workflows without adding a version-control selection policy. The standalone Jujutsu skill remains available for explicit user invocation. Other workflow instructions do not mention or route to it. Earlier references above record the historical adaptations, not current routing.

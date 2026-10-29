@@ -46,6 +46,7 @@ export const SKILLS = [
   "principle-subtract-before-you-add",
   "principle-test-behavior-not-implementation",
   "principle-type-system-discipline",
+  "recall",
   "refine-ui",
   "reflect",
   "setup-skills-sync",

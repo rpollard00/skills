@@ -99,7 +99,7 @@ Merging the repair or replacing the installed skill is separate from proposing i
 - `show-me-your-work`: Keep the decision-trail capability. Format, storage, and integration remain open.
 - `typescript-best-practices`: Preserve the selected type-system guidance. Correct the duration invariant and incomplete validator example after review. Validate finite, nonnegative durations at construction and reuse existing schema validators.
 - `bro`: Keep as a user-invoked plain-language reset.
-- `recall`: Exclude. No stub or automatic route. Revisit as a separate task.
+- `recall`: Adopted October 28 as an explicit-only route. See the October 28 recall section.
 - `automate-me`, `make-bot-ui`: Exclude.
 - `setup-pstack`: Replace Cursor model-rule setup with harness-specific configuration guidance.
 - Benny automation pack: Defer.
@@ -252,3 +252,14 @@ Add explicit-only `maintain-formal-verification-skill` for an existing project-l
 Selectively adapt the unsupported-language fallback in `create-formal-verification-skill`: if no suitable verifier supports the implementation language, exercise the real implementation with generated property-test inputs or fuzzing. Report this as testing evidence, never formal proof or exhaustive coverage. Record the actual campaign's limits and reproducibility details. Do not substitute a handwritten copy of the function for implementation verification.
 
 Retain the least-cost supported tool that answers the question. A small model checker can still suit design-ordering questions, and an unbounded claim can still need a proof assistant. Do not import a blanket TLA+ default, mandatory tools, harness-specific orchestration, or unrelated upstream changes.
+
+## October 28 recall
+
+Add explicit-only `recall`, which the original selection deferred. Mako routes to it; it is not an automatic dependency of another workflow.
+
+- Keep the upstream substance: route before searching, lock window, topic, and project, search prior conversations in parallel, sweep the shared record through `why`, verify live state, and return a capsule, tagged threads, problems, and one next move.
+- Replace Cursor transcript paths with discovered harness stores. Prefer supported tools such as T3 thread search. Record unavailable stores as gaps.
+- Scope a project as the repository and its worktrees, because most stores key conversations by working directory.
+- Keep the turn read-only. Separate it from `ketchup` (this conversation) and Session pickup (one task to continue).
+- The shared transcript rule names `recall` as its only cross-conversation exception. Other skills still read only the current session.
+- Remove the `automate-me` route, Cursor model and speed directives, and the mandatory `unslop` voice. Use the existing `writing` router.
