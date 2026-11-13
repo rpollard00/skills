@@ -119,3 +119,11 @@ The experiment mirrors pstack's ordinary Git commands and worktree workflows wit
 Source inspected: [`cursor/plugins` at `88d47514b82e7c44f00f2b2a72ff6dd12158038c`](https://github.com/cursor/plugins/tree/88d47514b82e7c44f00f2b2a72ff6dd12158038c/pstack). Relevant guidance lives in `pstack/skills/poteto-mode/playbooks/opening-a-pr.md`, `playbooks/hillclimb.md`, `playbooks/session-pickup.md`, `pstack/skills/arena/SKILL.md`, and `pstack/skills/why/references/sources/code-archaeology.md`. The inspected package contains no Jujutsu guidance.
 
 The adaptation retains scoped staging, dirty-work protection, topology ownership, exact publication leases, verification, and recovery. Destructive upstream reset and cleanup shortcuts remain excluded. The updater retains its existing Git and Jujutsu support; this experiment changes agent guidance, not updater backend support.
+
+## November 13 executable adversarial review
+
+This selective adaptation follows pstack's [October 27 adversarial review change](https://github.com/cursor/plugins/commit/ab1f702ce8e8b6557edb56b09f52cde8bfb83f17). The original import manifest and license notices remain unchanged.
+
+`interrogate` now requires adversaries to run probes against real behavior and the lead to reproduce each retained finding independently. Plans and designs use prototypes or probes. Source-only speculation, style judgments, and structural preferences no longer become findings. Unavailable execution becomes a coverage gap, not a pass.
+
+The adaptation preserves configured model routing, explicit invocation, isolation, source snapshots, and rendered UI evidence. It does not import Cursor agent names or arena's candidate-selection stages. Review does not authorize repairs, production probes, or changes to shared user state. Other Mako verification gates remain unchanged.

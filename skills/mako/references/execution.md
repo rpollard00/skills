@@ -58,7 +58,7 @@ Every brief names the outcome, source revision, working location, scope, do-not-
 
 Keep one assigned writer per writable resource. Separate directories are insufficient when they still share a database, browser profile, branch, or port. Identify those resources before launch. Stuck-writer replacement uses the immediate handoff rule that follows.
 
-Use fresh read-only reviewers for independent review. Give them source artifacts, not only an implementer's summary. Let a candidate produce one artifact; do not recursively launch its parent's design competition.
+Use fresh reviewers for independent review. Keep the target implementation read-only. For executable adversarial review, permit isolated repro artifacts, prototypes, and disposable test state within the caller's authority. Give reviewers source artifacts, not only an implementer's summary. Let a candidate produce one artifact; do not recursively launch its parent's design competition.
 
 Respect the harness's lifecycle and failure policy. An infrastructure failure is not a failed design candidate. Preserve the error, run identity, current revision, and partial diff. Do not silently change models, runners, or execution protocols.
 
